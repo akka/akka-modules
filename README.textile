@@ -2,4 +2,4 @@ h1. Akka Modules
 
 Repository for add-on modules to the Akka Project.
 
-Learn more at "http://akkasource.org":http://akkasource.org.
+Learn more at "http://akka.io":http://akka.io.
