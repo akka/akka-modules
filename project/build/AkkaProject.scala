@@ -113,6 +113,11 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
   lazy val voldemortModuleConfig   = ModuleConfiguration("voldemort", ClojarsRepo)
   lazy val embeddedRepo            = EmbeddedRepo // This is the only exception, because the embedded repo is fast!
 
+  val mavenLocal = "Local Maven Repository" at "file:/e:/maven-repository"
+
+    val efgfpNexusReleasesRepository = "Nexus Releases" at "http://nexus/nexus/content/groups/public"
+    val efgfpNexusSnaphotsRepository = "Nexus Snapshots" at "http://nexus/nexus/content/groups/public-snapshots"
+  
   // -------------------------------------------------------------------------------------------------------------------
   // Versions
   // -------------------------------------------------------------------------------------------------------------------
@@ -647,6 +652,8 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
   class AkkaJTAProject(info: ProjectInfo) extends AkkaModulesDefaultProject(info, distPath) {
     val akka_stm    = Dependencies.akka_stm
     val akka_remote = Dependencies.akka_remote
+
+    val jta_1_1                   = Dependencies.jta_1_1
     val atomikos_transactions     = Dependencies.atomikos_transactions
     val atomikos_transactions_api = Dependencies.atomikos_transactions_api
     val atomikos_transactions_jta = Dependencies.atomikos_transactions_jta
@@ -780,14 +787,23 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
     override def spdeSourcePath = mainSourcePath / "spde"
   }
 
-  class AkkaSampleChatProject(info: ProjectInfo) extends AkkaModulesDefaultProject(info, deployPath)
+  class AkkaSampleChatProject(info: ProjectInfo) extends AkkaModulesDefaultProject(info, deployPath) {
+    val akka_remote = Dependencies.akka_remote
+  }
   class AkkaSamplePubSubProject(info: ProjectInfo) extends AkkaModulesDefaultProject(info, deployPath)
-  class AkkaSampleFSMProject(info: ProjectInfo) extends AkkaModulesDefaultProject(info, deployPath)
 
   class AkkaSampleRestJavaProject(info: ProjectInfo) extends AkkaModulesDefaultProject(info, deployPath)
 
   class AkkaSampleRestScalaProject(info: ProjectInfo) extends AkkaModulesDefaultProject(info, deployPath) {
     val jsr311 = Dependencies.jsr311
+
+    val atmo          = Dependencies.atmo
+    val atmo_jbossweb = Dependencies.atmo_jbossweb
+    val atmo_jersey   = Dependencies.atmo_jersey
+    val atmo_runtime  = Dependencies.atmo_runtime
+    val atmo_tomcat   = Dependencies.atmo_tomcat
+    val atmo_weblogic = Dependencies.atmo_weblogic
+
   }
 
   class AkkaSampleCamelProject(info: ProjectInfo) extends AkkaModulesDefaultProject(info, deployPath) {
@@ -828,11 +844,9 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
     override def disableCrossPaths = true
 
     lazy val akka_sample_chat = project("akka-sample-chat", "akka-sample-chat",
-      new AkkaSampleChatProject(_), akka_remote)
+      new AkkaSampleChatProject(_), akka_persistence)
     lazy val akka_sample_pubsub = project("akka-sample-pubsub", "akka-sample-pubsub",
       new AkkaSamplePubSubProject(_), akka_kernel)
-    lazy val akka_sample_fsm = project("akka-sample-fsm", "akka-sample-fsm",
-      new AkkaSampleFSMProject(_), akka_kernel)
     lazy val akka_sample_rest_java = project("akka-sample-rest-java", "akka-sample-rest-java",
       new AkkaSampleRestJavaProject(_), akka_kernel)
     lazy val akka_sample_rest_scala = project("akka-sample-rest-scala", "akka-sample-rest-scala",
