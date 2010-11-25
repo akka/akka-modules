@@ -4,8 +4,11 @@
 
 package akka.kernel
 
-import akka.http.{ EmbeddedAppServer, DefaultAkkaLoader }
+import akka.http.EmbeddedAppServer
+import akka.servlet.AkkaLoader
 import akka.remote.BootableRemoteActorService
+import akka.actor.BootableActorLoaderService
+import akka.camel.CamelService
 
 object Main {
   def main(args: Array[String]) = Kernel.boot
@@ -16,7 +19,10 @@ object Main {
  *
  * @author <a href="http://jonasboner.com">Jonas Bon&#233;r</a>
  */
-object Kernel extends DefaultAkkaLoader {
+object Kernel extends AkkaLoader {
+  //This is what we run :-)
+  def boot(): Unit = boot(true, new EmbeddedAppServer with BootableActorLoaderService with BootableRemoteActorService with CamelService)
+
     //For testing purposes only
   def startRemoteService(): Unit = bundles.foreach( _ match {
     case x: BootableRemoteActorService => x.startRemoteService
