@@ -92,7 +92,6 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
   // -------------------------------------------------------------------------------------------------------------------
 
   import Repositories._
-  lazy val atmosphereModuleConfig  = ModuleConfiguration("org.atmosphere", SonatypeSnapshotRepo)
   lazy val jettyModuleConfig       = ModuleConfiguration("org.eclipse.jetty", sbt.DefaultMavenRepository)
   lazy val guiceyFruitModuleConfig = ModuleConfiguration("org.guiceyfruit", GuiceyFruitRepo)
   // lazy val hawtdispatchModuleConfig  = ModuleConfiguration("org.fusesource.hawtdispatch", FusesourceSnapshotRepo)
@@ -149,13 +148,6 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
     lazy val aopalliance = "aopalliance" % "aopalliance" % "1.0" % "compile" //Public domain
 
     lazy val aspectwerkz = "org.codehaus.aspectwerkz" % "aspectwerkz" % "2.2.3" % "compile" //LGPL 2.1
-
-    lazy val atmo          = "org.atmosphere" % "atmosphere-annotations"     % ATMO_VERSION % "compile" //CDDL v1
-    lazy val atmo_jbossweb = "org.atmosphere" % "atmosphere-compat-jbossweb" % ATMO_VERSION % "compile" //CDDL v1
-    lazy val atmo_jersey   = "org.atmosphere" % "atmosphere-jersey"          % ATMO_VERSION % "compile" //CDDL v1
-    lazy val atmo_runtime  = "org.atmosphere" % "atmosphere-runtime"         % ATMO_VERSION % "compile" //CDDL v1
-    lazy val atmo_tomcat   = "org.atmosphere" % "atmosphere-compat-tomcat"   % ATMO_VERSION % "compile" //CDDL v1
-    lazy val atmo_weblogic = "org.atmosphere" % "atmosphere-compat-weblogic" % ATMO_VERSION % "compile" //CDDL v1
 
     lazy val atomikos_transactions     = "com.atomikos" % "transactions"     % "3.2.3" % "compile" //ApacheV2
     lazy val atomikos_transactions_api = "com.atomikos" % "transactions-api" % "3.2.3" % "compile" //ApacheV2
@@ -793,13 +785,6 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
 
   class AkkaSampleRestScalaProject(info: ProjectInfo) extends AkkaModulesDefaultProject(info, deployPath) {
     val jsr311 = Dependencies.jsr311
-
-    val atmo          = Dependencies.atmo
-    val atmo_jbossweb = Dependencies.atmo_jbossweb
-    val atmo_jersey   = Dependencies.atmo_jersey
-    val atmo_runtime  = Dependencies.atmo_runtime
-    val atmo_tomcat   = Dependencies.atmo_tomcat
-    val atmo_weblogic = Dependencies.atmo_weblogic
 
   }
 
