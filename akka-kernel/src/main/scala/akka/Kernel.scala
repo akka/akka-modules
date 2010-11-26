@@ -7,8 +7,15 @@ package akka.kernel
 import akka.http.{ EmbeddedAppServer, DefaultAkkaLoader }
 import akka.remote.BootableRemoteActorService
 
+import java.util.concurrent.CountDownLatch
+
 object Main {
-  def main(args: Array[String]) = Kernel.boot
+  val keepAlive = new CountDownLatch(2)
+ 
+  def main(args: Array[String]) = {
+    Kernel.boot
+    keepAlive.await
+  }
 }
 
 /**
@@ -17,6 +24,7 @@ object Main {
  * @author <a href="http://jonasboner.com">Jonas Bon&#233;r</a>
  */
 object Kernel extends DefaultAkkaLoader {
+  
     //For testing purposes only
   def startRemoteService(): Unit = bundles.foreach( _ match {
     case x: BootableRemoteActorService => x.startRemoteService
