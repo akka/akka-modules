@@ -34,10 +34,10 @@ private[akka] object CassandraStorageBackend extends CommonStorageBackend {
   val REF_KEY = "item".getBytes("UTF-8")
   val EMPTY_BYTE_ARRAY = new Array[Byte](0)
 
-  val CASSANDRA_SERVER_HOSTNAME = config.getString("akka.persistence.cassandra.hostname", "127.0.0.1")
-  val CASSANDRA_SERVER_PORT = config.getInt("akka.persistence.cassandra.port", 9160)
+  val CASSANDRA_SERVER_HOSTNAME = config.getString("akka.storage.cassandra.hostname", "127.0.0.1")
+  val CASSANDRA_SERVER_PORT = config.getInt("akka.storage.cassandra.port", 9160)
   val CONSISTENCY_LEVEL = {
-    config.getString("akka.persistence.cassandra.consistency-level", "QUORUM") match {
+    config.getString("akka.storage.cassandra.consistency-level", "QUORUM") match {
       case "ZERO" => ConsistencyLevel.ZERO
       case "ONE" => ConsistencyLevel.ONE
       case "QUORUM" => ConsistencyLevel.QUORUM
@@ -79,7 +79,7 @@ private[akka] object CassandraStorageBackend extends CommonStorageBackend {
     override def getAll(owner: String, keys: Iterable[Array[Byte]]): Map[Array[Byte], Array[Byte]] = {
       sessions.withSession{
         session => {
-          var predicate = new SlicePredicate().setColumn_names(JavaConversions.asJavaList(keys.toList))
+          var predicate = new SlicePredicate().setColumn_names(JavaConversions.asList(keys.toList))
           val cols = session / (owner, parent, predicate, CONSISTENCY_LEVEL)
           var map = new TreeMap[Array[Byte], Array[Byte]]()(ordering)
           cols.foreach{
@@ -124,10 +124,10 @@ private[akka] object CassandraStorageBackend extends CommonStorageBackend {
             new KeyRange().setStart_key("").setEnd_key(""), CONSISTENCY_LEVEL)
 
           val mutations = new JHMap[String, JMap[String, JList[Mutation]]]
-          JavaConversions.asScalaIterable(slices).foreach{
+          JavaConversions.asIterable(slices).foreach{
             keySlice: KeySlice => {
               val key = keySlice.getKey
-              val keyMutations = JavaConversions.asScalaMap(mutations).getOrElse(key, {
+              val keyMutations = JavaConversions.asMap(mutations).getOrElse(key, {
                 val km = new JHMap[String, JList[Mutation]]
                 mutations.put(key, km)
                 km
@@ -135,7 +135,7 @@ private[akka] object CassandraStorageBackend extends CommonStorageBackend {
               val amutation = new JAList[Mutation]
               val cols = new JAList[Array[Byte]]
               keyMutations.put(parent.getColumn_family, amutation)
-              JavaConversions.asScalaIterable(keySlice.getColumns) foreach {
+              JavaConversions.asIterable(keySlice.getColumns) foreach {
                 cosc: ColumnOrSuperColumn => {
                   cols.add(cosc.getColumn.getName)
                 }

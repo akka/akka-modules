@@ -4,11 +4,17 @@
 
 package akka.persistence.common
 
+import akka.actor.{newUuid}
 import akka.stm._
 import akka.stm.TransactionManagement.transaction
 import akka.util.Logging
 import akka.japi.{Option => JOption}
-import collection.mutable.ArraySeq
+import akka.serialization.Serializer
+import collection.JavaConversions
+import collection.mutable.{ArraySeq}
+import com.google.common.collect.MapMaker
+import java.util.concurrent.ConcurrentMap
+import collection.mutable.{ConcurrentMap => SConcurrentMap}
 
 // FIXME move to 'stm' package + add message with more info
 class NoTransactionInScopeException extends RuntimeException
@@ -48,41 +54,159 @@ class StorageException(message: String) extends RuntimeException(message)
 trait Storage {
   type ElementType
 
-  def newMap: PersistentMap[ElementType, ElementType]
+  protected val backend: Backend[ElementType]
 
-  def newVector: PersistentVector[ElementType]
+  def transactional: Boolean = false
 
-  def newRef: PersistentRef[ElementType]
+  def newMap: PersistentMap[ElementType, ElementType] = newMap(newUuid.toString)
 
-  def newQueue: PersistentQueue[ElementType] = // only implemented for redis
-    throw new UnsupportedOperationException
+  def newVector: PersistentVector[ElementType] = newVector(newUuid.toString)
 
-  def newSortedSet: PersistentSortedSet[ElementType] = // only implemented for redis
-    throw new UnsupportedOperationException
+  def newRef: PersistentRef[ElementType] = newRef(newUuid.toString)
+
+  def newQueue: PersistentQueue[ElementType] = newQueue(newUuid.toString)
+
+  def newSortedSet: PersistentSortedSet[ElementType] = newSortedSet(newUuid.toString)
+
+  def getQueue(id: String): PersistentQueue[ElementType] = {
+    backend.storageManager.getQueue(id, {
+      backend.queueStorage match {
+        case None => throw new UnsupportedOperationException
+        case Some(store) => new PersistentQueue[ElementType] {
+          val uuid = id
+          val storage = store
+        }
+      }
+    })
+  }
+
+  def getRef(id: String): PersistentRef[ElementType] = {
+    backend.storageManager.getRef(id, {
+      backend.refStorage match {
+        case None => throw new UnsupportedOperationException
+        case Some(store) => new PersistentRef[ElementType] {
+          val uuid = id
+          val storage = store
+        }
+      }
+    })
+  }
+
+  def getVector(id: String): PersistentVector[ElementType] = {
+    backend.storageManager.getVector(id, {
+      backend.vectorStorage match {
+        case None => throw new UnsupportedOperationException
+        case Some(store) => new PersistentVector[ElementType] {
+          val uuid = id
+          val storage = store
+        }
+      }
+    })
+  }
 
   def getMap(id: String): PersistentMap[ElementType, ElementType]
 
-  def getVector(id: String): PersistentVector[ElementType]
+  def getSortedSet(id: String): PersistentSortedSet[ElementType]
 
-  def getRef(id: String): PersistentRef[ElementType]
+  def newMap(id: String): PersistentMap[ElementType, ElementType] = getMap(id)
 
-  def getQueue(id: String): PersistentQueue[ElementType] = // only implemented for redis
-    throw new UnsupportedOperationException
+  def newVector(id: String): PersistentVector[ElementType] = getVector(id)
 
-  def getSortedSet(id: String): PersistentSortedSet[ElementType] = // only implemented for redis
-    throw new UnsupportedOperationException
+  def newRef(id: String): PersistentRef[ElementType] = getRef(id)
 
-  def newMap(id: String): PersistentMap[ElementType, ElementType]
+  def newQueue(id: String): PersistentQueue[ElementType] = getQueue(id)
 
-  def newVector(id: String): PersistentVector[ElementType]
+  def newSortedSet(id: String): PersistentSortedSet[ElementType] = getSortedSet(id)
+}
 
-  def newRef(id: String): PersistentRef[ElementType]
+trait BytesStorage extends Storage with Logging{
+  type ElementType = Array[Byte]
 
-  def newQueue(id: String): PersistentQueue[ElementType] = // only implemented for redis
-    throw new UnsupportedOperationException
+  def getSortedSet(id: String): PersistentSortedSet[ElementType] = {
+    backend.storageManager.getSortedSet(id, {
+      backend.sortedSetStorage match {
+        case None => throw new UnsupportedOperationException
+        case Some(store) => new PersistentSortedSetBinary {
+          val uuid = id
+          val storage = store
+        }
+      }
+    })
+  }
 
-  def newSortedSet(id: String): PersistentSortedSet[ElementType] = // only implemented for redis
-    throw new UnsupportedOperationException
+  def getMap(id: String): PersistentMap[ElementType, ElementType] = {
+    backend.storageManager.getMap(id, {
+      backend.mapStorage match {
+        case None => throw new UnsupportedOperationException
+        case Some(store) => new PersistentMapBinary {
+          val uuid = id
+          val storage = store
+        }
+      }
+    })
+  }
+}
+
+class DefaultStorageManager[ElementType] extends StorageManager[ElementType] with Logging {
+
+  val maps = JavaConversions.asConcurrentMap(new MapMaker().weakValues.makeMap.asInstanceOf[ConcurrentMap[String, PersistentMap[ElementType, ElementType]]])
+  val vectors = JavaConversions.asConcurrentMap(new MapMaker().weakValues.makeMap.asInstanceOf[ConcurrentMap[String, PersistentVector[ElementType]]])
+  val queues = JavaConversions.asConcurrentMap(new MapMaker().weakValues.makeMap.asInstanceOf[ConcurrentMap[String, PersistentQueue[ElementType]]])
+  val refs = JavaConversions.asConcurrentMap(new MapMaker().weakValues.makeMap.asInstanceOf[ConcurrentMap[String, PersistentRef[ElementType]]])
+  val sortedSets = JavaConversions.asConcurrentMap(new MapMaker().weakValues.makeMap.asInstanceOf[ConcurrentMap[String, PersistentSortedSet[ElementType]]])
+
+  def getRef(id: String, op: => PersistentRef[ElementType]) = {
+    getOrPutIfAbsent(refs,id,op)
+  }
+
+  def getSortedSet(id: String, op: => PersistentSortedSet[ElementType]) = {
+    getOrPutIfAbsent(sortedSets,id,op)
+  }
+
+  def getVector(id: String, op: => PersistentVector[ElementType]) = {
+   getOrPutIfAbsent(vectors,id,op)
+  }
+
+  def getQueue(id: String, op: => PersistentQueue[ElementType]) = {
+   getOrPutIfAbsent(queues,id,op)
+  }
+
+  def getMap(id: String, op: => PersistentMap[ElementType, ElementType]) = {
+    getOrPutIfAbsent(maps,id,op)
+  }
+
+  def getOrPutIfAbsent[T](map:SConcurrentMap[String,T], id:String, op: => T):T= {
+     map.getOrElse(id, {
+      val it = op
+      map.putIfAbsent(id, it) match {
+        case None => {
+          it
+        }
+        case Some(other) => {
+          other
+        }
+      }
+    })
+  }
+}
+
+//Manage the storage so that instances are shared since they are transactional
+trait StorageManager[ElementType] {
+  def getMap(id: String, op: => PersistentMap[ElementType, ElementType]):PersistentMap[ElementType, ElementType]
+  def getQueue(id: String, op: => PersistentQueue[ElementType]):PersistentQueue[ElementType]
+  def getVector(id: String, op: => PersistentVector[ElementType]):PersistentVector[ElementType]
+  def getSortedSet(id: String, op: => PersistentSortedSet[ElementType]):PersistentSortedSet[ElementType]
+  def getRef(id: String, op: => PersistentRef[ElementType]):PersistentRef[ElementType]
+}
+
+//Provide the backend and storage manager to use
+trait Backend[ElementType] {
+  lazy val storageManager: StorageManager[ElementType] = new DefaultStorageManager[ElementType]
+  val mapStorage: Option[MapStorageBackend[ElementType, ElementType]]
+  val queueStorage: Option[QueueStorageBackend[ElementType]]
+  val vectorStorage: Option[VectorStorageBackend[ElementType]]
+  val refStorage: Option[RefStorageBackend[ElementType]]
+  val sortedSetStorage: Option[SortedSetStorageBackend[ElementType]]
 }
 
 private[akka] object PersistentMap {
@@ -92,6 +216,12 @@ private[akka] object PersistentMap {
   case object REM extends Op
   case object UPD extends Op
   case object CLR extends Op
+}
+
+private[akka] trait ExecutableEntry{
+    private var unexec = true
+    def wasExecuted() = {unexec = false}
+    def notExecuted() = unexec
 }
 
 /**
@@ -115,7 +245,7 @@ trait PersistentMap[K, V] extends scala.collection.mutable.Map[K, V]
   // append only log: records all mutating operations
   protected val appendOnlyTxLog = TransactionalVector[LogEntry]()
 
-  case class LogEntry(key: Option[K], value: Option[V], op: Op)
+  case class LogEntry(key: Option[K], value: Option[V], op: Op) extends ExecutableEntry
 
   // need to override in subclasses e.g. "sameElements" for Array[Byte]
   def equal(k1: K, k2: K): Boolean = k1 == k2
@@ -178,15 +308,22 @@ trait PersistentMap[K, V] extends scala.collection.mutable.Map[K, V]
   val storage: MapStorageBackend[K, V]
 
   def commit = {
-    appendOnlyTxLog.foreach {
-      case LogEntry(k, v, o) => o match {
-        case PUT => storage.insertMapStorageEntryFor(uuid, k.get, v.get)
-        case UPD => storage.insertMapStorageEntryFor(uuid, k.get, v.get)
-        case REM => storage.removeMapStorageFor(uuid, k.get)
-        case CLR => storage.removeMapStorageFor(uuid)
-      }
+    appendOnlyTxLog.foreach{
+      entry =>
+        if (storage.transactional || entry.notExecuted) {
+          entry match {
+            case LogEntry(k, v, o) => {
+              o match {
+                case PUT => storage.insertMapStorageEntryFor(uuid, k.get, v.get)
+                case UPD => storage.insertMapStorageEntryFor(uuid, k.get, v.get)
+                case REM => storage.removeMapStorageFor(uuid, k.get)
+                case CLR => storage.removeMapStorageFor(uuid)
+              }
+              entry.wasExecuted
+            }
+          }
+        }
     }
-
     appendOnlyTxLog.clear
     clearDistinctKeys
   }
@@ -296,6 +433,9 @@ trait PersistentMap[K, V] extends scala.collection.mutable.Map[K, V]
     if (transaction.get.isEmpty) throw new NoTransactionInScopeException
     transaction.get.get.register("Map:" + uuid, this)
   }
+
+
+
 }
 
 object PersistentMapBinary {
@@ -451,7 +591,7 @@ private[akka] object PersistentVector {
  *
  * @author <a href="http://jonasboner.com">Jonas Bon&#233;r</a>
  */
-trait PersistentVector[T] extends IndexedSeq[T] with Transactional with Committable with Abortable {
+trait PersistentVector[T] extends IndexedSeq[T] with Transactional with Committable with Abortable  {
   //Import Ops
   import PersistentVector._
 
@@ -461,7 +601,7 @@ trait PersistentVector[T] extends IndexedSeq[T] with Transactional with Committa
   // append only log: records all mutating operations
   protected val appendOnlyTxLog = TransactionalVector[LogEntry]()
 
-  case class LogEntry(index: Option[Int], value: Option[T], op: Op)
+  case class LogEntry(index: Option[Int], value: Option[T], op: Op) extends ExecutableEntry
 
   // need to override in subclasses e.g. "sameElements" for Array[Byte]
   // def equal(v1: T, v2: T): Boolean = v1 == v2
@@ -470,10 +610,13 @@ trait PersistentVector[T] extends IndexedSeq[T] with Transactional with Committa
 
   def commit = {
     for (entry <- appendOnlyTxLog) {
-      (entry: @unchecked) match {
-        case LogEntry(_, Some(v), ADD) => storage.insertVectorStorageEntryFor(uuid, v)
-        case LogEntry(Some(i), Some(v), UPD) => storage.updateVectorStorageEntryFor(uuid, i, v)
-        case LogEntry(_, _, POP) => storage.removeVectorStorageEntryFor(uuid)
+      if (storage.transactional || entry.notExecuted) {
+        (entry: @unchecked) match {
+          case LogEntry(_, Some(v), ADD) => storage.insertVectorStorageEntryFor(uuid, v)
+          case LogEntry(Some(i), Some(v), UPD) => storage.updateVectorStorageEntryFor(uuid, i, v)
+          case LogEntry(_, _, POP) => storage.removeVectorStorageEntryFor(uuid)
+        }
+        entry.wasExecuted
       }
     }
     appendOnlyTxLog.clear
@@ -555,6 +698,8 @@ trait PersistentVector[T] extends IndexedSeq[T] with Transactional with Committa
     if (transaction.get.isEmpty) throw new NoTransactionInScopeException
     transaction.get.get.register("Vector" + uuid, this)
   }
+
+
 }
 
 /**
@@ -562,7 +707,7 @@ trait PersistentVector[T] extends IndexedSeq[T] with Transactional with Committa
  *
  * @author <a href="http://jonasboner.com">Jonas Bon&#233;r</a>
  */
-trait PersistentRef[T] extends Transactional with Committable with Abortable {
+trait PersistentRef[T] extends Transactional with Committable with Abortable  {
   protected val ref = Ref[T]()
 
   val storage: RefStorageBackend[T]
@@ -593,6 +738,12 @@ trait PersistentRef[T] extends Transactional with Committable with Abortable {
     if (transaction.get.isEmpty) throw new NoTransactionInScopeException
     transaction.get.get.register("Ref" + uuid, this)
   }
+
+  def applyLog(log: Array[Byte]) = {
+    ref.swap(Serializer.Java.fromBinary(log, Some(classOf[Ref[T]])).asInstanceOf[T])
+  }
+
+  def getLog() = Serializer.Java.toBinary(ref.get.asInstanceOf[AnyRef])
 }
 
 private[akka] object PersistentQueue {
@@ -633,7 +784,7 @@ trait PersistentQueue[A] extends scala.collection.mutable.Queue[A]
   //Import Ops
   import PersistentQueue._
 
-  case class LogEntry(value: Option[A], op: QueueOp)
+  case class LogEntry(value: Option[A], op: QueueOp) extends ExecutableEntry
 
   // current trail that will be played on commit to the underlying store
   protected val appendOnlyTxLog = TransactionalVector[LogEntry]()
@@ -641,11 +792,14 @@ trait PersistentQueue[A] extends scala.collection.mutable.Queue[A]
   // to be concretized in subclasses
   val storage: QueueStorageBackend[A]
 
-  def commit = synchronized {
+  def commit = synchronized{
     for (entry <- appendOnlyTxLog) {
-      (entry: @unchecked) match {
-        case LogEntry(Some(v), ENQ) => storage.enqueue(uuid, v)
-        case LogEntry(_, DEQ) => storage.dequeue(uuid)
+      if (storage.transactional || entry.notExecuted) {
+        (entry: @unchecked) match {
+          case LogEntry(Some(v), ENQ) => storage.enqueue(uuid, v)
+          case LogEntry(_, DEQ) => storage.dequeue(uuid)
+        }
+        entry.wasExecuted
       }
     }
     appendOnlyTxLog.clear
@@ -716,6 +870,16 @@ trait PersistentQueue[A] extends scala.collection.mutable.Queue[A]
     if (transaction.get.isEmpty) throw new NoTransactionInScopeException
     transaction.get.get.register("Queue:" + uuid, this)
   }
+
+  def applyLog(log: Array[Byte]) = {
+    val tlog = Serializer.Java.fromBinary(log, Some(classOf[TransactionalVector[LogEntry]])).asInstanceOf[TransactionalVector[LogEntry]]
+    tlog.foreach{
+      appendOnlyTxLog add _
+    }
+  }
+
+  def getLog() = Serializer.Java.toBinary(appendOnlyTxLog)
+
 }
 
 private[akka] object PersistentSortedSet {
@@ -768,15 +932,18 @@ trait PersistentSortedSet[A] extends Transactional with Committable with Abortab
   // need to override in subclasses e.g. "sameElements" for Array[Byte]
   def equal(v1: A, v2: A): Boolean = v1 == v2
 
-  case class LogEntry(value: A, score: Option[Float], op: Op)
+  case class LogEntry(value: A, score: Option[Float], op: Op) extends ExecutableEntry
 
   val storage: SortedSetStorageBackend[A]
 
   def commit = {
     for (entry <- appendOnlyTxLog) {
-      (entry: @unchecked) match {
-        case LogEntry(e, Some(s), ADD) => storage.zadd(uuid, String.valueOf(s), e)
-        case LogEntry(e, _, REM) => storage.zrem(uuid, e)
+      if (storage.transactional || entry.notExecuted) {
+        (entry: @unchecked) match {
+          case LogEntry(e, Some(s), ADD) => storage.zadd(uuid, String.valueOf(s), e)
+          case LogEntry(e, _, REM) => storage.zrem(uuid, e)
+        }
+        entry.wasExecuted
       }
     }
     appendOnlyTxLog.clear
@@ -853,8 +1020,10 @@ trait PersistentSortedSet[A] extends Transactional with Committable with Abortab
 
   protected def register = {
     if (transaction.get.isEmpty) throw new NoTransactionInScopeException
-    transaction.get.get.register("SortedSet:" + uuid, this)
+    transaction.get.get.register("SortedSet:"+uuid, this)
   }
+
+
 }
 
 trait PersistentSortedSetBinary extends PersistentSortedSet[Array[Byte]] {

@@ -20,7 +20,7 @@ private[akka] object MemcachedStorageBackend extends CommonStorageBackend {
   import KVStorageBackend._
   import org.apache.commons.codec.binary.Base64
 
-  val clientAddresses = config.getString("akka.persistence.memcached.client.addresses", "localhost:11211")
+  val clientAddresses = config.getString("akka.storage.memcached.client.addresses", "localhost:11211")
   val factory = new KetamaConnectionFactory
   val client = new MemcachedClient(factory, AddrUtil.getAddresses(clientAddresses))
   val base64 = new Base64(76, Array.empty[Byte], true)
@@ -63,11 +63,11 @@ private[akka] object MemcachedStorageBackend extends CommonStorageBackend {
     }
 
     def getAll(keys: Iterable[Array[Byte]]) = {
-      val jmap = client.getBulk(JavaConversions.asJavaList(keys.map{
+      val jmap = client.getBulk(JavaConversions.asList(keys.map{
         k: Array[Byte] =>
           keyStr(encodeKey(k))
       }.toList))
-      JavaConversions.asScalaMap(jmap).map{
+      JavaConversions.asMap(jmap).map{
         kv => kv match {
           case (key, value) => (base64.decode(key) -> value.asInstanceOf[Array[Byte]])
         }

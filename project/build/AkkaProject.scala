@@ -470,6 +470,7 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
     val commons_pool = Dependencies.commons_pool
     val thrift       = Dependencies.thrift
     val scalaj_coll  = Dependencies.scalaj_coll
+    val goog         = Dependencies.google_coll
 
     // testing
     val junit           = Dependencies.junit
