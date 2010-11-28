@@ -149,11 +149,11 @@ trait BytesStorage extends Storage with Logging{
 
 class DefaultStorageManager[ElementType] extends StorageManager[ElementType] with Logging {
 
-  val maps = JavaConversions.asConcurrentMap(new MapMaker().weakValues.makeMap.asInstanceOf[ConcurrentMap[String, PersistentMap[ElementType, ElementType]]])
-  val vectors = JavaConversions.asConcurrentMap(new MapMaker().weakValues.makeMap.asInstanceOf[ConcurrentMap[String, PersistentVector[ElementType]]])
-  val queues = JavaConversions.asConcurrentMap(new MapMaker().weakValues.makeMap.asInstanceOf[ConcurrentMap[String, PersistentQueue[ElementType]]])
-  val refs = JavaConversions.asConcurrentMap(new MapMaker().weakValues.makeMap.asInstanceOf[ConcurrentMap[String, PersistentRef[ElementType]]])
-  val sortedSets = JavaConversions.asConcurrentMap(new MapMaker().weakValues.makeMap.asInstanceOf[ConcurrentMap[String, PersistentSortedSet[ElementType]]])
+  val maps = JavaConversions.asScalaConcurrentMap(new MapMaker().weakValues.makeMap.asInstanceOf[ConcurrentMap[String, PersistentMap[ElementType, ElementType]]])
+  val vectors = JavaConversions.asScalaConcurrentMap(new MapMaker().weakValues.makeMap.asInstanceOf[ConcurrentMap[String, PersistentVector[ElementType]]])
+  val queues = JavaConversions.asScalaConcurrentMap(new MapMaker().weakValues.makeMap.asInstanceOf[ConcurrentMap[String, PersistentQueue[ElementType]]])
+  val refs = JavaConversions.asScalaConcurrentMap(new MapMaker().weakValues.makeMap.asInstanceOf[ConcurrentMap[String, PersistentRef[ElementType]]])
+  val sortedSets = JavaConversions.asScalaConcurrentMap(new MapMaker().weakValues.makeMap.asInstanceOf[ConcurrentMap[String, PersistentSortedSet[ElementType]]])
 
   def getRef(id: String, op: => PersistentRef[ElementType]) = {
     getOrPutIfAbsent(refs,id,op)
