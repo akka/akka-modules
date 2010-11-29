@@ -57,16 +57,66 @@ trait Storage {
   protected val backend: Backend[ElementType]
 
   def transactional: Boolean = false
+   def newMap: PersistentMap[ElementType, ElementType]
 
-  def newMap: PersistentMap[ElementType, ElementType] = newMap(newUuid.toString)
+  def newVector: PersistentVector[ElementType]
 
-  def newVector: PersistentVector[ElementType] = newVector(newUuid.toString)
+  def newRef: PersistentRef[ElementType]
 
-  def newRef: PersistentRef[ElementType] = newRef(newUuid.toString)
+  def newQueue: PersistentQueue[ElementType]
 
-  def newQueue: PersistentQueue[ElementType] = newQueue(newUuid.toString)
+  def newSortedSet: PersistentSortedSet[ElementType]
 
-  def newSortedSet: PersistentSortedSet[ElementType] = newSortedSet(newUuid.toString)
+  def getMap(id: String): PersistentMap[ElementType, ElementType]
+
+  def getVector(id: String): PersistentVector[ElementType]
+
+  def getRef(id: String): PersistentRef[ElementType]
+
+  def getQueue(id: String): PersistentQueue[ElementType]
+
+  def getSortedSet(id: String): PersistentSortedSet[ElementType]
+
+  def newMap(id: String): PersistentMap[ElementType, ElementType]
+
+  def newVector(id: String): PersistentVector[ElementType]
+
+  def newRef(id: String): PersistentRef[ElementType]
+
+  def newQueue(id: String): PersistentQueue[ElementType]
+
+  def newSortedSet(id: String): PersistentSortedSet[ElementType]
+
+}
+
+trait BytesStorage extends Storage with Logging{
+  type ElementType = Array[Byte]
+
+  def getSortedSet(id: String): PersistentSortedSet[Array[Byte]] = {
+    backend.storageManager.getSortedSet(id, {
+      backend.sortedSetStorage match {
+        case None => throw new UnsupportedOperationException
+        case Some(store) => new PersistentSortedSetBinary {
+          val uuid = id
+          val storage = store
+        }
+      }
+    })
+  }
+
+  def getMap(id: String): PersistentMap[Array[Byte], Array[Byte]] = {
+    backend.storageManager.getMap(id, {
+      backend.mapStorage match {
+        case None => throw new UnsupportedOperationException
+        case Some(store) => new PersistentMapBinary {
+          val uuid = id
+          val storage = store
+        }
+      }
+    })
+  }
+
+
 
   def getQueue(id: String): PersistentQueue[ElementType] = {
     backend.storageManager.getQueue(id, {
@@ -104,9 +154,15 @@ trait Storage {
     })
   }
 
-  def getMap(id: String): PersistentMap[ElementType, ElementType]
+  def newMap: PersistentMap[ElementType, ElementType] = newMap(newUuid.toString)
 
-  def getSortedSet(id: String): PersistentSortedSet[ElementType]
+  def newVector: PersistentVector[ElementType] = newVector(newUuid.toString)
+
+  def newRef: PersistentRef[ElementType] = newRef(newUuid.toString)
+
+  def newQueue: PersistentQueue[ElementType] = newQueue(newUuid.toString)
+
+  def newSortedSet: PersistentSortedSet[ElementType] = newSortedSet(newUuid.toString)
 
   def newMap(id: String): PersistentMap[ElementType, ElementType] = getMap(id)
 
@@ -117,34 +173,6 @@ trait Storage {
   def newQueue(id: String): PersistentQueue[ElementType] = getQueue(id)
 
   def newSortedSet(id: String): PersistentSortedSet[ElementType] = getSortedSet(id)
-}
-
-trait BytesStorage extends Storage with Logging{
-  type ElementType = Array[Byte]
-
-  def getSortedSet(id: String): PersistentSortedSet[ElementType] = {
-    backend.storageManager.getSortedSet(id, {
-      backend.sortedSetStorage match {
-        case None => throw new UnsupportedOperationException
-        case Some(store) => new PersistentSortedSetBinary {
-          val uuid = id
-          val storage = store
-        }
-      }
-    })
-  }
-
-  def getMap(id: String): PersistentMap[ElementType, ElementType] = {
-    backend.storageManager.getMap(id, {
-      backend.mapStorage match {
-        case None => throw new UnsupportedOperationException
-        case Some(store) => new PersistentMapBinary {
-          val uuid = id
-          val storage = store
-        }
-      }
-    })
-  }
 }
 
 class DefaultStorageManager[ElementType] extends StorageManager[ElementType] with Logging {
