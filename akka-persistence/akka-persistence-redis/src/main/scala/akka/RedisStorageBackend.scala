@@ -10,6 +10,7 @@ import akka.util.Logging
 import akka.config.Config.config
 
 import com.redis._
+import com.redis.cluster._
 
 trait Base64StringEncoder {
   def byteArrayToString(bytes: Array[Byte]): String
@@ -54,38 +55,36 @@ private [akka] object RedisStorageBackend extends
   // need an explicit definition in akka-conf
   val nodes = config.getList("akka.persistence.redis.cluster")
 
-  def connect() =
+
+  def connect(): Either[RedisCluster, RedisClientPool] =
     nodes match {
       case Seq() =>
         // no cluster defined
         val REDIS_SERVER_HOSTNAME = config.getString("akka.persistence.redis.hostname", "127.0.0.1")
         val REDIS_SERVER_PORT = config.getInt("akka.persistence.redis.port", 6379)
-        new RedisClient(REDIS_SERVER_HOSTNAME, REDIS_SERVER_PORT)
+        Right(new RedisClientPool(REDIS_SERVER_HOSTNAME, REDIS_SERVER_PORT))
 
       case s =>
         // with cluster
         import com.redis.cluster._
         log.info("Running on Redis cluster")
-        new RedisCluster(nodes: _*) {
+        Left(new RedisCluster(nodes: _*) {
           val keyTag = Some(NoOpKeyTag)
-        }
+        })
     }
 
-  var db = connect()
+  var clients = connect()
 
   /**
    * Map storage in Redis.
    * <p/>
    * Maps are stored as key/value pairs in redis.
    */
-  def insertMapStorageEntryFor(name: String, key: Array[Byte], value: Array[Byte]): Unit = withErrorHandling {
+  def insertMapStorageEntryFor(name: String, key: Array[Byte], value: Array[Byte]): Unit = 
     insertMapStorageEntriesFor(name, List((key, value)))
-  }
 
-  def insertMapStorageEntriesFor(name: String, entries: List[Tuple2[Array[Byte], Array[Byte]]]): Unit = withErrorHandling {
-    mset(entries.map(e =>
-          (makeRedisKey(name, e._1), byteArrayToString(e._2))))
-  }
+  def insertMapStorageEntriesFor(name: String, entries: List[Tuple2[Array[Byte], Array[Byte]]]): Unit = 
+    mset(entries.map(e => (makeRedisKey(name, e._1), byteArrayToString(e._2))))
 
   /**
    * Make a redis key from an Akka Map key.
@@ -95,56 +94,67 @@ private [akka] object RedisStorageBackend extends
    * <li>: is chosen since it cannot appear in base64 encoding charset</li>
    * <li>both parts of the key need to be based64 encoded since there can be spaces within each of them</li>
    */
-  private [this] def makeRedisKey(name: String, key: Array[Byte]): String = withErrorHandling {
+  private [this] def makeRedisKey(name: String, key: Array[Byte]): String = 
     "%s:%s".format(name, new String(key))
-  }
 
-  private [this] def makeKeyFromRedisKey(redisKey: String) = withErrorHandling {
+  private [this] def makeKeyFromRedisKey(redisKey: String) = {
     val nk = redisKey.split(':')
     (nk(0), nk(1).getBytes)
   }
 
   private [this] def mset(entries: List[(String, String)]): Unit = withErrorHandling {
-    entries.foreach {e: (String, String) =>
-      db.set(e._1, e._2)
+    client => {
+      entries.foreach {e: (String, String) =>
+        client.set(e._1, e._2)
+      }
     }
   }
 
   def removeMapStorageFor(name: String): Unit = withErrorHandling {
-    db.keys("%s:*".format(name)) match {
-      case None =>
-        throw new NoSuchElementException(name + " not present")
-      case Some(keys) =>
-        keys.foreach(k => db.del(k.get))
+    client => {
+      client.keys("%s:*".format(name)) match {
+        case None =>
+          throw new NoSuchElementException(name + " not present")
+        case Some(keys) =>
+          keys.foreach(k => client.del(k.get))
+      }
     }
   }
 
   def removeMapStorageFor(name: String, key: Array[Byte]): Unit = withErrorHandling {
-    db.del(makeRedisKey(name, key))
+    client => {
+      client.del(makeRedisKey(name, key))
+    }
   }
 
   def getMapStorageEntryFor(name: String, key: Array[Byte]): Option[Array[Byte]] = withErrorHandling {
-    db.get(makeRedisKey(name, key))
-      .map(stringToByteArray(_))
-      .orElse(throw new NoSuchElementException(new String(key) + " not present"))
+    client => {
+      client.get(makeRedisKey(name, key))
+        .map(stringToByteArray(_))
+        .orElse(throw new NoSuchElementException(new String(key) + " not present"))
+      }
     }
 
   def getMapStorageSizeFor(name: String): Int = withErrorHandling {
-    db.keys("%s:*".format(name)).map(_.length).getOrElse(0)
+    client => {
+      client.keys("%s:*".format(name)).map(_.length).getOrElse(0)
+    }
   }
 
   def getMapStorageFor(name: String): List[(Array[Byte], Array[Byte])] = withErrorHandling {
-    db.keys("%s:*".format(name))
-      .map { keys =>
-        keys.map(key => (makeKeyFromRedisKey(key.get)._2, stringToByteArray(db.get(key.get).get))).toList
-      }.getOrElse {
-        throw new NoSuchElementException(name + " not present")
+    client => {
+      client.keys("%s:*".format(name))
+        .map { keys =>
+          keys.map(key => (makeKeyFromRedisKey(key.get)._2, stringToByteArray(client.get(key.get).get))).toList
+        }.getOrElse {
+          throw new NoSuchElementException(name + " not present")
+        }
       }
   }
 
   def getMapStorageRangeFor(name: String, start: Option[Array[Byte]],
                             finish: Option[Array[Byte]],
-                            count: Int): List[(Array[Byte], Array[Byte])] = withErrorHandling {
+                            count: Int): List[(Array[Byte], Array[Byte])] = {
 
     import scala.collection.immutable.TreeMap
     val wholeSorted =
@@ -190,22 +200,28 @@ private [akka] object RedisStorageBackend extends
   }
 
   def insertVectorStorageEntryFor(name: String, element: Array[Byte]): Unit = withErrorHandling {
-    db.lpush(name, byteArrayToString(element))
+    client => {
+      client.lpush(name, byteArrayToString(element))
+    }
   }
 
-  def insertVectorStorageEntriesFor(name: String, elements: List[Array[Byte]]): Unit = withErrorHandling {
+  def insertVectorStorageEntriesFor(name: String, elements: List[Array[Byte]]): Unit = {
     elements.foreach(insertVectorStorageEntryFor(name, _))
   }
 
   def updateVectorStorageEntryFor(name: String, index: Int, elem: Array[Byte]): Unit = withErrorHandling {
-    db.lset(name, index, byteArrayToString(elem))
+    client => {
+      client.lset(name, index, byteArrayToString(elem))
+    }
   }
 
   def getVectorStorageEntryFor(name: String, index: Int): Array[Byte] = withErrorHandling {
-    db.lindex(name, index)
-      .map(stringToByteArray(_))
-      .getOrElse {
-        throw new NoSuchElementException(name + " does not have element at " + index)
+    client => {
+      client.lindex(name, index)
+        .map(stringToByteArray(_))
+        .getOrElse {
+          throw new NoSuchElementException(name + " does not have element at " + index)
+        }
       }
   }
 
@@ -216,142 +232,195 @@ private [akka] object RedisStorageBackend extends
    * if <tt>start</tt> == 0 and <tt>finish</tt> == 0, return an empty collection
    */
   def getVectorStorageRangeFor(name: String, start: Option[Int], finish: Option[Int], count: Int): List[Array[Byte]] = withErrorHandling {
-    val s = if (start.isDefined) start.get else 0
-    val cnt =
-      if (finish.isDefined) {
-        val f = finish.get
-        if (f >= s) (f - s) else count
+    client => {
+      val s = if (start.isDefined) start.get else 0
+      val cnt =
+        if (finish.isDefined) {
+          val f = finish.get
+          if (f >= s) (f - s) else count
+        }
+        else count
+      if (s == 0 && cnt == 0) List()
+      else
+      client.lrange(name, s, s + cnt - 1) match {
+        case None =>
+          throw new NoSuchElementException(name + " does not have elements in the range specified")
+        case Some(l) =>
+          l map (e => stringToByteArray(e.get))
       }
-      else count
-    if (s == 0 && cnt == 0) List()
-    else
-    db.lrange(name, s, s + cnt - 1) match {
-      case None =>
-        throw new NoSuchElementException(name + " does not have elements in the range specified")
-      case Some(l) =>
-        l map (e => stringToByteArray(e.get))
     }
   }
 
   def getVectorStorageSizeFor(name: String): Int = withErrorHandling {
-    db.llen(name).getOrElse { throw new NoSuchElementException(name + " not present") }
+    client => {
+      client.llen(name).getOrElse { throw new NoSuchElementException(name + " not present") }
+    }
   }
 
   def insertRefStorageFor(name: String, element: Array[Byte]): Unit = withErrorHandling {
-    db.set(name, byteArrayToString(element))
+    client => {
+      client.set(name, byteArrayToString(element))
+    }
   }
 
   def insertRefStorageFor(name: String, element: String): Unit = withErrorHandling {
-    db.set(name, element)
+    client => {
+      client.set(name, element)
+    }
   }
 
   def getRefStorageFor(name: String): Option[Array[Byte]] = withErrorHandling {
-    db.get(name)
-      .map(stringToByteArray(_))
+    client => {
+      client.get(name)
+        .map(stringToByteArray(_))
+      }
   }
 
   // add to the end of the queue
   def enqueue(name: String, item: Array[Byte]): Option[Int] = withErrorHandling {
-    db.rpush(name, byteArrayToString(item))
+    client => {
+      client.rpush(name, byteArrayToString(item))
+    }
   }
 
   // pop from the front of the queue
   def dequeue(name: String): Option[Array[Byte]] = withErrorHandling {
-    db.lpop(name)
-      .map(stringToByteArray(_))
-      .orElse {
-        throw new NoSuchElementException(name + " not present")
+    client => {
+      client.lpop(name)
+        .map(stringToByteArray(_))
+        .orElse {
+          throw new NoSuchElementException(name + " not present")
+        }
       }
   }
 
   // get the size of the queue
   def size(name: String): Int = withErrorHandling {
-    db.llen(name).getOrElse { throw new NoSuchElementException(name + " not present") }
+    client => {
+      client.llen(name).getOrElse { throw new NoSuchElementException(name + " not present") }
+    }
   }
 
   // return an array of items currently stored in the queue
   // start is the item to begin, count is how many items to return
   def peek(name: String, start: Int, count: Int): List[Array[Byte]] = withErrorHandling {
-    count match {
-      case 1 =>
-        db.lindex(name, start) match {
-          case None =>
-            throw new NoSuchElementException("No element at " + start)
-          case Some(s) =>
-            List(stringToByteArray(s))
-        }
-      case n =>
-        db.lrange(name, start, start + count - 1) match {
-          case None =>
-            throw new NoSuchElementException(
-              "No element found between " + start + " and " + (start + count - 1))
-          case Some(es) =>
-            es.map(e => stringToByteArray(e.get))
-        }
+    client => {
+      count match {
+        case 1 =>
+          client.lindex(name, start) match {
+            case None =>
+              throw new NoSuchElementException("No element at " + start)
+            case Some(s) =>
+              List(stringToByteArray(s))
+          }
+        case n =>
+          client.lrange(name, start, start + count - 1) match {
+            case None =>
+              throw new NoSuchElementException(
+                "No element found between " + start + " and " + (start + count - 1))
+            case Some(es) =>
+              es.map(e => stringToByteArray(e.get))
+          }
+       }
      }
   }
 
   // completely delete the queue
   def remove(name: String): Boolean = withErrorHandling {
-    db.del(name).map { case 1 => true }.getOrElse(false)
+    client => {
+      client.del(name).map { case 1 => true }.getOrElse(false)
+    }
   }
 
   // add item to sorted set identified by name
   def zadd(name: String, zscore: String, item: Array[Byte]): Boolean = withErrorHandling {
-    db.zadd(name, zscore, byteArrayToString(item))
-      .map { e =>
-        e match {
-          case 1 => true
-          case _ => false
-        }
-      }.getOrElse(false)
+    client => {
+      client.zadd(name, zscore, byteArrayToString(item))
+        .map { e =>
+          e match {
+            case 1 => true
+            case _ => false
+          }
+        }.getOrElse(false)
+      }
   }
 
   // remove item from sorted set identified by name
   def zrem(name: String, item: Array[Byte]): Boolean = withErrorHandling {
-    db.zrem(name, byteArrayToString(item))
-      .map { e =>
-        e match {
-          case 1 => true
-          case _ => false
-        }
-      }.getOrElse(false)
+    client => {
+      client.zrem(name, byteArrayToString(item))
+        .map { e =>
+          e match {
+            case 1 => true
+            case _ => false
+          }
+        }.getOrElse(false)
+      }
   }
 
   // cardinality of the set identified by name
   def zcard(name: String): Int = withErrorHandling {
-    db.zcard(name).getOrElse { throw new NoSuchElementException(name + " not present") }
+    client => {
+      client.zcard(name).getOrElse { throw new NoSuchElementException(name + " not present") }
+    }
   }
 
   def zscore(name: String, item: Array[Byte]): Option[Float] = withErrorHandling {
-    db.zscore(name, byteArrayToString(item)).map(_.toFloat)
+    client => {
+      client.zscore(name, byteArrayToString(item)).map(_.toFloat)
+    }
   }
 
   def zrange(name: String, start: Int, end: Int): List[Array[Byte]] = withErrorHandling {
-    db.zrange(name, start.toString, end.toString, RedisClient.ASC, false)
-      .map(_.map(e => stringToByteArray(e.get)))
-      .getOrElse {
-        throw new NoSuchElementException(name + " not present")
+    client => {
+      client.zrange(name, start.toString, end.toString, RedisClient.ASC, false)
+        .map(_.map(e => stringToByteArray(e.get)))
+        .getOrElse {
+          throw new NoSuchElementException(name + " not present")
+        }
       }
   }
 
   def zrangeWithScore(name: String, start: Int, end: Int): List[(Array[Byte], Float)] = withErrorHandling {
-    db.zrangeWithScore(name, start.toString, end.toString, RedisClient.ASC)
-      .map(_.map { case (elem, score) => (stringToByteArray(elem.get), score.get.toFloat) })
-      .getOrElse {
-        throw new NoSuchElementException(name + " not present")
+    client => {
+      client.zrangeWithScore(name, start.toString, end.toString, RedisClient.ASC)
+        .map(_.map { case (elem, score) => (stringToByteArray(elem.get), score.get.toFloat) })
+        .getOrElse {
+          throw new NoSuchElementException(name + " not present")
+        }
       }
   }
 
-  def flushDB = withErrorHandling(db.flushdb)
+  def flushDB = withErrorHandling{
+    client => {
+      client.flushdb
+    }
+  }
 
-  private def withErrorHandling[T](body: => T): T = {
+  def close = 
+    if (clients isLeft) clients.left.get.close
+    else clients.right.get.close
+
+  private def withErrorHandling[T](body: RedisClient => T): T = {
     try {
-      body
+      if (clients isLeft) body(clients.left.get)
+      else {
+        clients.right.get.withClient { 
+          client => body(client)
+        }
+      }
     } catch {
       case e: RedisConnectionException => {
-        db = connect()
-        body
+        if (clients isLeft) {
+          clients = connect()
+          body(clients.left.get)
+        } else {
+          clients.right.get.pool.close
+          clients = connect()
+          clients.right.get.withClient { 
+            client => body(client)
+          }
+        }
       }
       case e: java.lang.NullPointerException =>
         throw new StorageException("Could not connect to Redis server")

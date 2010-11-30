@@ -641,7 +641,8 @@ trait PersistentQueue[A] extends scala.collection.mutable.Queue[A]
   // to be concretized in subclasses
   val storage: QueueStorageBackend[A]
 
-  def commit = synchronized {
+  // def commit = synchronized {
+  def commit = {
     for (entry <- appendOnlyTxLog) {
       (entry: @unchecked) match {
         case LogEntry(Some(v), ENQ) => storage.enqueue(uuid, v)
@@ -651,18 +652,21 @@ trait PersistentQueue[A] extends scala.collection.mutable.Queue[A]
     appendOnlyTxLog.clear
   }
 
-  def abort = synchronized {
+  // def abort = synchronized {
+  def abort = {
     appendOnlyTxLog.clear
   }
 
   override def toList = replay
 
-  override def enqueue(elems: A*) = synchronized {
+  // override def enqueue(elems: A*) = synchronized {
+  override def enqueue(elems: A*) = {
     register
     elems.foreach(e => appendOnlyTxLog.add(LogEntry(Some(e), ENQ)))
   }
 
-  private def replay: List[A] = synchronized {
+  // private def replay: List[A] = synchronized {
+  private def replay: List[A] = {
     import scala.collection.mutable.ListBuffer
     var elemsStorage = ListBuffer(storage.peek(uuid, 0, storage.size(uuid)): _*)
 
@@ -675,7 +679,8 @@ trait PersistentQueue[A] extends scala.collection.mutable.Queue[A]
     elemsStorage.toList
   }
 
-  override def dequeue: A = synchronized {
+  // override def dequeue: A = synchronized {
+  override def dequeue: A = {
     register
     val l = replay
     if (l.isEmpty) throw new NoSuchElementException("trying to dequeue from empty queue")
@@ -683,7 +688,8 @@ trait PersistentQueue[A] extends scala.collection.mutable.Queue[A]
     l.head
   }
 
-  override def clear = synchronized {
+  // override def clear = synchronized {
+  override def clear = {
     register
     appendOnlyTxLog.clear
   }
