@@ -9,6 +9,7 @@ import akka.util.{Logging}
 import collection.JavaConversions
 import voldemort.store.memory.InMemoryStorageConfiguration
 import voldemort.client.protocol.admin.{AdminClientConfig, AdminClient}
+import java.util.Arrays
 
 
 trait EmbeddedVoldemort extends BeforeAndAfterAll with Logging {
@@ -22,7 +23,7 @@ trait EmbeddedVoldemort extends BeforeAndAfterAll with Logging {
       val home = new File(dir)
       log.info("Creating Voldemort Config")
       val config = VoldemortConfig.loadFromVoldemortHome(home.getCanonicalPath)
-      config.setStorageConfigurations(JavaConversions.asJavaList(List(classOf[InMemoryStorageConfiguration].getName)))
+      config.setStorageConfigurations(Arrays.asList(classOf[InMemoryStorageConfiguration].getName))
       log.info("Starting Voldemort")
       server = new VoldemortServer(config)
       server.start
