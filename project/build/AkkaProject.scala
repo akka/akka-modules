@@ -214,7 +214,7 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
 
     lazy val rabbit = "com.rabbitmq" % "amqp-client" % "1.8.1" % "compile" //Mozilla public license
 
-    lazy val redis = "com.redis" % "redisclient" % "2.8.0-2.2" % "compile" //ApacheV2
+    lazy val redis = "com.redis" % "redisclient" % "2.8.1-2.2" % "compile" //ApacheV2
 
     lazy val sbinary = "sbinary" % "sbinary" % "2.8.0-0.3.1" % "compile" //MIT
 
