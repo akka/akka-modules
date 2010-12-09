@@ -29,6 +29,7 @@ class RedisStorageBackendSpec extends
 
   override def afterAll {
     flushDB
+    close
     println("** destroyed database")
   }
 
