@@ -214,7 +214,7 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
 
     lazy val rabbit = "com.rabbitmq" % "amqp-client" % "1.8.1" % "compile" //Mozilla public license
 
-    lazy val redis = "com.redis" % "redisclient" % "2.8.1-2.2" % "compile" //ApacheV2
+    lazy val redis = "com.redis" % "redisclient" % "2.8.1-2.3" % "compile" //ApacheV2
 
     lazy val sbinary = "sbinary" % "sbinary" % "2.8.0-0.3.1" % "compile" //MIT
 
@@ -482,7 +482,6 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
   // -------------------------------------------------------------------------------------------------------------------
 
   class AkkaRedisProject(info: ProjectInfo) extends AkkaModulesDefaultProject(info, distPath) {
-    val commons_codec = Dependencies.commons_codec
     val redis         = Dependencies.redis
 
     override def testOptions = createTestFilter( _.endsWith("Test"))
