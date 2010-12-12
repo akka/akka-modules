@@ -539,6 +539,8 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
         </dependency>
         <dependency org="org.mortbay.jetty" name="jetty" rev="6.1.14" conf="test">
         </dependency>
+        <dependency org="sjson.json" name="sjson" rev="0.8-2.8.0" conf="test">
+        </dependency>
       </dependencies>
 
     override def testOptions = createTestFilter( _.endsWith("Test") )
