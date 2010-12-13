@@ -27,11 +27,6 @@ private[akka] object HbaseStorageBackend extends CommonStorageBackend {
 
   val HBASE_ZOOKEEPER_QUORUM = config.getString("akka.persistence.hbase.zookeeper-quorum", "localhost")
   val CONFIGURATION = new HBaseConfiguration
-  val REF_TABLE_NAME = "__REF_TABLE"
-  val VECTOR_TABLE_NAME = "__VECTOR_TABLE"
-  val VECTOR_ELEMENT_COLUMN_FAMILY_NAME = "__VECTOR_ELEMENT"
-  val MAP_ELEMENT_COLUMN_FAMILY_NAME = "__MAP_ELEMENT"
-  val MAP_TABLE_NAME = "__MAP_TABLE"
   var ADMIN: HBaseAdmin = _
 
   CONFIGURATION.set("hbase.zookeeper.quorum", HBASE_ZOOKEEPER_QUORUM)
@@ -85,8 +80,10 @@ private[akka] object HbaseStorageBackend extends CommonStorageBackend {
     }
 
     def drop() = {
-      ADMIN.disableTable(store)
-      ADMIN.deleteTable(store)
+      if (ADMIN.tableExists(store)) {
+        ADMIN.disableTable(store)
+        ADMIN.deleteTable(store)
+      }
     }
   }
 

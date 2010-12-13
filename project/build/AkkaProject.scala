@@ -543,7 +543,7 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
         </dependency>
       </dependencies>
 
-    override def testOptions = createTestFilter( _.endsWith("Test") )
+    override def testOptions = createTestFilter({ s:String=> s.endsWith("Suite") || s.endsWith("Test")})
   }
 
   // -------------------------------------------------------------------------------------------------------------------
