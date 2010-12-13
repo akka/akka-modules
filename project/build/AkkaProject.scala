@@ -95,6 +95,7 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
   lazy val jettyModuleConfig       = ModuleConfiguration("org.eclipse.jetty", sbt.DefaultMavenRepository)
   lazy val guiceyFruitModuleConfig = ModuleConfiguration("org.guiceyfruit", GuiceyFruitRepo)
   // lazy val hawtdispatchModuleConfig  = ModuleConfiguration("org.fusesource.hawtdispatch", FusesourceSnapshotRepo)
+  //lazy val akkaRepo               = ModuleConfiguration("se.scalablesolutions.akka", LocalMavenRepo /*Change to AkkaRepo before release*/)
   lazy val jbossModuleConfig       = ModuleConfiguration("org.jboss", JBossRepo)
   lazy val jdmkModuleConfig        = ModuleConfiguration("com.sun.jdmk", SunJDMKRepo)
   lazy val jmsModuleConfig         = ModuleConfiguration("javax.jms", SunJDMKRepo)
@@ -111,8 +112,8 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
   lazy val casbahModuleConfig      = ModuleConfiguration("com.novus", CasbahRepo)
   lazy val timeModuleConfig        = ModuleConfiguration("org.scala-tools", "time", CasbahSnapshotRepo)
   lazy val voldemortModuleConfig   = ModuleConfiguration("voldemort", ClojarsRepo)
-  lazy val embeddedRepo            = EmbeddedRepo // This is the only exception, because the embedded repo is fast!
-  lazy val localMavenRepo          = LocalMavenRepo // Second exception, also fast! ;-)
+  val embeddedRepo            = EmbeddedRepo // This is the only exception, because the embedded repo is fast!
+  val localMavenRepo          = LocalMavenRepo // Second exception, also fast! ;-)
 
   // -------------------------------------------------------------------------------------------------------------------
   // Versions
@@ -132,6 +133,7 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
   lazy val SLF4J_VERSION         = "1.6.0"
   lazy val SPRING_VERSION        = "3.0.4.RELEASE"
   lazy val JETTY_VERSION         = "7.1.6.v20100715"
+  lazy val CODEC_VERSION         = "1.4"
 
   // -------------------------------------------------------------------------------------------------------------------
   // Dependencies
@@ -159,7 +161,7 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
 
     lazy val commonsHttpClient = "commons-httpclient" % "commons-httpclient" % "3.1" % "compile" //ApacheV2
 
-    lazy val commons_codec = "commons-codec" % "commons-codec" % "1.4" % "compile" //ApacheV2
+    lazy val commons_codec = "commons-codec" % "commons-codec" % CODEC_VERSION % "compile" //ApacheV2
 
     lazy val commons_io = "commons-io" % "commons-io" % "1.4" % "compile" //ApacheV2
 
@@ -528,8 +530,11 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
         </dependency>
         <dependency org="org.apache.hbase" name="hbase-core" rev="0.20.6" conf="compile">
         </dependency>
+        <dependency org="commons-codec" name="commons-codec" rev={CODEC_VERSION} conf="compile">
+        </dependency>
         <dependency org="org.apache.hadoop" name="hadoop-test" rev="0.20.2" conf="test">
           <exclude module="slf4j-api"/>
+          <exclude module="commons-codec"/>
         </dependency>
         <dependency org="org.slf4j" name="slf4j-api" rev={SLF4J_VERSION} conf="test">
         </dependency>
