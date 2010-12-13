@@ -6,14 +6,9 @@ import akka.stm._
 
 import org.junit.Test
 import org.junit.Assert._
-import org.junit.BeforeClass
-import org.junit.Before
-import org.junit.AfterClass
-import org.junit.After
 
 import org.scalatest.junit.JUnitSuite
 import org.scalatest.BeforeAndAfterAll
-import org.apache.hadoop.hbase.HBaseTestingUtility
 
 case class GetMapState(key: String)
 case object GetVectorState
@@ -73,27 +68,7 @@ class HbasePersistentActor extends Actor {
   def fail = throw new RuntimeException("Expected exception; to test fault-tolerance")
 }
 
-class HbasePersistentActorSpecTestIntegration extends JUnitSuite with BeforeAndAfterAll {
-
-  val testUtil = new HBaseTestingUtility
-
-  override def beforeAll {
-    testUtil.startMiniCluster
-  }
-
-  override def afterAll {
-    testUtil.shutdownMiniCluster
-  }
-
-  @Before
-  def beforeEach {
-    HbaseStorageBackend.drop
-  }
-
-  @After
-  def afterEach {
-    HbaseStorageBackend.drop
-  }
+class HbasePersistentActorSpecTestIntegration extends JUnitSuite with BeforeAndAfterAll with EmbeddedHbase {
 
   @Test
   def testMapShouldNotRollbackStateForStatefulServerInCaseOfSuccess = {

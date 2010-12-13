@@ -216,7 +216,7 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
 
     lazy val rabbit = "com.rabbitmq" % "amqp-client" % "1.8.1" % "compile" //Mozilla public license
 
-    lazy val redis = "com.redis" % "redisclient" % "2.8.1-2.2" % "compile" //ApacheV2
+    lazy val redis = "com.redis" % "redisclient" % "2.8.1-2.3" % "compile" //ApacheV2
 
     lazy val sbinary = "sbinary" % "sbinary" % "2.8.0-0.3.1" % "compile" //MIT
 
@@ -472,6 +472,7 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
     val commons_pool = Dependencies.commons_pool
     val thrift       = Dependencies.thrift
     val scalaj_coll  = Dependencies.scalaj_coll
+    val goog         = Dependencies.google_coll
 
     // testing
     val junit           = Dependencies.junit
@@ -483,7 +484,6 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
   // -------------------------------------------------------------------------------------------------------------------
 
   class AkkaRedisProject(info: ProjectInfo) extends AkkaModulesDefaultProject(info, distPath) {
-    val commons_codec = Dependencies.commons_codec
     val redis         = Dependencies.redis
 
     override def testOptions = createTestFilter( _.endsWith("Test"))
@@ -543,6 +543,8 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
         <dependency org="log4j" name="log4j" rev="1.2.15" conf="test">
         </dependency>
         <dependency org="org.mortbay.jetty" name="jetty" rev="6.1.14" conf="test">
+        </dependency>
+        <dependency org="sjson.json" name="sjson" rev="0.8-2.8.0" conf="test">
         </dependency>
       </dependencies>
 
