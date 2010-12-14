@@ -82,6 +82,9 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
     lazy val ZookeeperRepo        = MavenRepository("Zookeeper Repo", "http://lilycms.org/maven/maven2/deploy/")
     lazy val ClojarsRepo          = MavenRepository("Clojars Repo", "http://clojars.org/repo")
     lazy val ScalaToolsRelRepo    = MavenRepository("Scala Tools Releases Repo", "http://scala-tools.org/repo-releases")
+	lazy val TerrastoreRepo       = MavenRepository("Terrastore Releases Repo", "http://m2.terrastore.googlecode.com/hg/repo")
+	lazy val MsgPackRepo          = MavenRepository("Message Pack Releases Repo","http://msgpack.sourceforge.net/maven2/")
+	lazy val TerracottaRepo       = MavenRepository("Terracotta Releases Repo", "http://www.terracotta.org/download/reflector/maven2")
   }
 
   // -------------------------------------------------------------------------------------------------------------------
@@ -112,6 +115,14 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
   lazy val casbahModuleConfig      = ModuleConfiguration("com.novus", CasbahRepo)
   lazy val timeModuleConfig        = ModuleConfiguration("org.scala-tools", "time", CasbahSnapshotRepo)
   lazy val voldemortModuleConfig   = ModuleConfiguration("voldemort", ClojarsRepo)
+  lazy val terrastoreModuleConfig  = ModuleConfiguration("terrastore", TerrastoreRepo)
+  lazy val msgPackModuleConfig     = ModuleConfiguration("org.msgpack", MsgPackRepo)
+  //lazy val terracottatoolki_runtimetModuleConfig  = ModuleConfiguration("org.terracotta", "terracotta-toolkit-1.1-runtime", TerrastoreRepo)
+  //lazy val terracottatoolkit_apiModuleConfig  = ModuleConfiguration("org.terracotta.toolkit", "terracotta-toolkit-1.1-api", TerrastoreRepo)
+  //lazy val terracottatoolkit_implModuleConfig  = ModuleConfiguration("org.terracotta.toolkit", "terracotta-toolkit-1.1-impl", TerrastoreRepo)
+  lazy val resteasyModuleConfig    = ModuleConfiguration("org.jboss.resteasy", JBossRepo)
+  lazy val jsr166yModuleConfig     = ModuleConfiguration("jsr166y", TerrastoreRepo)
+  lazy val args4jModuleConfig      = ModuleConfiguration("args4j", JBossRepo)
   val embeddedRepo            = EmbeddedRepo // This is the only exception, because the embedded repo is fast!
   val localMavenRepo          = LocalMavenRepo // Second exception, also fast! ;-)
 
@@ -251,6 +262,9 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
     lazy val riak_pb_client = "com.trifork"   %  "riak-java-pb-client"      % "1.0-for-akka-by-ticktock"  % "compile" //ApacheV2
     lazy val scalaj_coll = "org.scalaj" % "scalaj-collection_2.8.0" % "1.0" % "compile" //ApacheV2
 
+	//Terrastore Client
+	lazy val terrastore_client = "terrastore" % "terrastore-javaclient" % "2.2" % "compile"
+
     // Test
 
     lazy val camel_spring   = "org.apache.camel"       % "camel-spring"        % CAMEL_VERSION     % "test" //ApacheV2
@@ -283,6 +297,9 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
 
     //simpledb
     lazy val simpledb = "com.amazonaws" % "aws-java-sdk" % "1.0.14" % "compile"
+
+	//terrastore
+	lazy val terrastore = "terrastore" % "terrastore" % "0.8.0" % "test"
   }
 
   // -------------------------------------------------------------------------------------------------------------------
@@ -330,6 +347,7 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
     " dist/akka-persistence-mongo-%s.jar".format(version) +
     " dist/akka-persistence-cassandra-%s.jar".format(version) +
     " dist/akka-persistence-voldemort-%s.jar".format(version) +
+    " dist/akka-persistence-terrastore-%s.jar".format(version) +
     " dist/akka-persistence-riak-%s.jar".format(version) +
     " dist/akka-persistence-hbase-%s.jar".format(version) +
     " dist/akka-persistence-simpledb-%s.jar".format(version) +
@@ -452,6 +470,8 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
       new AkkaHbaseProject(_), akka_persistence_common)
     lazy val akka_persistence_voldemort = project("akka-persistence-voldemort", "akka-persistence-voldemort",
       new AkkaVoldemortProject(_), akka_persistence_common)
+    lazy val akka_persistence_terrastore = project("akka-persistence-terrastore", "akka-persistence-terrastore",
+      new AkkaTerrastoreProject(_), akka_persistence_common)
     lazy val akka_persistence_riak = project("akka-persistence-riak", "akka-persistence-riak",
       new AkkaRiakProject(_), akka_persistence_common)
     lazy val akka_persistence_couchdb = project("akka-persistence-couchdb", "akka-persistence-couchdb",
@@ -572,6 +592,21 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
   }
 
   // -------------------------------------------------------------------------------------------------------------------
+  // akka-persistence-terrastore subproject
+  // -------------------------------------------------------------------------------------------------------------------
+
+  class AkkaTerrastoreProject(info: ProjectInfo) extends AkkaModulesDefaultProject(info, distPath) {
+    val terrastore_client = Dependencies.terrastore_client
+
+    //testing
+    val scalatest = Dependencies.scalatest
+	val terrastoretest = Dependencies.terrastore
+	
+    override def testOptions = createTestFilter({ s:String=> s.endsWith("Suite") || s.endsWith("Test")})
+  }
+
+
+  // -------------------------------------------------------------------------------------------------------------------
   // akka-persistence-riak subproject
   // -------------------------------------------------------------------------------------------------------------------
 
@@ -683,7 +718,8 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
         akka_persistence.akka_persistence_simpledb,
         akka_persistence.akka_persistence_memcached,
         akka_persistence.akka_persistence_riak,
-        akka_persistence.akka_persistence_voldemort)
+        akka_persistence.akka_persistence_voldemort,
+		akka_persistence.akka_persistence_terrastore)
   }
 
   class AkkaOSGiDependenciesBundleProject(info: ProjectInfo) extends AkkaModulesDefaultProject(info, distPath) with BNDPlugin {
