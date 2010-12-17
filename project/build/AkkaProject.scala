@@ -296,6 +296,8 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
 
 	//terrastore
 	lazy val terrastore = "terrastore" % "terrastore" % "0.8.0" % "test"
+	lazy val commons_codec_test = "commons-codec" % "commons-codec" % CODEC_VERSION % "test" //ApacheV2
+    
   }
 
   // -------------------------------------------------------------------------------------------------------------------
@@ -593,10 +595,12 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
 
   class AkkaTerrastoreProject(info: ProjectInfo) extends AkkaModulesDefaultProject(info, distPath) {
     val terrastore_client = Dependencies.terrastore_client
+    val commons_codec     = Dependencies.commons_codec
 
     //testing
     val scalatest = Dependencies.scalatest
 	val terrastoretest = Dependencies.terrastore
+    val commons_codec_test = Dependencies.commons_codec_test
 	
     override def testOptions = createTestFilter({ s:String=> s.endsWith("Suite") || s.endsWith("Test")})
   }
