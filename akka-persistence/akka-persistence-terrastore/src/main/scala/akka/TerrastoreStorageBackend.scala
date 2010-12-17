@@ -7,12 +7,11 @@ package akka.persistence.terrastore
 import akka.persistence.common._
 import terrastore.client.connection.resteasy.HTTPConnectionFactory
 import terrastore.client.{BucketOperation, TerrastoreClient}
-import java.nio.charset.Charset
-import com.google.protobuf.ByteString
 import terrastore.client.connection.NoSuchKeyException
 import collection.Map
 import collection.immutable.Iterable
 import collection.immutable.HashMap
+import org.apache.commons.codec.binary.Base64
 
 /**
  * @author <a href="http://www.davidgreco.it">David Greco</a>
@@ -32,16 +31,18 @@ private[akka] object TerrastoreStorageBackend extends CommonStorageBackend {
     }
 
     def put(key: Array[Byte], value: Array[Byte]) = {
-      val ks = ByteString.copyFrom(key)
-      val vs = new String(value, Charset.forName("UTF8"))
-      bucket.key(ks.toString).put(new Value(vs))
+      val ks = Base64.encodeBase64String(key)
+      val vs = Base64.encodeBase64String(value)
+      println(ks+" "+vs)
+      bucket.key(ks).put(new Value(vs))
     }
 
     def get(key: Array[Byte]): Array[Byte] = {
       try {
-        val ks = ByteString.copyFrom(key)
-        val value = bucket.key(ks.toString).get(classOf[Value])
-        value.getValue.getBytes(Charset.forName("UTF8"))
+        val ks = Base64.encodeBase64String(key)
+        val vs = bucket.key(ks).get(classOf[Value]).getValue
+        println(ks+" "+vs)
+        Base64.decodeBase64(vs)
       }
       catch {
         case e: NoSuchKeyException => null
@@ -51,9 +52,10 @@ private[akka] object TerrastoreStorageBackend extends CommonStorageBackend {
 
     def get(key: Array[Byte], default: Array[Byte]): Array[Byte] = {
       try {
-        val ks = ByteString.copyFrom(key)
-        val value = bucket.key(ks.toString).get(classOf[Value])
-        value.getValue.getBytes(Charset.forName("UTF8"))
+        val ks = Base64.encodeBase64String(key)
+        val vs = bucket.key(ks).get(classOf[Value]).getValue
+        println(ks+" "+vs)
+        Base64.decodeBase64(vs)
       }
       catch {
         case e: NoSuchKeyException => default
@@ -75,8 +77,9 @@ private[akka] object TerrastoreStorageBackend extends CommonStorageBackend {
     }
 
     def delete(key: Array[Byte]) = {
-      val ks = ByteString.copyFrom(key)
-      bucket.key(ks.toString).remove
+      val ks = Base64.encodeBase64String(key)
+      println(ks)
+      bucket.key(ks).remove
     }
 
     def drop() = {
