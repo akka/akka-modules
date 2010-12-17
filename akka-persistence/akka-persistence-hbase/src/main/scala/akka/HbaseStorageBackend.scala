@@ -68,11 +68,6 @@ private[akka] object HbaseStorageBackend extends CommonStorageBackend {
       }
     }
 
-    def getAll(keys: Iterable[Array[Byte]]): Map[Array[Byte], Array[Byte]] = {
-      keys.foreach( k => {println(k)})
-      new HashMap[Array[Byte], Array[Byte]]
-    }
-
     def delete(owner: String, key: Array[Byte]) = {
       val delrow = new Delete(Bytes.toBytes(owner))
       delrow.deleteColumns(Bytes.toBytes(store), key)

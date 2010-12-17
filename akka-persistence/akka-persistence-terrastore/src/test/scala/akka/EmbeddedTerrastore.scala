@@ -11,6 +11,7 @@ trait EmbeddedTerrastore extends BeforeAndAfterAll with Logging {
 
   override protected def beforeAll(): Unit = {
     server = new TerrastoreEmbeddedServer
+    server.start("localhost", 8080)
   }
 
   override protected def afterAll(): Unit = {

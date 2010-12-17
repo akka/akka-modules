@@ -84,7 +84,6 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
     lazy val ScalaToolsRelRepo    = MavenRepository("Scala Tools Releases Repo", "http://scala-tools.org/repo-releases")
 	lazy val TerrastoreRepo       = MavenRepository("Terrastore Releases Repo", "http://m2.terrastore.googlecode.com/hg/repo")
 	lazy val MsgPackRepo          = MavenRepository("Message Pack Releases Repo","http://msgpack.sourceforge.net/maven2/")
-	lazy val TerracottaRepo       = MavenRepository("Terracotta Releases Repo", "http://www.terracotta.org/download/reflector/maven2")
   }
 
   // -------------------------------------------------------------------------------------------------------------------
@@ -117,9 +116,6 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
   lazy val voldemortModuleConfig   = ModuleConfiguration("voldemort", ClojarsRepo)
   lazy val terrastoreModuleConfig  = ModuleConfiguration("terrastore", TerrastoreRepo)
   lazy val msgPackModuleConfig     = ModuleConfiguration("org.msgpack", MsgPackRepo)
-  //lazy val terracottatoolki_runtimetModuleConfig  = ModuleConfiguration("org.terracotta", "terracotta-toolkit-1.1-runtime", TerrastoreRepo)
-  //lazy val terracottatoolkit_apiModuleConfig  = ModuleConfiguration("org.terracotta.toolkit", "terracotta-toolkit-1.1-api", TerrastoreRepo)
-  //lazy val terracottatoolkit_implModuleConfig  = ModuleConfiguration("org.terracotta.toolkit", "terracotta-toolkit-1.1-impl", TerrastoreRepo)
   lazy val resteasyModuleConfig    = ModuleConfiguration("org.jboss.resteasy", JBossRepo)
   lazy val jsr166yModuleConfig     = ModuleConfiguration("jsr166y", TerrastoreRepo)
   lazy val args4jModuleConfig      = ModuleConfiguration("args4j", JBossRepo)
