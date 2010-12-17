@@ -31,14 +31,14 @@ private[akka] object TerrastoreStorageBackend extends CommonStorageBackend {
     }
 
     def put(key: Array[Byte], value: Array[Byte]) = {
-      val ks = Base64.encodeBase64String(key)
-      val vs = Base64.encodeBase64String(value)
+      val ks = Base64.encodeBase64URLSafeString(key)
+      val vs = Base64.encodeBase64URLSafeString(value)
       bucket.key(ks).put(new Value(vs))
     }
 
     def get(key: Array[Byte]): Array[Byte] = {
       try {
-        val ks = Base64.encodeBase64String(key)
+        val ks = Base64.encodeBase64URLSafeString(key)
         val vs = bucket.key(ks).get(classOf[Value]).getValue
         Base64.decodeBase64(vs)
       }
@@ -50,7 +50,7 @@ private[akka] object TerrastoreStorageBackend extends CommonStorageBackend {
 
     def get(key: Array[Byte], default: Array[Byte]): Array[Byte] = {
       try {
-        val ks = Base64.encodeBase64String(key)
+        val ks = Base64.encodeBase64URLSafeString(key)
         val vs = bucket.key(ks).get(classOf[Value]).getValue
         Base64.decodeBase64(vs)
       }
@@ -74,7 +74,7 @@ private[akka] object TerrastoreStorageBackend extends CommonStorageBackend {
     }
 
     def delete(key: Array[Byte]) = {
-      val ks = Base64.encodeBase64String(key)
+      val ks = Base64.encodeBase64URLSafeString(key)
       bucket.key(ks).remove
     }
 
