@@ -5,6 +5,7 @@ package akka.persistence.terrastore
  */
 
 import akka.persistence.common._
+import akka.config.Config.config
 import terrastore.client.connection.resteasy.HTTPConnectionFactory
 import terrastore.client.{BucketOperation, TerrastoreClient}
 import terrastore.client.connection.NoSuchKeyException
@@ -18,6 +19,8 @@ import org.apache.commons.codec.binary.Base64
  */
 private[akka] object TerrastoreStorageBackend extends CommonStorageBackend {
 
+  val url = config.getString("akka.persistence.terrastore.url", "http://localhost:8080")
+
   class TerrastoreAccess(val store: String) extends KVStorageBackendAccess {
 
     var client: TerrastoreClient = _
@@ -26,7 +29,7 @@ private[akka] object TerrastoreStorageBackend extends CommonStorageBackend {
     initAccess
 
     def initAccess() = {
-      client = new TerrastoreClient("http://localhost:8080", new HTTPConnectionFactory());
+      client = new TerrastoreClient(url, new HTTPConnectionFactory());
       bucket = client.bucket(store)
     }
 
