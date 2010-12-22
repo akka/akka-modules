@@ -106,11 +106,11 @@ class ActorFactoryBean extends AbstractFactoryBean[AnyRef] with Logging with App
         "Either 'implementation' or 'ref' must be specified as attribute of the 'akka:typed-actor' element in the Spring config file ")
 
     val typedActor: AnyRef = if (beanRef eq null ) {
-	TypedActor.newInstance(interface.toClass, implementation.toClass, createConfig)
+        TypedActor.newInstance(interface.toClass, implementation.toClass, createConfig)
     }
     else
     {
-	TypedActor.newInstance(interface.toClass, getBeanFactory().getBean(beanRef), createConfig)
+        TypedActor.newInstance(interface.toClass, getBeanFactory().getBean(beanRef), createConfig)
     }
 
 
@@ -132,9 +132,9 @@ class ActorFactoryBean extends AbstractFactoryBean[AnyRef] with Logging with App
     if (((implementation eq null) || implementation == "") && (beanRef eq null)) throw new AkkaBeansException(
         "Either 'implementation' or 'ref' must be specified as attribute of the 'akka:untyped-actor' element in the Spring config file ")
     val actorRef = if (beanRef eq null ) 
-	Actor.actorOf(implementation.toClass) 
+        Actor.actorOf(implementation.toClass) 
     else 
-	Actor.actorOf(getBeanFactory().getBean(beanRef).asInstanceOf[Actor])
+        Actor.actorOf(getBeanFactory().getBean(beanRef).asInstanceOf[Actor])
 
     if (timeout > 0) {
       actorRef.setTimeout(timeout)

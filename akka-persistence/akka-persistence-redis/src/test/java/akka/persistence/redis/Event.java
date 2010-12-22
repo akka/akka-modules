@@ -7,6 +7,6 @@ import java.io.Serializable;
  */
 public abstract class Event implements Serializable {
 
-	private static final long serialVersionUID = -1354942905395394545L;
+        private static final long serialVersionUID = -1354942905395394545L;
 
 }
