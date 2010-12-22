@@ -9,7 +9,7 @@ import org.scalatest.junit.JUnitRunner
 import akka.persistence.common._
 
 @RunWith(classOf[JUnitRunner])
-class HbaseTicket343TestIntegration extends Ticket343Test with EmbeddedHbase {
+class HbaseTicket343Test extends Ticket343Test with EmbeddedHbase {
   def dropMapsAndVectors: Unit = {
     HbaseStorageBackend.vectorAccess.drop
     HbaseStorageBackend.mapAccess.drop

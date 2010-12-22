@@ -23,7 +23,7 @@ class HbaseVectorStorageBackendTest extends VectorStorageBackendTest with Embedd
 }
 
 @RunWith(classOf[JUnitRunner])
-class HbaseMapStorageBackendTestIntegration extends MapStorageBackendTest with EmbeddedHbase {
+class HbaseMapStorageBackendTest extends MapStorageBackendTest with EmbeddedHbase {
   def dropMaps = {
     HbaseStorageBackend.mapAccess.drop
   }
