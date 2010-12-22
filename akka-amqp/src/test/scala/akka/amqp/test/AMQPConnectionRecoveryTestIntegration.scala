@@ -1,7 +1,7 @@
 package akka.amqp.test
 
 /**
- * Copyright (C) 2009-2010 Scalable Solutions AB <http://scalablesolutions.se>
+ * Copyright (C) 2009-2011 Scalable Solutions AB <http://scalablesolutions.se>
  */
 
 import java.util.concurrent.TimeUnit
