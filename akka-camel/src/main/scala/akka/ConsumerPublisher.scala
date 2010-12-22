@@ -128,7 +128,7 @@ private[camel] abstract class ConsumerRouteBuilder(endpointUri: String, id: Stri
   protected def routeDefinitionHandler: RouteDefinitionHandler
   protected def targetUri: String
 
-  private def onRouteDefinition(rd: RouteDefinition) = routeDefinitionHandler.onRouteDefinition(rd)  
+  private def onRouteDefinition(rd: RouteDefinition) = routeDefinitionHandler.onRouteDefinition(rd)
   private def startRouteDefinition(bodyConversion: Option[Class[_]]): RouteDefinition = bodyConversion match {
     case Some(clazz) => from(endpointUri).routeId(id).convertBodyTo(clazz)
     case None        => from(endpointUri).routeId(id)

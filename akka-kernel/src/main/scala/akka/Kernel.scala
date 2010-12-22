@@ -14,7 +14,7 @@ import java.util.concurrent.CountDownLatch
 
 object Main {
   val keepAlive = new CountDownLatch(2)
- 
+
   def main(args: Array[String]) = {
     Kernel.boot
     keepAlive.await

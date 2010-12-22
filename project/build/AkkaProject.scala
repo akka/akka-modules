@@ -619,7 +619,7 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
 
   class AkkaKernelProject(info: ProjectInfo) extends AkkaModulesDefaultProject(info, distPath) {
     val akka_stm    = Dependencies.akka_stm
-    val akka_remote = Dependencies.akka_remote 
+    val akka_remote = Dependencies.akka_remote
     val akka_http   = Dependencies.akka_http
   }
 
@@ -669,13 +669,13 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
 
     lazy val akka_osgi_assembly = project("akka-osgi-assembly", "akka-osgi-assembly",
       new AkkaOSGiAssemblyProject(_),
-        akka_osgi_dependencies_bundle, 
+        akka_osgi_dependencies_bundle,
         akka_amqp,
-        akka_camel, 
+        akka_camel,
         akka_spring,
-        akka_jta, 
+        akka_jta,
         akka_persistence.akka_persistence_common,
-        akka_persistence.akka_persistence_redis, 
+        akka_persistence.akka_persistence_redis,
         akka_persistence.akka_persistence_mongo,
         akka_persistence.akka_persistence_cassandra,
         akka_persistence.akka_persistence_simpledb,

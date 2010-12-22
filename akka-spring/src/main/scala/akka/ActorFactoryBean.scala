@@ -131,9 +131,9 @@ class ActorFactoryBean extends AbstractFactoryBean[AnyRef] with Logging with App
   private[akka] def createUntypedInstance() : ActorRef = {
     if (((implementation eq null) || implementation == "") && (beanRef eq null)) throw new AkkaBeansException(
         "Either 'implementation' or 'ref' must be specified as attribute of the 'akka:untyped-actor' element in the Spring config file ")
-    val actorRef = if (beanRef eq null ) 
-        Actor.actorOf(implementation.toClass) 
-    else 
+    val actorRef = if (beanRef eq null )
+        Actor.actorOf(implementation.toClass)
+    else
         Actor.actorOf(getBeanFactory().getBean(beanRef).asInstanceOf[Actor])
 
     if (timeout > 0) {
