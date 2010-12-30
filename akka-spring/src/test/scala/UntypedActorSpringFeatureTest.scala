@@ -113,6 +113,13 @@ class UntypedActorSpringFeatureTest extends FeatureSpec with ShouldMatchers with
       assert(myactor.getRemoteAddress().get.getPort() === 9990)
     }
 
+    scenario("autostart untypedactor when requested in config") {
+      val context = new ClassPathXmlApplicationContext("/untyped-actor-config.xml")
+      val pingActor = context.getBean("remote-untyped-actor-autostart").asInstanceOf[ActorRef]
+      assert(pingActor.isRunning === true)
+      assert(pingActor.id === "remote-untyped-actor-autostart")
+    }
+
     scenario("create server managed remote untyped-actor") {
       val myactor = getPingActorFromContext("/server-managed-config.xml", "server-managed-remote-untyped-actor")
       val nrOfActors = ActorRegistry.actors.length

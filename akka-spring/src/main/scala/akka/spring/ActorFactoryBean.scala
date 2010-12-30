@@ -45,6 +45,7 @@ class ActorFactoryBean extends AbstractFactoryBean[AnyRef] with Logging with App
   @BeanProperty var host: String = ""
   @BeanProperty var port: String = ""
   @BeanProperty var serverManaged: Boolean = false
+  @BeanProperty var autostart: Boolean = false
   @BeanProperty var serviceName: String = ""
   @BeanProperty var lifecycle: String = ""
   @BeanProperty var dispatcher: DispatcherProperties = _
@@ -87,6 +88,8 @@ class ActorFactoryBean extends AbstractFactoryBean[AnyRef] with Logging with App
         typedActor
       case UNTYPED_ACTOR_TAG => val untypedActor = createUntypedInstance()
         setProperties(untypedActor.actor)
+        if (autostart)
+          untypedActor.start
         untypedActor
       case _ => throw new IllegalArgumentException("Unknown actor type")
     }

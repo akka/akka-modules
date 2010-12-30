@@ -51,6 +51,7 @@ object AkkaSpringConfigurationTags {
   val SERVICE_NAME = "service-name"
   val LIFECYCLE = "lifecycle"
   val SCOPE = "scope"
+  val AUTOSTART = "autostart"
 
   // supervision attributes
   val FAILOVER = "failover"

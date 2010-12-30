@@ -22,6 +22,7 @@ class ActorProperties {
   var host: String = ""
   var port: String = ""
   var serverManaged: Boolean = false
+  var autostart: Boolean = false
   var serviceName: String = ""
   var lifecycle: String = ""
   var scope:String = VAL_SCOPE_SINGLETON
@@ -48,6 +49,7 @@ class ActorProperties {
     builder.addPropertyValue(DISPATCHER_TAG, dispatcher)
     builder.addPropertyValue(PROPERTYENTRY_TAG,propertyEntries)
     builder.addPropertyValue("id", id)
+    builder.addPropertyValue(AUTOSTART, autostart)
   }
 
   def timeout() : Long = {
