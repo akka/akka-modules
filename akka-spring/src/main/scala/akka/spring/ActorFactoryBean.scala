@@ -36,7 +36,7 @@ class AkkaBeansException(message: String, cause:Throwable) extends BeansExceptio
 class ActorFactoryBean extends AbstractFactoryBean[AnyRef] with Logging with ApplicationContextAware {
   import StringReflect._
   import AkkaSpringConfigurationTags._
-
+  @BeanProperty var id: String = ""
   @BeanProperty var typed: String = ""
   @BeanProperty var interface: String = ""
   @BeanProperty var implementation: String = ""
@@ -52,18 +52,12 @@ class ActorFactoryBean extends AbstractFactoryBean[AnyRef] with Logging with App
   @BeanProperty var property: PropertyEntries = _
   @BeanProperty var applicationContext: ApplicationContext = _
 
-  lazy val timeout = parseTimeout
-
-  private def parseTimeout() : Long = {
-    var result = -1L
-    try {
-      result = if (!timeoutStr.isEmpty) timeoutStr.toLong else -1L
-    } catch {
-      case nfe: NumberFormatException =>
-        log.error(nfe, "could not parse timeout %s", timeoutStr)
-        throw nfe
-    }
-    result
+  lazy val timeout = try {
+    if (!timeoutStr.isEmpty) timeoutStr.toLong else -1L
+  } catch {
+    case nfe: NumberFormatException =>
+      log.error(nfe, "could not parse timeout %s", timeoutStr)
+      throw nfe
   }
 
   // Holds info about if deps have been set or not. Depends on
@@ -100,19 +94,15 @@ class ActorFactoryBean extends AbstractFactoryBean[AnyRef] with Logging with App
   }
 
   private[akka] def createTypedInstance() : AnyRef = {
-    if ((interface eq null) || interface == "") throw new AkkaBeansException(
+    if (!StringUtils.hasText(interface)) throw new AkkaBeansException(
         "The 'interface' part of the 'akka:actor' element in the Spring config file can't be null or empty string")
-    if (((implementation eq null) || implementation == "") && (beanRef eq null)) throw new AkkaBeansException(
+    if ((!StringUtils.hasText(implementation)) && (beanRef eq null)) throw new AkkaBeansException(
         "Either 'implementation' or 'ref' must be specified as attribute of the 'akka:typed-actor' element in the Spring config file ")
 
-    val typedActor: AnyRef = if (beanRef eq null ) {
-	TypedActor.newInstance(interface.toClass, implementation.toClass, createConfig)
-    }
-    else
-    {
-	TypedActor.newInstance(interface.toClass, getBeanFactory().getBean(beanRef), createConfig)
-    }
-
+    val typedActor: AnyRef = if (beanRef eq null )
+          TypedActor.newInstance(interface.toClass, implementation.toClass, createConfig)
+        else
+          TypedActor.newInstance(interface.toClass, getBeanFactory().getBean(beanRef), createConfig)
 
     if (isRemote && serverManaged) {
       val server = RemoteServer.getOrCreateServer(new InetSocketAddress(host, port.toInt))
@@ -129,35 +119,35 @@ class ActorFactoryBean extends AbstractFactoryBean[AnyRef] with Logging with App
    * Create an UntypedActor.
    */
   private[akka] def createUntypedInstance() : ActorRef = {
-    if (((implementation eq null) || implementation == "") && (beanRef eq null)) throw new AkkaBeansException(
+    if ((!StringUtils.hasText(implementation)) && (beanRef eq null)) throw new AkkaBeansException(
         "Either 'implementation' or 'ref' must be specified as attribute of the 'akka:untyped-actor' element in the Spring config file ")
-    val actorRef = if (beanRef eq null ) 
-	Actor.actorOf(implementation.toClass) 
-    else 
-	Actor.actorOf(getBeanFactory().getBean(beanRef).asInstanceOf[Actor])
 
-    if (timeout > 0) {
+    val actorRef = if (beanRef ne null)
+                     Actor.actorOf(getBeanFactory().getBean(beanRef).asInstanceOf[Actor])
+                   else
+                     Actor.actorOf(implementation.toClass)
+
+    if (timeout > 0)
       actorRef.setTimeout(timeout)
-    }
+
     if (isRemote) {
       if (serverManaged) {
         val server = RemoteServer.getOrCreateServer(new InetSocketAddress(host, port.toInt))
-        if (serviceName.isEmpty) {
+        if (serviceName.isEmpty)
           server.register(actorRef)
-        } else {
+        else
           server.register(serviceName, actorRef)
-        }
-      } else {
+      } else { //Is client managed
         actorRef.makeRemote(host, port.toInt)
       }
     }
-    if (hasDispatcher) {
-      if (dispatcher.dispatcherType != THREAD_BASED){
-        actorRef.setDispatcher(dispatcherInstance())
-      } else {
-        actorRef.setDispatcher(dispatcherInstance(Some(actorRef)))
-      }
-    }
+
+    if(StringUtils.hasText(id))
+      actorRef.id = id
+
+    if (hasDispatcher)
+      actorRef.setDispatcher( dispatcherInstance( if (dispatcher.dispatcherType == THREAD_BASED) Some(actorRef) else None ) )
+
     actorRef
   }
 
@@ -174,7 +164,7 @@ class ActorFactoryBean extends AbstractFactoryBean[AnyRef] with Logging with App
   private def setProperties(ref: AnyRef): AnyRef = {
     if (hasSetDependecies) return ref
     log.debug("Processing properties and dependencies for implementation class\n\t[%s]", implementation)
-    val beanWrapper = new BeanWrapperImpl(ref);
+    val beanWrapper = new BeanWrapperImpl(ref)
     if (ref.isInstanceOf[ApplicationContextAware]) {
       log.debug("Setting application context")
       beanWrapper.setPropertyValue("applicationContext", applicationContext)
@@ -197,22 +187,20 @@ class ActorFactoryBean extends AbstractFactoryBean[AnyRef] with Logging with App
   private[akka] def createConfig: TypedActorConfiguration = {
     val config = new TypedActorConfiguration().timeout(Duration(timeout, "millis"))
     if (isRemote && !serverManaged) config.makeRemote(host, port.toInt)
+    if (StringUtils.hasText(id)) config.id(id)
     if (hasDispatcher) {
-      if (dispatcher.dispatcherType != THREAD_BASED) {
-        config.dispatcher(dispatcherInstance())
-      } else {
+      if (dispatcher.dispatcherType == THREAD_BASED) {
         config.threadBasedDispatcher()
+      } else {
+        config.dispatcher(dispatcherInstance())
       }
     }
     config
   }
 
-  private[akka] def isRemote = (host ne null) && (!host.isEmpty)
+  private[akka] def isRemote = StringUtils.hasText(host)
 
-  private[akka] def hasDispatcher =
-    (dispatcher ne null) &&
-    (dispatcher.dispatcherType ne null) &&
-    (!dispatcher.dispatcherType.isEmpty)
+  private[akka] def hasDispatcher = (dispatcher ne null) && (StringUtils.hasText(dispatcher.dispatcherType))
 
   /**
    * Create dispatcher instance with dispatcher properties.
@@ -221,10 +209,10 @@ class ActorFactoryBean extends AbstractFactoryBean[AnyRef] with Logging with App
    */
   private[akka] def dispatcherInstance(actorRef: Option[ActorRef] = None) : MessageDispatcher = {
     import DispatcherFactoryBean._
-    if (dispatcher.dispatcherType != THREAD_BASED) {
-      createNewInstance(dispatcher)
-    } else {
+    if (dispatcher.dispatcherType == THREAD_BASED) {
       createNewInstance(dispatcher, actorRef)
+    } else {
+      createNewInstance(dispatcher)
     }
   }
 }

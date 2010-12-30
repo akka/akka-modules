@@ -95,6 +95,7 @@ class UntypedActorSpringFeatureTest extends FeatureSpec with ShouldMatchers with
 
     scenario("untyped-actor with custom dispatcher") {
       val myactor = getPingActorFromContext("/untyped-actor-config.xml", "untyped-actor-with-dispatcher")
+      assert(myactor.id === "untyped-actor-with-dispatcher")
       assert(myactor.getTimeout() === 1000)
       assert(myactor.getDispatcher.isInstanceOf[ExecutorBasedEventDrivenWorkStealingDispatcher])
       myactor.sendOneWay("Hello 5")

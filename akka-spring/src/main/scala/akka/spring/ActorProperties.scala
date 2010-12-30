@@ -13,6 +13,7 @@ import AkkaSpringConfigurationTags._
  * @author Martin Krasser
  */
 class ActorProperties {
+  var id: String = ""
   var typed: String = ""
   var target: String = ""
   var beanRef: String = ""
@@ -46,6 +47,7 @@ class ActorProperties {
     builder.addPropertyValue(SCOPE, scope)
     builder.addPropertyValue(DISPATCHER_TAG, dispatcher)
     builder.addPropertyValue(PROPERTYENTRY_TAG,propertyEntries)
+    builder.addPropertyValue("id", id)
   }
 
   def timeout() : Long = {
