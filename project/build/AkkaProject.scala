@@ -495,10 +495,9 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
   // -------------------------------------------------------------------------------------------------------------------
 
   class AkkaMongoProject(info: ProjectInfo) extends AkkaModulesDefaultProject(info, distPath) {
-    val mongo = Dependencies.mongo
     val casbah = Dependencies.casbah
 
-    override def testOptions = createTestFilter( _.endsWith("Test"))
+    override def testOptions = createTestFilter( _.endsWith("Spec"))
   }
 
 
