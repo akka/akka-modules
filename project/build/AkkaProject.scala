@@ -197,7 +197,7 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
 
     lazy val jta_1_1 = "org.apache.geronimo.specs" % "geronimo-jta_1.1_spec" % "1.1.1" % "compile" intransitive //ApacheV2
 
-    lazy val casbah = "com.mongodb.casbah" %% "casbah" % "2.0" % "compile" //ApacheV2 - provides ApacheV2 mongo-java-driver transiently
+    lazy val casbah = "com.mongodb.casbah" %% "casbah" % "2.0.1" % "compile" //ApacheV2 - provides ApacheV2 mongo-java-driver transiently
 
     lazy val multiverse = "org.multiverse" % "multiverse-alpha" % MULTIVERSE_VERSION % "compile" intransitive //ApacheV2
     lazy val multiverse_test = "org.multiverse" % "multiverse-alpha" % MULTIVERSE_VERSION % "test" intransitive //ApacheV2
@@ -497,7 +497,7 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
   class AkkaMongoProject(info: ProjectInfo) extends AkkaModulesDefaultProject(info, distPath) {
     val casbah = Dependencies.casbah
 
-    override def testOptions = createTestFilter( _.endsWith("Spec"))
+    override def testOptions = createTestFilter( _.endsWith("Test"))
   }
 
 
