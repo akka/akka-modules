@@ -16,6 +16,7 @@ import org.springframework.context.support.ClassPathXmlApplicationContext
 import org.springframework.core.io.{ClassPathResource, Resource}
 import org.scalatest.{BeforeAndAfterAll, FeatureSpec}
 import java.util.concurrent.CountDownLatch
+import akka.remote.netty.NettyRemoteSupport
 import akka.actor._
 import akka.actor.Actor._
 
@@ -35,29 +36,23 @@ object RemoteTypedActorLog {
  * Tests for spring configuration of typed actors.
  * @author michaelkober
  */
-/*@RunWith(classOf[JUnitRunner])
+@RunWith(classOf[JUnitRunner])
 class TypedActorSpringFeatureTest extends FeatureSpec with ShouldMatchers with BeforeAndAfterAll {
 
-  override def beforeAll = {
-    server1 = new RemoteServer()
-    server1.start("localhost", 9990)
-    server2 = new RemoteServer()
-    server2.start("localhost", 9992)
+  var optimizeLocal_? = remote.asInstanceOf[NettyRemoteSupport].optimizeLocalScoped_?
 
+  override def beforeAll {
+    remote.asInstanceOf[NettyRemoteSupport].optimizeLocal.set(false) //Can't run the test if we're eliminating all remote calls
+    remote.start("localhost",9990)
     val typedActor = TypedActor.newInstance(classOf[RemoteTypedActorOne], classOf[RemoteTypedActorOneImpl], 1000)
-    server1.registerTypedActor("typed-actor-service", typedActor)
+    remote.registerTypedActor("typed-actor-service", typedActor)
   }
 
-  // make sure the servers shutdown cleanly after the test has finished
-  override def afterAll = {
-    try {
-      server1.shutdown
-      server2.shutdown
-      RemoteClient.shutdownAll
-      Thread.sleep(1000)
-    } catch {
-      case e => ()
-    }
+  override def afterAll {
+    remote.asInstanceOf[NettyRemoteSupport].optimizeLocal.set(optimizeLocal_?) //Reset optimizelocal after all tests
+
+    remote.shutdown
+    Thread.sleep(1000)
   }
 
   def getTypedActorFromContext(config: String, id: String) : IMyPojo = {
@@ -125,7 +120,7 @@ class TypedActorSpringFeatureTest extends FeatureSpec with ShouldMatchers with B
     scenario("get a server-managed-remote-typed-actor") {
       val serverPojo = getTypedActorFromContext("/server-managed-config.xml", "server-managed-remote-typed-actor")
       //
-      val myPojoProxy = RemoteClient.typedActorFor(classOf[IMyPojo], classOf[IMyPojo].getName, 5000L, "localhost", 9990)
+      val myPojoProxy = remote.typedActorFor(classOf[IMyPojo], "server-managed-remote-typed-actor", 5000L, "localhost", 9990)
       assert(myPojoProxy.getFoo() === "foo")
       myPojoProxy.oneWay("hello server-managed-remote-typed-actor")
       MyPojo.latch.await
@@ -135,7 +130,7 @@ class TypedActorSpringFeatureTest extends FeatureSpec with ShouldMatchers with B
     scenario("get a server-managed-remote-typed-actor-custom-id") {
       val serverPojo = getTypedActorFromContext("/server-managed-config.xml", "server-managed-remote-typed-actor-custom-id")
       //
-      val myPojoProxy = RemoteClient.typedActorFor(classOf[IMyPojo], "mypojo-service", 5000L, "localhost", 9990)
+      val myPojoProxy = remote.typedActorFor(classOf[IMyPojo], "server-managed-remote-typed-actor-custom-id", 5000L, "localhost", 9990)
       assert(myPojoProxy.getFoo() === "foo")
       myPojoProxy.oneWay("hello server-managed-remote-typed-actor 2")
       MyPojo.latch.await
@@ -156,5 +151,5 @@ class TypedActorSpringFeatureTest extends FeatureSpec with ShouldMatchers with B
 
   }
 
-} */
+}
 

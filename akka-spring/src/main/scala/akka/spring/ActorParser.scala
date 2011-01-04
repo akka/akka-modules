@@ -31,7 +31,7 @@ trait ActorParser extends BeanParser with DispatcherParser {
     if (remoteElement ne null) {
       objectProperties.host = mandatory(remoteElement, HOST)
       objectProperties.port = mandatory(remoteElement, PORT)
-      objectProperties.serverManaged = (remoteElement.getAttribute(MANAGED_BY) ne null) && (remoteElement.getAttribute(MANAGED_BY).equals(SERVER_MANAGED))
+      objectProperties.serverManaged = SERVER_MANAGED == remoteElement.getAttribute(MANAGED_BY)
       val serviceName = remoteElement.getAttribute(SERVICE_NAME)
       if ((serviceName ne null) && (!serviceName.isEmpty)) {
         objectProperties.serviceName = serviceName
@@ -56,10 +56,9 @@ trait ActorParser extends BeanParser with DispatcherParser {
     objectProperties.target = if (element.getAttribute(IMPLEMENTATION).isEmpty) null else element.getAttribute(IMPLEMENTATION)
     objectProperties.beanRef = if (element.getAttribute(BEANREF).isEmpty) null else element.getAttribute(BEANREF)
     objectProperties.id = element.getAttribute("id")
-    objectProperties.autostart = {
-      val value = element.getAttribute(AUTOSTART)
-      if ((value eq null) || value.isEmpty) false
-      else value.toBoolean
+    objectProperties.autostart = element.getAttribute(AUTOSTART) match {
+      case null|"" => false
+      case other   => other.toBoolean
     }
 
     if (objectProperties.target == null && objectProperties.beanRef == null) {

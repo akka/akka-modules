@@ -107,7 +107,6 @@ class ActorFactoryBean extends AbstractFactoryBean[AnyRef] with Logging with App
           TypedActor.newInstance(interface.toClass, getBeanFactory().getBean(beanRef), createConfig)
 
     if (isRemote && serverManaged) {
-      Actor.remote.start(host, port.toInt)//TODO: remove this?
       if (serviceName.isEmpty) {
         Actor.remote.registerTypedActor(interface, typedActor)
       } else {
@@ -146,7 +145,6 @@ class ActorFactoryBean extends AbstractFactoryBean[AnyRef] with Logging with App
       actorRef.setDispatcher( dispatcherInstance( if (dispatcher.dispatcherType == THREAD_BASED) Some(actorRef) else None ) )
 
     if (isRemote && serverManaged) {
-      Actor.remote.start(host, port.toInt)//TODO: Remove this
       if (serviceName.isEmpty)
         Actor.remote.register(actorRef)
       else

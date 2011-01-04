@@ -1,7 +1,7 @@
 /**
  * Copyright (C) 2009-2010 Scalable Solutions AB <http://scalablesolutions.se>
  */
-/*package akka.spring
+package akka.spring
 
 
 import foo.PingActor
@@ -10,41 +10,32 @@ import org.scalatest.matchers.ShouldMatchers
 import org.scalatest.junit.JUnitRunner
 import org.junit.runner.RunWith
 import org.springframework.context.support.ClassPathXmlApplicationContext
-import akka.remote.{RemoteClient, RemoteServer}
+import akka.remote.netty.NettyRemoteSupport
 import org.scalatest.{BeforeAndAfterAll, FeatureSpec}
 
 import java.util.concurrent.CountDownLatch
-import akka.actor.{RemoteActorRef, ActorRegistry, Actor, ActorRef}
-*/
+import akka.actor.{RemoteActorRef, Actor, ActorRef, TypedActor}
+import akka.actor.Actor._
+
 /**
  * Tests for spring configuration of typed actors.
  * @author michaelkober
  */
-/*@RunWith(classOf[JUnitRunner])
+@RunWith(classOf[JUnitRunner])
 class UntypedActorSpringFeatureTest extends FeatureSpec with ShouldMatchers with BeforeAndAfterAll {
 
-  var server1: RemoteServer = null
-  var server2: RemoteServer = null
+  var optimizeLocal_? = remote.asInstanceOf[NettyRemoteSupport].optimizeLocalScoped_?
 
-
-  override def beforeAll = {
-    val actor = Actor.actorOf[PingActor]  // FIXME: remove this line when ticket 425 is fixed
-    server1 = new RemoteServer()
-    server1.start("localhost", 9990)
-    server2 = new RemoteServer()
-    server2.start("localhost", 9992)
+  override def beforeAll {
+    remote.asInstanceOf[NettyRemoteSupport].optimizeLocal.set(false) //Can't run the test if we're eliminating all remote calls
+    remote.start("localhost",9990)
   }
 
-  // make sure the servers shutdown cleanly after the test has finished
-  override def afterAll = {
-    try {
-      server1.shutdown
-      server2.shutdown
-      RemoteClient.shutdownAll
-      Thread.sleep(1000)
-    } catch {
-      case e => ()
-    }
+  override def afterAll {
+    remote.asInstanceOf[NettyRemoteSupport].optimizeLocal.set(optimizeLocal_?) //Reset optimizelocal after all tests
+
+    remote.shutdown
+    Thread.sleep(1000)
   }
 
 
@@ -86,9 +77,9 @@ class UntypedActorSpringFeatureTest extends FeatureSpec with ShouldMatchers with
     scenario("get a remote typed-actor") {
       val myactor = getPingActorFromContext("/untyped-actor-config.xml", "remote-untyped-actor")
       myactor.sendOneWay("Hello 4")
-      assert(myactor.getRemoteAddress().isDefined)
-      assert(myactor.getRemoteAddress().get.getHostName() === "localhost")
-      assert(myactor.getRemoteAddress().get.getPort() === 9992)
+      assert(myactor.homeAddress.isDefined)
+      assert(myactor.homeAddress.get.getHostName() === "localhost")
+      assert(myactor.homeAddress.get.getPort() === 9990)
       PingActor.latch.await
       assert(PingActor.lastMessage === "Hello 4")
     }
@@ -108,9 +99,9 @@ class UntypedActorSpringFeatureTest extends FeatureSpec with ShouldMatchers with
       myactor.sendOneWay("Hello client managed remote untyped-actor")
       PingActor.latch.await
       assert(PingActor.lastMessage === "Hello client managed remote untyped-actor")
-      assert(myactor.getRemoteAddress().isDefined)
-      assert(myactor.getRemoteAddress().get.getHostName() === "localhost")
-      assert(myactor.getRemoteAddress().get.getPort() === 9990)
+      assert(myactor.homeAddress.isDefined)
+      assert(myactor.homeAddress.get.getHostName() === "localhost")
+      assert(myactor.homeAddress.get.getPort() === 9990)
     }
 
     scenario("autostart untypedactor when requested in config") {
@@ -123,7 +114,7 @@ class UntypedActorSpringFeatureTest extends FeatureSpec with ShouldMatchers with
     scenario("create server managed remote untyped-actor") {
       val myactor = getPingActorFromContext("/server-managed-config.xml", "server-managed-remote-untyped-actor")
       val nrOfActors = Actor.registry.actors.length
-      val actorRef = RemoteClient.actorFor("akka.spring.foo.PingActor", "localhost", 9990)
+      val actorRef = remote.actorFor("server-managed-remote-untyped-actor", "localhost", 9990)
       actorRef.sendOneWay("Hello server managed remote untyped-actor")
       PingActor.latch.await
       assert(PingActor.lastMessage === "Hello server managed remote untyped-actor")
@@ -133,7 +124,7 @@ class UntypedActorSpringFeatureTest extends FeatureSpec with ShouldMatchers with
     scenario("create server managed remote untyped-actor with custom service id") {
       val myactor = getPingActorFromContext("/server-managed-config.xml", "server-managed-remote-untyped-actor-custom-id")
       val nrOfActors = Actor.registry.actors.length
-      val actorRef = RemoteClient.actorFor("ping-service", "localhost", 9990)
+      val actorRef = remote.actorFor("ping-service", "localhost", 9990)
       actorRef.sendOneWay("Hello server managed remote untyped-actor")
       PingActor.latch.await
       assert(PingActor.lastMessage === "Hello server managed remote untyped-actor")
@@ -156,5 +147,5 @@ class UntypedActorSpringFeatureTest extends FeatureSpec with ShouldMatchers with
     }
 
   }
-}*/
+}
 
