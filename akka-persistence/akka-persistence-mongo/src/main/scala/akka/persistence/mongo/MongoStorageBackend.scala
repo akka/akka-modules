@@ -9,7 +9,7 @@ import akka.persistence.common._
 import akka.util.Logging
 import akka.config.Config.config
 
-import com.novus.casbah.mongodb.Imports._
+import com.mongodb.casbah.Imports._
 
 /**
  * A module for supporting MongoDB based persistence.
@@ -45,12 +45,12 @@ private[akka] object MongoStorageBackend extends
   }
 
   def insertMapStorageEntriesFor(name: String, entries: List[(Array[Byte], Array[Byte])]) {
-    db.safely { db =>
+    db.request { db =>
       val q: DBObject = MongoDBObject(KEY -> name)
       coll.findOne(q) match {
         case Some(dbo) =>
           entries.foreach { case (k, v) => dbo += new String(k) -> v }
-          db.safely { db => coll.update(q, dbo, true, false) }
+          db.request { db => coll.update(q, dbo, true, false) }
         case None =>
           val builder = MongoDBObject.newBuilder
           builder += KEY -> name
@@ -62,7 +62,7 @@ private[akka] object MongoStorageBackend extends
 
   def removeMapStorageFor(name: String): Unit = {
     val q: DBObject = MongoDBObject(KEY -> name)
-    db.safely { db => coll.remove(q) }
+    db.request { db => coll.remove(q) }
   }
 
 
@@ -74,7 +74,7 @@ private[akka] object MongoStorageBackend extends
   def removeMapStorageFor(name: String, key: Array[Byte]): Unit = queryFor(name) { (q, dbo) =>
     dbo.foreach { d =>
       d -= new String(key)
-      db.safely { db => coll.update(q, d, true, false) }
+      db.request { db => coll.update(q, d, true, false) }
     }
   }
 
@@ -129,7 +129,7 @@ private[akka] object MongoStorageBackend extends
     // lookup with name
     val q: DBObject = MongoDBObject(KEY -> name)
 
-    db.safely { db =>
+    db.request { db =>
       coll.findOne(q) match {
         // exists : need to update
         case Some(dbo) =>
@@ -161,7 +161,7 @@ private[akka] object MongoStorageBackend extends
   def updateVectorStorageEntryFor(name: String, index: Int, elem: Array[Byte]) = queryFor(name) { (q, dbo) =>
     dbo.foreach { d =>
       d += ((index.toString, elem))
-      db.safely { db => coll.update(q, d, true, false) }
+      db.request { db => coll.update(q, d, true, false) }
     }
   }
 
@@ -204,7 +204,7 @@ private[akka] object MongoStorageBackend extends
     // lookup with name
     val q: DBObject = MongoDBObject(KEY -> name)
 
-    db.safely { db =>
+    db.request { db =>
       coll.findOne(q) match {
         // exists : need to update
         case Some(dbo) =>
