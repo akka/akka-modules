@@ -8,7 +8,7 @@ import org.junit.runner.RunWith
 import java.util.NoSuchElementException
 
 @RunWith(classOf[JUnitRunner])
-class MongoStorageSpec extends
+class MongoStorageTestIntegration extends
   Spec with
   ShouldMatchers with
   BeforeAndAfterEach {

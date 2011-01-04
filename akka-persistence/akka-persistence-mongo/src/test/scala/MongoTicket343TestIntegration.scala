@@ -170,7 +170,7 @@ object Storage {
 import Storage._
 
 @RunWith(classOf[JUnitRunner])
-class MongoTicket343Spec extends
+class MongoTicket343TestIntegration extends
   Spec with
   ShouldMatchers with
   BeforeAndAfterAll with

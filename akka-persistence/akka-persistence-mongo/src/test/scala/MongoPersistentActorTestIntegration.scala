@@ -90,7 +90,7 @@ class BankAccountActor extends Actor {
 }
 
 @RunWith(classOf[JUnitRunner])
-class MongoPersistentActorSpec extends
+class MongoPersistentActorTestIntegration extends
   Spec with
   ShouldMatchers with
   BeforeAndAfterEach {
