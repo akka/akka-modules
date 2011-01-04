@@ -3,7 +3,7 @@
  */
 package akka.spring
 
-import akka.actor.{ActorRegistry, ActorRef}
+import akka.actor.{Actor, ActorRef}
 import akka.spring.foo.PingActor
 
 import org.junit.runner.RunWith
@@ -18,7 +18,7 @@ import org.scalatest.matchers.ShouldMatchers
  */
 @RunWith(classOf[JUnitRunner])
 class ActorFactoryBeanTest extends Spec with ShouldMatchers with BeforeAndAfterAll {
-  override protected def afterAll = ActorRegistry.shutdownAll
+  override protected def afterAll = Actor.registry.shutdownAll
 
   describe("A ActorFactoryBean") {
     val bean = new ActorFactoryBean

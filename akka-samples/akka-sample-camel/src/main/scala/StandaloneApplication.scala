@@ -39,7 +39,7 @@ object StandaloneApplication extends Application {
 
   stopCamelService
 
-  ActorRegistry.shutdownAll
+  Actor.registry.shutdownAll
 }
 
 class StandaloneApplicationRoute extends RouteBuilder {
@@ -60,7 +60,7 @@ object StandaloneSpringApplication extends Application {
 
   appctx.close
 
-  ActorRegistry.shutdownAll
+  Actor.registry.shutdownAll
 }
 
 class StandaloneSpringApplicationRoute extends RouteBuilder {
@@ -103,5 +103,5 @@ object StandaloneJmsApplication extends Application {
   Thread.sleep(1000)
 
   stopCamelService
-  ActorRegistry.shutdownAll
+  Actor.registry.shutdownAll
 }

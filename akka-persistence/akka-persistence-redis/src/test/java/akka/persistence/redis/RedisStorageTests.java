@@ -5,7 +5,8 @@ import org.junit.Test;
 import org.junit.Before;
 
 import akka.actor.ActorRef;
-import akka.actor.UntypedActor;
+import akka.actor.Actors;
+import akka.actor.Actor;
 import akka.actor.UntypedActorFactory;
 
 public class RedisStorageTests {
@@ -14,8 +15,8 @@ public class RedisStorageTests {
 
     @Before public void initialise() {
 		RedisStorageBackend.flushDB();
-		chat = UntypedActor.actorOf(new UntypedActorFactory() {
-			public UntypedActor create() {
+		chat = Actors.actorOf(new UntypedActorFactory() {
+			public Actor create() {
 				return new RedisChatStorage();
 			}
 		});

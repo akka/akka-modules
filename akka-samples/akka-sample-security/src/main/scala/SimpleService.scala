@@ -11,7 +11,6 @@ import akka.util.Logging
 import akka.security.{BasicAuthenticationActor,BasicCredentials,SpnegoAuthenticationActor,DigestAuthenticationActor, UserInfo}
 import akka.stm._
 import akka.stm.TransactionalMap
-import akka.actor.ActorRegistry.actorFor
 
 class Boot {
   val factory = SupervisorFactory(
@@ -123,7 +122,7 @@ class SecureTickService {
   def tick = {
         //Fetch the first actor of type PersistentSimpleServiceActor
         //Send it the "Tick" message and expect a NdeSeq back
-        val result = for{a <- actorFor[SecureTickActor]
+        val result = for{a <- registry.actorFor[SecureTickActor]
                          r <- (a !! "Tick").as[Integer]} yield r
         //Return either the resulting NodeSeq or a default one
         result match {

@@ -20,7 +20,7 @@ class Activator extends BundleActivator {
   }
 
   def stop(context: BundleContext) {
-          ActorRegistry.shutdownAll()
+          Actor.registry.shutdownAll()
     println("Stopped the OSGi example.")
   }
 }

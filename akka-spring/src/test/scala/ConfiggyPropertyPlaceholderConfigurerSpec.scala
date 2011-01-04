@@ -34,8 +34,8 @@ class ConfiggyPropertyPlaceholderConfigurerSpec extends FeatureSpec with ShouldM
     scenario("should provide the akkka config for spring") {
       val context = new ClassPathXmlApplicationContext("/property-config.xml")
       val actor1 = context.getBean("actor-1").asInstanceOf[ActorRef]
-      assert(actor1.remoteAddress.get.getHostName === "localhost")
-      assert(actor1.remoteAddress.get.getPort === 9995)
+      assert(actor1.homeAddress.get.getHostName === "localhost")
+      assert(actor1.homeAddress.get.getPort === 9995)
       assert(actor1.timeout === 2000)
     }
   }

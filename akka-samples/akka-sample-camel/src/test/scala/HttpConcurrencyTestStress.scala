@@ -58,7 +58,7 @@ object HttpConcurrencyTestStress {
   @AfterClass
   def afterClass = {
     stopCamelService
-    ActorRegistry.shutdownAll
+    Actor.registry.shutdownAll
   }
 
   class HttpClientActor(label: String, latch: CountDownLatch) extends Actor with Producer {

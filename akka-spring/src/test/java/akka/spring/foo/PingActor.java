@@ -1,7 +1,8 @@
 package akka.spring.foo;
 
-import akka.actor.UntypedActor;
+import static akka.actor.Actors.*;
 import akka.actor.ActorRef;
+import akka.actor.UntypedActor;
 
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -59,7 +60,7 @@ public class PingActor extends UntypedActor implements ApplicationContextAware {
     if (message instanceof String) {
       lastMessage = (String) message;
       if (message.equals("longRunning")) {
-        ActorRef pongActor = UntypedActor.actorOf(PongActor.class).start();
+        ActorRef pongActor = actorOf(PongActor.class).start();
         pongActor.sendRequestReply("longRunning", getContext());
       }
     latch.countDown();

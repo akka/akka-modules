@@ -3,7 +3,7 @@ package akka.amqp;
 import org.multiverse.api.latches.StandardLatch;
 import scala.Option;
 import akka.actor.ActorRef;
-import akka.actor.ActorRegistry;
+import akka.actor.Actors;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorFactory;
 
@@ -46,7 +46,7 @@ public class ExampleSessionJava {
         // all connections/consumers/producers will be stopped
         AMQP.shutdownAll();
 
-        ActorRegistry.shutdownAll();
+        Actors.registry().shutdownAll();
 
         printTopic("Happy hAkking :-)");
 
@@ -70,11 +70,10 @@ public class ExampleSessionJava {
 
         AMQP.ExchangeParameters exchangeParameters = new AMQP.ExchangeParameters("my_direct_exchange", Direct.getInstance());
 
-        ActorRef deliveryHandler = UntypedActor.actorOf(DirectDeliveryHandlerActor.class);
+        ActorRef deliveryHandler = Actors.actorOf(DirectDeliveryHandlerActor.class);
 
         AMQP.ConsumerParameters consumerParameters = new AMQP.ConsumerParameters("some.routing", deliveryHandler, exchangeParameters);
         ActorRef consumer = AMQP.newConsumer(connection, consumerParameters);
-
 
         ActorRef producer = AMQP.newProducer(connection, new AMQP.ProducerParameters(exchangeParameters));
         producer.sendOneWay(new Message("@jonas_boner: You sucked!!".getBytes(), "some.routing"));
@@ -84,13 +83,13 @@ public class ExampleSessionJava {
 
         final CountDownLatch channelCountdown = new CountDownLatch(2);
 
-        ActorRef connectionCallback = UntypedActor.actorOf(ConnectionCallbackActor.class);
+        ActorRef connectionCallback = Actors.actorOf(ConnectionCallbackActor.class);
         connectionCallback.start();
 
         AMQP.ConnectionParameters connectionParameters = new AMQP.ConnectionParameters(connectionCallback);
         ActorRef connection = AMQP.newConnection(connectionParameters);
 
-        ActorRef channelCallback = UntypedActor.actorOf(new UntypedActorFactory() {
+        ActorRef channelCallback = Actors.actorOf(new UntypedActorFactory() {
             public UntypedActor create() {
                 return new ChannelCallbackActor(channelCountdown);
             }
@@ -100,7 +99,7 @@ public class ExampleSessionJava {
         AMQP.ExchangeParameters exchangeParameters = new AMQP.ExchangeParameters("my_callback_exchange", Direct.getInstance());
         AMQP.ChannelParameters channelParameters = new AMQP.ChannelParameters(channelCallback);
 
-        ActorRef dummyHandler = UntypedActor.actorOf(DummyActor.class);
+        ActorRef dummyHandler = Actors.actorOf(DummyActor.class);
         AMQP.ConsumerParameters consumerParameters = new AMQP.ConsumerParameters("callback.routing", dummyHandler, exchangeParameters, channelParameters);
 
         ActorRef consumer = AMQP.newConsumer(connection, consumerParameters);

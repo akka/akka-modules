@@ -2,14 +2,14 @@ package sample.camel
 
 import org.apache.camel.Exchange
 
-import akka.actor.{Actor, ActorRef, RemoteActor}
+import akka.actor.{Actor, ActorRef, ActorRegistry}
 import akka.camel.{Failure, Producer, Message, Consumer}
 import akka.util.Logging
 
 /**
  * Client-initiated remote actor.
  */
-class RemoteActor1 extends RemoteActor("localhost", 7777) with Consumer {
+class RemoteActor1 extends Actor with Consumer {
   def endpointUri = "jetty:http://localhost:6644/camel/remote-actor-1"
 
   protected def receive = {

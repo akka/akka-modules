@@ -5,12 +5,11 @@
 package akka.spring
 
 import org.springframework.beans.{BeanUtils,BeansException,BeanWrapper,BeanWrapperImpl}
-import akka.remote.{RemoteClient, RemoteServer}
 import org.springframework.beans.factory.config.AbstractFactoryBean
 import org.springframework.context.{ApplicationContext,ApplicationContextAware}
 import org.springframework.util.StringUtils
 
-import akka.actor.{ActorRef, AspectInitRegistry, TypedActorConfiguration, TypedActor,Actor}
+import akka.actor.{ActorRef, ActorRegistry, AspectInitRegistry, TypedActorConfiguration, TypedActor,Actor}
 import akka.dispatch.MessageDispatcher
 import akka.util.{Logging, Duration}
 import scala.reflect.BeanProperty
@@ -108,11 +107,11 @@ class ActorFactoryBean extends AbstractFactoryBean[AnyRef] with Logging with App
           TypedActor.newInstance(interface.toClass, getBeanFactory().getBean(beanRef), createConfig)
 
     if (isRemote && serverManaged) {
-      val server = RemoteServer.getOrCreateServer(new InetSocketAddress(host, port.toInt))
+      Actor.remote.start(host, port.toInt)//TODO: remove this?
       if (serviceName.isEmpty) {
-        server.registerTypedActor(interface, typedActor)
+        Actor.remote.registerTypedActor(interface, typedActor)
       } else {
-        server.registerTypedActor(serviceName, typedActor)
+        Actor.remote.registerTypedActor(serviceName, typedActor)
       }
     }
     typedActor
@@ -125,31 +124,34 @@ class ActorFactoryBean extends AbstractFactoryBean[AnyRef] with Logging with App
     if ((!StringUtils.hasText(implementation)) && (beanRef eq null)) throw new AkkaBeansException(
         "Either 'implementation' or 'ref' must be specified as attribute of the 'akka:untyped-actor' element in the Spring config file ")
 
-    val actorRef = if (beanRef ne null)
-                     Actor.actorOf(getBeanFactory().getBean(beanRef).asInstanceOf[Actor])
-                   else
-                     Actor.actorOf(implementation.toClass)
+    val actorRef = if (isRemote && !serverManaged) { //If clientManaged
+        if (beanRef ne null)
+          Actor.remote.actorOf(getBeanFactory().getBean(beanRef).asInstanceOf[Actor], host, port.toInt)
+        else
+          Actor.remote.actorOf(implementation.toClass, host, port.toInt)
+    } else {
+      if (beanRef ne null)
+         Actor.actorOf(getBeanFactory().getBean(beanRef).asInstanceOf[Actor])
+       else
+         Actor.actorOf(implementation.toClass)
+    }
 
     if (timeout > 0)
       actorRef.setTimeout(timeout)
-
-    if (isRemote) {
-      if (serverManaged) {
-        val server = RemoteServer.getOrCreateServer(new InetSocketAddress(host, port.toInt))
-        if (serviceName.isEmpty)
-          server.register(actorRef)
-        else
-          server.register(serviceName, actorRef)
-      } else { //Is client managed
-        actorRef.makeRemote(host, port.toInt)
-      }
-    }
 
     if(StringUtils.hasText(id))
       actorRef.id = id
 
     if (hasDispatcher)
       actorRef.setDispatcher( dispatcherInstance( if (dispatcher.dispatcherType == THREAD_BASED) Some(actorRef) else None ) )
+
+    if (isRemote && serverManaged) {
+      Actor.remote.start(host, port.toInt)//TODO: Remove this
+      if (serviceName.isEmpty)
+        Actor.remote.register(actorRef)
+      else
+        Actor.remote.register(serviceName, actorRef)
+    }
 
     actorRef
   }
@@ -245,12 +247,9 @@ class ActorForFactoryBean extends AbstractFactoryBean[AnyRef] with Logging with 
   /*
    * @see org.springframework.beans.factory.config.AbstractFactoryBean#createInstance()
    */
-  def createInstance: AnyRef = {
-    if (interface.isEmpty) {
-      RemoteClient.actorFor(serviceName, host, port.toInt)
-    } else {
-      RemoteClient.typedActorFor(interface.toClass, serviceName, host, port.toInt)
-    }
+  def createInstance: AnyRef = interface match {
+    case null|"" => Actor.remote.actorFor(serviceName, host, port.toInt)
+    case iface   => Actor.remote.typedActorFor(iface.toClass, serviceName, host, port.toInt)
   }
 }
 

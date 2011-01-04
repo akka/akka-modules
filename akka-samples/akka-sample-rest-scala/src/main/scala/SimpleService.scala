@@ -16,7 +16,6 @@ import java.lang.Integer
 import java.nio.ByteBuffer
 import javax.ws.rs.core.MultivaluedMap
 import javax.ws.rs.{GET, POST, Path, Produces, WebApplicationException, Consumes,PathParam}
-import akka.actor.ActorRegistry.actorFor
 
 class Boot {
   val factory = SupervisorFactory(
@@ -42,7 +41,7 @@ class SimpleService {
   def count = {
     //Fetch the first actor of type SimpleServiceActor
     //Send it the "Tick" message and expect a NodeSeq back
-    val result = for{a <- actorFor[SimpleServiceActor]
+    val result = for{a <- registry.actorFor[SimpleServiceActor]
                      r <- (a !! "Tick").as[NodeSeq]} yield r
     //Return either the resulting NodeSeq or a default one
     result getOrElse <error>Error in counter</error>
@@ -87,7 +86,7 @@ class PersistentSimpleService {
   def count = {
     //Fetch the first actor of type PersistentSimpleServiceActor
     //Send it the "Tick" message and expect a NodeSeq back
-    val result = for{a <- actorFor[PersistentSimpleServiceActor]
+    val result = for{a <- registry.actorFor[PersistentSimpleServiceActor]
                      r <- (a !! "Tick").as[NodeSeq]} yield r
     //Return either the resulting NodeSeq or a default one
     result getOrElse <error>Error in counter</error>

@@ -6,8 +6,7 @@ package sample.chat
 
 import scala.collection.mutable.HashMap
 
-import akka.actor.{SupervisorFactory, Actor, ActorRef, RemoteActor}
-import akka.remote.{RemoteNode, RemoteClient}
+import akka.actor.{SupervisorFactory, Actor, ActorRef, ActorRegistry}
 import akka.persistence.common.PersistentVector
 import akka.persistence.redis.RedisStorage
 import akka.stm._
@@ -60,7 +59,7 @@ case class ChatMessage(from: String, message: String) extends Event
  * Chat client.
  */
 class ChatClient(val name: String) {
-  val chat = RemoteClient.actorFor("chat:service", "localhost", 2552)
+  val chat = Actor.remote.actorFor("chat:service", "localhost", 2552)
 
   def login                 = chat ! Login(name)
   def logout                = chat ! Logout(name)
@@ -203,8 +202,8 @@ class ChatService extends
   ChatManagement with
   RedisChatStorageFactory {
   override def preStart = {
-    RemoteNode.start("localhost", 2552)
-    RemoteNode.register("chat:service", self)
+    Actor.remote.start("localhost", 2552)
+    Actor.remote.register("chat:service", self)
   }
 }
 

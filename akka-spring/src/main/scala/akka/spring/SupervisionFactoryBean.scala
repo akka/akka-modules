@@ -5,7 +5,7 @@ package akka.spring
 
 import org.springframework.beans.factory.config.AbstractFactoryBean
 import akka.config.Supervision._
-import akka.actor.{Supervisor, SupervisorFactory, Actor}
+import akka.actor.{Supervisor, SupervisorFactory, Actor, ActorRegistry}
 import AkkaSpringConfigurationTags._
 import reflect.BeanProperty
 import akka.config.{TypedActorConfigurator, RemoteAddress}
@@ -82,16 +82,10 @@ class SupervisionFactoryBean extends AbstractFactoryBean[AnyRef] {
     val lifeCycle = if (!props.lifecycle.isEmpty && props.lifecycle.equalsIgnoreCase(VAL_LIFECYCYLE_TEMPORARY)) Temporary else Permanent
     val isRemote = (props.host ne null) && (!props.host.isEmpty)
     val actorRef = Actor.actorOf(props.target.toClass)
-    if (props.timeout > 0) {
-      actorRef.setTimeout(props.timeout)
-    }
 
-    val supervise = if (isRemote) {
-      val remote = new RemoteAddress(props.host, props.port.toInt)
-      Supervise(actorRef, lifeCycle, remote)
-    } else {
-      Supervise(actorRef, lifeCycle)
-    }
-    supervise
+    if (props.timeout > 0)
+      actorRef.setTimeout(props.timeout)
+
+    Supervise(actorRef, lifeCycle, isRemote)
   }
 }
