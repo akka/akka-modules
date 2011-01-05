@@ -89,24 +89,38 @@ private[akka] object MongoStorageBackend extends
    *    For the context of STM, it is best to use a w=1 (same as calling getLastError
    *    which happens in the request{} blocks.)
    *    However, many users want to config this and may even want w=2
+   * Users can specify an Enum value *OR* the specific values.
    *   @see http://api.mongodb.org/java/2.5-pre-/com/mongodb/WriteConcern.html
    */
-  /** 
-   * Default 1 -- Wait for 1 server to commit the write before returning.  
-   * If Replica Pairs or Sets is enabled this default will become 2 instead of 1
-   */
-  val WRITE_CONCERN_W = config.getInt("akka.persistence.mongodb.write_concern.w", 
-                                      if (REPLICA_PAIR || REPLICA_SETS) 2 else 1)
-  /** Default 0 -- Wait / block forever for writes to return. */
-  val WRITE_CONCERN_WTIMEOUT = 
-    config.getInt("akka.persistence.mongodb.write_concern.wtimeout", 0)
 
-  /** Defauilt false, if true flushes mongo data to disk on each write before
-   * returning.  Setting this to true should only be done by those who know 
-   * what they are doing
-   */
-  val WRITE_CONCERN_FSYNC = 
-    config.getBool("akka.persistence.mongodb.write_concern_fsync", false)
+  val WRITE_CONCERN = config.getString("akka.persistence.mongodb.write_concern") match {
+    case None | null | Some("") => {
+      /** 
+       * Default 1 -- Wait for 1 server to commit the write before returning.  
+       * If Replica Pairs or Sets is enabled this default will become 2 instead of 1
+       */
+      val w = config.getInt("akka.persistence.mongodb.write_concern.w", 
+                                          if (REPLICA_PAIR || REPLICA_SETS) 2 else 1)
+      /** Default 0 -- Wait / block forever for writes to return. */
+      val wtimeout = 
+        config.getInt("akka.persistence.mongodb.write_concern.wtimeout", 0)
+
+      /** Default false, if true flushes mongo data to disk on each write before
+       * returning.  Setting this to true should only be done by those who know 
+       * what they are doing
+       */
+      val fsync = 
+        config.getBool("akka.persistence.mongodb.write_concern_fsync", false)
+
+      WriteConcern(w, wtimeout, fsync)
+    }
+    case Some(wc_enum) => {
+      log.debug("Attempting to parse Write Concern enum value '%s'", wc_enum)
+      val wc = WriteConcern.valueOf(wc_enum)
+      require(wc != null, "Unable to resolve Write Concern enum value '%s'")
+      wc
+    }
+  }
 
   val db: MongoDB = getMongoDB 
 
@@ -155,9 +169,7 @@ private[akka] object MongoStorageBackend extends
       log.info("Standard Mongo Connection mode enabled.")
       MongoConnection(HOSTNAME, PORT)
     }
-    // Setup Write Concern
-    val wc = WriteConcern(WRITE_CONCERN_W, WRITE_CONCERN_WTIMEOUT, WRITE_CONCERN_FSYNC)
-    conn.writeConcern = wc
+    conn.writeConcern = WRITE_CONCERN
     conn(DBNAME)
   }
 
