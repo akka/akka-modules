@@ -120,7 +120,7 @@ class TypedActorSpringFeatureTest extends FeatureSpec with ShouldMatchers with B
     scenario("get a server-managed-remote-typed-actor") {
       val serverPojo = getTypedActorFromContext("/server-managed-config.xml", "server-managed-remote-typed-actor")
       //
-      val myPojoProxy = remote.typedActorFor(classOf[IMyPojo], "server-managed-remote-typed-actor", 5000L, "localhost", 9990)
+      val myPojoProxy = remote.typedActorFor(classOf[IMyPojo], classOf[IMyPojo].getName, 5000L, "localhost", 9990)
       assert(myPojoProxy.getFoo() === "foo")
       myPojoProxy.oneWay("hello server-managed-remote-typed-actor")
       MyPojo.latch.await
@@ -130,7 +130,7 @@ class TypedActorSpringFeatureTest extends FeatureSpec with ShouldMatchers with B
     scenario("get a server-managed-remote-typed-actor-custom-id") {
       val serverPojo = getTypedActorFromContext("/server-managed-config.xml", "server-managed-remote-typed-actor-custom-id")
       //
-      val myPojoProxy = remote.typedActorFor(classOf[IMyPojo], "server-managed-remote-typed-actor-custom-id", 5000L, "localhost", 9990)
+      val myPojoProxy = remote.typedActorFor(classOf[IMyPojo], "mypojo-service", 5000L, "localhost", 9990)
       assert(myPojoProxy.getFoo() === "foo")
       myPojoProxy.oneWay("hello server-managed-remote-typed-actor 2")
       MyPojo.latch.await
