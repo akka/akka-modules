@@ -66,7 +66,7 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
   // -------------------------------------------------------------------------------------------------------------------
 
   object Repositories {
-    lazy val AkkaRepo             = MavenRepository("Akka Repository", "http://scalablesolutions.se/akka/repository")
+    lazy val AkkaRepo             = MavenRepository("Akka Repository", "http://akka.io/repository")
     lazy val ScalaToolsRepo           = MavenRepository("Scala-Tools Repo", "http://scala-tools.org/repo-releases")
     lazy val CodehausRepo         = MavenRepository("Codehaus Repo", "http://repository.codehaus.org")
     lazy val EmbeddedRepo         = MavenRepository("Embedded Repo", (info.projectPath / "embedded-repo").asURL.toString)
@@ -80,8 +80,8 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
     lazy val ZookeeperRepo        = MavenRepository("Zookeeper Repo", "http://lilycms.org/maven/maven2/deploy/")
     lazy val ClojarsRepo          = MavenRepository("Clojars Repo", "http://clojars.org/repo")
     lazy val ScalaToolsRelRepo    = MavenRepository("Scala Tools Releases Repo", "http://scala-tools.org/repo-releases")
-	lazy val TerrastoreRepo       = MavenRepository("Terrastore Releases Repo", "http://m2.terrastore.googlecode.com/hg/repo")
-	lazy val MsgPackRepo          = MavenRepository("Message Pack Releases Repo","http://msgpack.sourceforge.net/maven2/")
+	  lazy val TerrastoreRepo       = MavenRepository("Terrastore Releases Repo", "http://m2.terrastore.googlecode.com/hg/repo")
+	  lazy val MsgPackRepo          = MavenRepository("Message Pack Releases Repo","http://msgpack.sourceforge.net/maven2/")
   }
 
   // -------------------------------------------------------------------------------------------------------------------
@@ -118,6 +118,7 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
   lazy val jsr166yModuleConfig     = ModuleConfiguration("jsr166y", TerrastoreRepo)
   lazy val args4jModuleConfig      = ModuleConfiguration("args4j", JBossRepo)
   lazy val scannotationModuleConfig= ModuleConfiguration("org.scannotation", JBossRepo)
+  lazy val configgyModuleConfig    = ModuleConfiguration("net.lag", AkkaRepo)
   val embeddedRepo                 = EmbeddedRepo // This is the only exception, because the embedded repo is fast!
   val localMavenRepo               = LocalMavenRepo // Second exception, also fast! ;-)
 
@@ -242,7 +243,8 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
     lazy val scalaj_coll = "org.scalaj" % "scalaj-collection_2.8.0" % "1.0" % "compile" //ApacheV2
 
 	  //Terrastore Client
-	  lazy val terrastore_client = "terrastore" % "terrastore-javaclient" % "2.2" % "compile"
+	  lazy val terrastore_client = "terrastore" % "terrastore-javaclient" % "2.2" % "compile" intransitive()
+
 
     // Test
 

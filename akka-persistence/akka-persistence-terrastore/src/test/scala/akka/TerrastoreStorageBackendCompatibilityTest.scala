@@ -16,7 +16,7 @@ class TerrastoreRefStorageBackendTest extends RefStorageBackendTest with Embedde
 @RunWith(classOf[JUnitRunner])
 class TerrastoreMapStorageBackendTest extends MapStorageBackendTest with EmbeddedTerrastore {
   def dropMaps = {
-     TerrastoreStorageBackend.mapAccess.drop
+    TerrastoreStorageBackend.mapAccess.drop
   }
 
   def storage = TerrastoreStorageBackend
