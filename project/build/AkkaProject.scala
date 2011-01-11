@@ -66,7 +66,7 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
   // -------------------------------------------------------------------------------------------------------------------
 
   object Repositories {
-    lazy val AkkaRepo             = MavenRepository("Akka Repository", "http://scalablesolutions.se/akka/repository")
+    lazy val AkkaRepo             = MavenRepository("Akka Repository", "http://akka.io/repository")
     lazy val ScalaToolsRepo           = MavenRepository("Scala-Tools Repo", "http://scala-tools.org/repo-releases")
     lazy val CodehausRepo         = MavenRepository("Codehaus Repo", "http://repository.codehaus.org")
     lazy val EmbeddedRepo         = MavenRepository("Embedded Repo", (info.projectPath / "embedded-repo").asURL.toString)
@@ -95,7 +95,7 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
   lazy val jettyModuleConfig       = ModuleConfiguration("org.eclipse.jetty", sbt.DefaultMavenRepository)
   lazy val guiceyFruitModuleConfig = ModuleConfiguration("org.guiceyfruit", GuiceyFruitRepo)
   // lazy val hawtdispatchModuleConfig  = ModuleConfiguration("org.fusesource.hawtdispatch", FusesourceSnapshotRepo)
-  //lazy val akkaRepo               = ModuleConfiguration("se.scalablesolutions.akka", AkkaRepo /*Change to AkkaRepo before release*/)
+  lazy val akkaRepo               = ModuleConfiguration("se.scalablesolutions.akka", AkkaRepo /*Change to AkkaRepo before release*/)
   lazy val jbossModuleConfig       = ModuleConfiguration("org.jboss", JBossRepo)
   lazy val jdmkModuleConfig        = ModuleConfiguration("com.sun.jdmk", SunJDMKRepo)
   lazy val jmsModuleConfig         = ModuleConfiguration("javax.jms", SunJDMKRepo)
@@ -118,6 +118,7 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
   lazy val jsr166yModuleConfig     = ModuleConfiguration("jsr166y", TerrastoreRepo)
   lazy val args4jModuleConfig      = ModuleConfiguration("args4j", JBossRepo)
   lazy val scannotationModuleConfig= ModuleConfiguration("org.scannotation", JBossRepo)
+  lazy val configgyModuleConfig    = ModuleConfiguration("net.lag", AkkaRepo)
   val embeddedRepo                 = EmbeddedRepo // This is the only exception, because the embedded repo is fast!
   val localMavenRepo               = LocalMavenRepo // Second exception, also fast! ;-)
 
@@ -125,7 +126,7 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
   // Versions
   // -------------------------------------------------------------------------------------------------------------------
 
-  lazy val AKKA_VERSION          = "1.0-RC3"
+  lazy val AKKA_VERSION          = "1.0"
   lazy val ATMO_VERSION          = "0.6.2"
   lazy val CAMEL_VERSION         = "2.5.0"
   lazy val CASSANDRA_VERSION     = "0.6.1"
