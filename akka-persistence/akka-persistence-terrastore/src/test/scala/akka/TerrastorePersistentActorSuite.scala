@@ -37,7 +37,7 @@ class BankAccountActor extends Actor {
   import sjson.json.JsonSerialization._
 
   def receive = {
-    case message => atomic{
+    case message => atomic {
       atomicReceive(message)
     }
   }
@@ -74,7 +74,7 @@ class BankAccountActor extends Actor {
         .getOrElse(0)
 
       var cbal = m
-      amounts.foreach{
+      amounts.foreach {
         amount =>
           accountState.put(accountNo.getBytes, tobinary(m - amount))
           cbal = cbal - amount
@@ -152,7 +152,7 @@ BeforeAndAfterEach with EmbeddedTerrastore {
       bactor.start
       bactor !! Credit("a-123", 5000)
       (bactor !! Balance("a-123")).get.asInstanceOf[Int] should equal(5000)
-      evaluating{
+      evaluating {
         bactor !! Debit("a-123", 7000)
       } should produce[Exception]
       (bactor !! Balance("a-123")).get.asInstanceOf[Int] should equal(5000)
@@ -166,7 +166,7 @@ BeforeAndAfterEach with EmbeddedTerrastore {
       bactor.start
       bactor !! Credit("a-123", 5000)
       (bactor !! Balance("a-123")).get.asInstanceOf[Int] should equal(5000)
-      evaluating{
+      evaluating {
         bactor !! MultiDebit("a-123", List(1000, 2000, 4000))
       } should produce[Exception]
       (bactor !! Balance("a-123")).get.asInstanceOf[Int] should equal(5000)

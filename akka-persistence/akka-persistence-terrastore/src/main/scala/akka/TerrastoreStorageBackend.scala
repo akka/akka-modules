@@ -65,7 +65,7 @@ private[akka] object TerrastoreStorageBackend extends CommonStorageBackend {
 
     def getAll(keys: Iterable[Array[Byte]]): Map[Array[Byte], Array[Byte]] = {
       var result = new HashMap[Array[Byte], Array[Byte]]
-      keys.foreach{
+      keys.foreach {
         key =>
           val value = get(key)
           Option(value) match {

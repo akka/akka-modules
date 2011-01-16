@@ -55,8 +55,17 @@ object StandaloneSpringApplication extends Application {
   // load Spring application context
   val appctx = new ClassPathXmlApplicationContext("/context-standalone.xml")
 
+  // We cannot use the CamelServiceManager to wait for endpoint activation
+  // because CamelServiceManager is started by the Spring application context.
+  // (and hence is not available for setting expectations on activations). This
+  // will be improved/enabled in upcoming releases.
+  Thread.sleep(1000)
+
   // access 'externally' registered typed actors with typed-actor component
   assert("hello msg3" == mandatoryTemplate.requestBody("direct:test3", "msg3"))
+
+  // access auto-started untyped consumer
+  assert("received msg3" == mandatoryTemplate.requestBody("direct:untyped-consumer-1", "msg3"))
 
   appctx.close
 

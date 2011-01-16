@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<xsd:schema xmlns="http://www.akka.io/schema/akka"
-            targetNamespace="http://www.akka.io/schema/akka"
+<xsd:schema xmlns="http://akka.io/schema/akka"
+            targetNamespace="http://akka.io/schema/akka"
             elementFormDefault="qualified" attributeFormDefault="unqualified"
             xmlns:xsd="http://www.w3.org/2001/XMLSchema"
             xmlns:beans="http://www.springframework.org/schema/beans">
@@ -180,6 +180,13 @@
         </xsd:documentation>
       </xsd:annotation>
     </xsd:attribute>
+    <xsd:attribute name="depends-on" type="xsd:string">
+      <xsd:annotation>
+        <xsd:documentation>
+          comma-separated list of beans that must be initialized before this bean
+        </xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
   </xsd:complexType>
 
   <!-- untyped actor -->
@@ -230,6 +237,13 @@
       <xsd:annotation>
         <xsd:documentation>
           true or false, defaults to false if omitted.
+        </xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="depends-on" type="xsd:string">
+      <xsd:annotation>
+        <xsd:documentation>
+          comma-separated list of beans that must be initialized before this bean
         </xsd:documentation>
       </xsd:annotation>
     </xsd:attribute>

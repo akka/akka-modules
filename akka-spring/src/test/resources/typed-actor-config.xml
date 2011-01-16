@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns="http://www.springframework.org/schema/beans"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-       xmlns:akka="http://www.akka.io/schema/akka"
+       xmlns:akka="http://akka.io/schema/akka"
        xmlns:beans="http://www.springframework.org/schema/lang"
        xsi:schemaLocation="
 http://www.springframework.org/schema/beans
 http://www.springframework.org/schema/beans/spring-beans-2.0.xsd
-http://www.akka.io/schema/akka
-http://akka.io/schema/akka-1.0.xsd">
+http://akka.io/schema/akka
+http://akka.io/akka-1.0.xsd">
 
   <akka:typed-actor id="simple-typed-actor"
                       interface="akka.spring.foo.IMyPojo"

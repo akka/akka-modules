@@ -52,6 +52,7 @@ object AkkaSpringConfigurationTags {
   val LIFECYCLE = "lifecycle"
   val SCOPE = "scope"
   val AUTOSTART = "autostart"
+  val DEPENDS_ON = "depends-on"
 
   // supervision attributes
   val FAILOVER = "failover"
