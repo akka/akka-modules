@@ -60,6 +60,10 @@ trait ActorParser extends BeanParser with DispatcherParser {
       case null|"" => false
       case other   => other.toBoolean
     }
+    objectProperties.dependsOn = element.getAttribute(DEPENDS_ON) match {
+      case null|"" => Array[String]()
+      case other   => for (dep <- other.split(",")) yield dep.trim
+    }
 
     if (objectProperties.target == null && objectProperties.beanRef == null) {
       throw new IllegalArgumentException("Mandatory attribute missing, you need to provide either implementation or ref  ")

@@ -28,7 +28,7 @@ class ActorProperties {
   var scope:String = VAL_SCOPE_SINGLETON
   var dispatcher: DispatcherProperties = _
   var propertyEntries = new PropertyEntries()
-
+  var dependsOn: Array[String] = Array[String]()
 
   /**
    * Sets the properties to the given builder.
@@ -50,6 +50,7 @@ class ActorProperties {
     builder.addPropertyValue(PROPERTYENTRY_TAG,propertyEntries)
     builder.addPropertyValue("id", id)
     builder.addPropertyValue(AUTOSTART, autostart)
+    dependsOn foreach { dep => builder.addDependsOn(dep) }
   }
 
   def timeout() : Long = {
