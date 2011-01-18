@@ -27,10 +27,69 @@ trait MongoTransactional extends Transactional {
   override val uuid = _id.toString
 }
 
+object MongoAnyOrdering {
+  implicit object AnyOrdering extends Ordering[Any] {
+    def compare(o1: Any, o2: Any) = o1.toString.compare(o2.toString)
+  }
+}
 
 trait MongoPersistentMap extends PersistentMap[Any, Any] with MongoTransactional {
-  // TODO: Examine PersistentMapBinary and see if we need any of it's values
+  import scala.collection.immutable.{SortedMap, HashMap, TreeMap, StringLike}
   
+  type T = StringLike[String]
+
+  
+  private def replayAllKeys: SortedMap[Any, Any] = {
+    import MongoAnyOrdering._
+
+    val fromStorage = TreeMap(storage.getMapStorageFor(uuid): _*)
+
+    val (keysAdded, keysRemoved) = keysInCurrentTx.map {
+      case (_, k) => (k, getCurrentValue(k))
+    }.partition(_._2.isDefined)
+
+    val inStorageRemovedInTx =
+      keysRemoved.filterKeys(k => existsInStorage(k).isDefined)
+
+    (fromStorage -- inStorageRemovedInTx) ++ keysAdded.map { case (k, v) => (k, v.get) }
+  }
+
+  def slice(start: Option[Any], finish: Option[Any], count: Int): List[(Any, Any)] = try {
+    val newMap = replayAllKeys
+
+    if (newMap isEmpty) List[(Any, Any)]()
+
+    ((start, finish, count): @unchecked) match {
+      case ((Some(s), Some(e), _)) => newMap.range(s, e).toList
+      case ((Some(s), None, c)) if c > 0 => newMap.from(s).take(count).toList
+      case ((Some(s), None, _)) => newMap.from(s).toList
+      case ((None, Some(e), _)) => newMap.until(e).toList
+    }
+
+
+  } catch { case e: Exception => Nil }
+  
+  def iterator: Iterator[(Any, Any)] = {
+    new Iterator[(Any, Any)] {
+      private var elements = replayAllKeys
+
+      def next: (Any, Any) = synchronized {
+        val (k, v) = elements.head
+        elements = elements.tail
+        (k, v)
+      }
+
+      def hasNext: Boolean = synchronized { !elements.isEmpty }
+    }
+  }
+
+
+  import scala.collection.JavaConversions.asJavaIterator
+
+  def javaIterator = asJavaIterator(iterator)
+  
+  def toEquals(k: Any) = k.toString
+
 }
 
 trait MongoPersistentVector extends PersistentVector[Any] with MongoTransactional 

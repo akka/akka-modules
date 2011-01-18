@@ -112,7 +112,6 @@ private[akka] object MongoNativeMapStorageBackend extends
 
   def removeMapStorageFor(txnID: String) = mongoRequest { _ remove(_id(txnID)) }
 
-
 }
 
 
