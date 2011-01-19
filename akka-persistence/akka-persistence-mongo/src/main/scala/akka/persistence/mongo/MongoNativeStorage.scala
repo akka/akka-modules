@@ -165,13 +165,8 @@ private[akka] trait MongoNativeSortedSetStorageBackend extends
   }
 
   // zscore of the item from sorted set, identified by name
-  def zscore(txnID: String, item: Any): Option[Float] = {
-    throw new Exception("FOO!")
-    queryFor(txnID) { (q, dbo) => 
-      val foo = dbo.map { _.getAs[Double](_field(item)) map(_.toFloat) } 
-      log.debug("Zscore: %s", foo)
-      foo getOrElse(None)
-    }
+  def zscore(txnID: String, item: Any): Option[Float] = queryFor(txnID) { (q, dbo) => 
+    dbo.map { _.getAs[Double](_field(item)) map(_.toFloat) } getOrElse(None)
   }
 
   // zrange from the sorted set identified by name -- just the element
