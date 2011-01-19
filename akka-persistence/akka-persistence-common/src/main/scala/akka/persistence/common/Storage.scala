@@ -57,7 +57,8 @@ trait Storage {
   protected val backend: Backend[ElementType]
 
   def transactional: Boolean = false
-   def newMap: PersistentMap[ElementType, ElementType]
+
+  def newMap: PersistentMap[ElementType, ElementType]
 
   def newVector: PersistentVector[ElementType]
 

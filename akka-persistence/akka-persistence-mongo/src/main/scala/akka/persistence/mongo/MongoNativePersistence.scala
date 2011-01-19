@@ -23,8 +23,7 @@ import org.bson.types.ObjectId
  * @todo Make sure I'm not causing any weird bugs by _id <-> uuid
  */
 trait MongoTransactional extends Transactional {
-  val _id: ObjectId
-  override val uuid = _id.toString
+  override val uuid: String
 }
 
 object MongoAnyOrdering {
@@ -84,9 +83,9 @@ trait MongoPersistentMap extends PersistentMap[Any, Any] with MongoTransactional
   }
 
 
-  import scala.collection.JavaConversions.asJavaIterator
+  import scalaj.collection.Imports._
 
-  def javaIterator = asJavaIterator(iterator)
+  def javaIterator = iterator.asJava 
   
   def toEquals(k: Any) = k.toString
 

@@ -14,16 +14,16 @@ class MongoStorageTestIntegration extends
   BeforeAndAfterEach {
 
   override def beforeEach {
-    MongoStorageBackend.drop
+    MongoClassicStorageBackend.drop
   }
 
   override def afterEach {
-    MongoStorageBackend.drop
+    MongoClassicStorageBackend.drop
   }
 
   describe("persistent maps") {
     it("should insert with single key and value") {
-      import MongoStorageBackend._
+      import MongoClassicStorageBackend._
 
       insertMapStorageEntryFor("t1", "odersky".getBytes, "scala".getBytes)
       insertMapStorageEntryFor("t1", "gosling".getBytes, "java".getBytes)
@@ -36,7 +36,7 @@ class MongoStorageTestIntegration extends
     }
 
     it("should insert with multiple keys and values") {
-      import MongoStorageBackend._
+      import MongoClassicStorageBackend._
 
       val l = List(("stroustrup", "c++"), ("odersky", "scala"), ("gosling", "java"))
       insertMapStorageEntriesFor("t1", l.map { case (k, v) => (k.getBytes, v.getBytes) })
@@ -58,7 +58,7 @@ class MongoStorageTestIntegration extends
     }
 
     it("should do proper range queries") {
-      import MongoStorageBackend._
+      import MongoClassicStorageBackend._
       val l = List(
         ("bjarne stroustrup", "c++"),
         ("martin odersky", "scala"),
@@ -80,7 +80,7 @@ class MongoStorageTestIntegration extends
 
   describe("persistent vectors") {
     it("should insert a single value") {
-      import MongoStorageBackend._
+      import MongoClassicStorageBackend._
 
       insertVectorStorageEntryFor("t1", "martin odersky".getBytes)
       insertVectorStorageEntryFor("t1", "james gosling".getBytes)
@@ -89,7 +89,7 @@ class MongoStorageTestIntegration extends
     }
 
     it("should insert multiple values") {
-      import MongoStorageBackend._
+      import MongoClassicStorageBackend._
 
       insertVectorStorageEntryFor("t1", "martin odersky".getBytes)
       insertVectorStorageEntryFor("t1", "james gosling".getBytes)
@@ -102,7 +102,7 @@ class MongoStorageTestIntegration extends
     }
 
     it("should fetch a range of values") {
-      import MongoStorageBackend._
+      import MongoClassicStorageBackend._
 
       insertVectorStorageEntryFor("t1", "martin odersky".getBytes)
       insertVectorStorageEntryFor("t1", "james gosling".getBytes)
@@ -116,7 +116,7 @@ class MongoStorageTestIntegration extends
     }
 
     it("should insert and query complex structures") {
-      import MongoStorageBackend._
+      import MongoClassicStorageBackend._
       import sjson.json.DefaultProtocol._
       import sjson.json.JsonSerialization._
 
@@ -146,7 +146,7 @@ class MongoStorageTestIntegration extends
 
   describe("persistent refs") {
     it("should insert a ref") {
-      import MongoStorageBackend._
+      import MongoClassicStorageBackend._
 
       insertRefStorageFor("t1", "martin odersky".getBytes)
       new String(getRefStorageFor("t1").get) should equal("martin odersky")

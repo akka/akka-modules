@@ -13,24 +13,26 @@ import com.mongodb.casbah.Imports._
 
 import com.mongodb.{ServerAddress, WriteResult}
 
+import scala.collection.immutable.SortedSet
 import scala.util.control.Exception._
 
-trait MongoNativeStorageBackend extends MongoBackendConfiguration with Logging {
+// TODO - Filter keys for things like $ and .
+trait MongoNativeStorageBase extends MongoBackendConfiguration with Logging {
 
   val COLLECTION = "akka_stm"
-  val STORAGE_KEY: String
-  val VERSION_KEY: String = "version"
+  protected[this] val STORAGE_KEY: String
 
   protected def _id(txnID: String) =
     MongoDBObject(
-      "_id" -> MongoDBObject("transaction_id" -> txnID, 
+      "_id" -> MongoDBObject("transaction_id" -> new ObjectId(txnID), 
                              "akkaSTM" -> true)
     )
 
+  protected def _field(item: Any) = "%s.%s".format(STORAGE_KEY, item.toString)
+
   protected def queryFor[T](txnID: String)(body: (MongoDBObject, Option[DBObject]) => T): T = {
     val q = _id(txnID)
-    val dbo = coll.findOne(q, MongoDBObject(STORAGE_KEY -> true, VERSION_KEY -> true, "_id" -> false))
-    // TODO - Version verification?
+    val dbo = coll.findOne(q, MongoDBObject(STORAGE_KEY -> true, "_id" -> false))
     body(q, dbo)
   }
 
@@ -41,15 +43,24 @@ trait MongoNativeStorageBackend extends MongoBackendConfiguration with Logging {
    * last call is to save/insert/update/remove and throws any error.
    *
    * Casbah will have a version of this in a future release
+   * 
+   * TODO - logging of any errors
    */
    protected def mongoRequest(op: MongoCollection => WriteResult) = 
     op(coll).getLastError.throwOnError
 
+  def dropDB = coll.getDB.dropDatabase()
 }
 
-private[akka] object MongoNativeMapStorageBackend extends 
+/*private[akka] object MongoNativeStorageBackend extends 
+  MongoNativeMapStorageBackend with
+  MongoNativeSortedSetStorageBackend */
+  
+private[akka] object MongoNativeMapStorageBackend extends MongoNativeMapStorageBackend
+
+private[akka] trait MongoNativeMapStorageBackend extends 
   MapStorageBackend[Any, Any] with
-  MongoNativeStorageBackend with
+  MongoNativeStorageBase with
   Logging {
 
   val STORAGE_KEY = "mapStorage"
@@ -94,7 +105,7 @@ private[akka] object MongoNativeMapStorageBackend extends
     val q = _id(txnID)
     val builder = MongoDBObject.newBuilder
     entries.foreach { case (k, v) => 
-      builder += ("$set" -> MongoDBObject("%s.%s".format(STORAGE_KEY, k) -> v)) 
+      builder += ("$set" -> (_field(k) -> v)) 
     }
     log.debug("Insert ID Calced: %s", q)
     // TODO Version and findAndModify increment support
@@ -108,11 +119,84 @@ private[akka] object MongoNativeMapStorageBackend extends
 
 
   def removeMapStorageFor(txnID: String, key: Any) =
-    mongoRequest { _ update(_id(txnID), $unset ("%s.%s".format(STORAGE_KEY, key)) ) } 
+    mongoRequest { _ update(_id(txnID), $unset (_field(key))) } 
 
   def removeMapStorageFor(txnID: String) = mongoRequest { _ remove(_id(txnID)) }
 
 }
 
+private[akka] object MongoNativeSortedSetStorageBackend extends MongoNativeSortedSetStorageBackend
 
+// TODO - Less naive implementation of this ,as it doesn't deserialize the stringified
+// and won't work with complex objects to use as map keys
+private[akka] trait MongoNativeSortedSetStorageBackend extends 
+  SortedSetStorageBackend[Any] with
+  MongoNativeStorageBase with
+  Logging {
+
+  val STORAGE_KEY = "sortedSetStorage"
+
+  implicit object ZScoredOrdering extends Ordering[(Any, Float)] {
+    def compare(o1: (Any, Float), o2: (Any, Float)) = o1._2.compare(o2._2)
+  }
+
+  // add item to sorted set identified by name
+  def zadd(txnID: String, zscore: String, item: Any): Boolean = {
+    val q = _id(txnID)
+    val doc = $set ("%s.%s".format(STORAGE_KEY, item.toString) -> zscore.toDouble)
+    // Upsert: if it exists update else create it.
+    mongoBoolUpdate { _ update(q, doc, true, false) }
+  }
+
+  // Remove item from sorted set identified by name
+  def zrem(txnID: String, item: Any): Boolean = {
+    val field = _field(item)
+    // Use $exists to help us determine if it existed before remove or not
+    val q = _id(txnID) ++ field $exists true
+    val doc = $unset (field)
+    mongoBoolUpdate { _ update(q, doc) }
+  }
+
+
+  // Cardinality of the set identified by name
+  def zcard(txnID: String): Int = queryFor(txnID) { (q, dbo) =>
+    // Just fetch the whole Set and count the keys (slight hackery)
+    dbo.map { _.getAs[DBObject](STORAGE_KEY).size } getOrElse(0) 
+  }
+
+  // zscore of the item from sorted set, identified by name
+  def zscore(txnID: String, item: Any): Option[Float] = {
+    throw new Exception("FOO!")
+    queryFor(txnID) { (q, dbo) => 
+      val foo = dbo.map { _.getAs[Double](_field(item)) map(_.toFloat) } 
+      log.debug("Zscore: %s", foo)
+      foo getOrElse(None)
+    }
+  }
+
+  // zrange from the sorted set identified by name -- just the element
+  def zrange(txnID: String, start: Int, end: Int): List[Any] =
+    zrangeWithScore(txnID, start, end).map { _._1 }
+  
+  // zrange with score from the sorted set identified by name
+  def zrangeWithScore(txnID: String, start: Int, end: Int): List[(Any, Float)] = queryFor(txnID) { 
+    (q, dbo) => dbo.map { obj =>
+      val builder = SortedSet.newBuilder[(Any, Float)]
+      obj.getAs[DBObject](STORAGE_KEY).foreach { 
+        _.map { case (k, v) => builder += (k -> v.asInstanceOf[Double].toFloat) } 
+      } 
+      val set = builder.result
+      log.debug("Mapped Builder Set: %s", set)
+      set.slice(start, end).toList
+    } getOrElse(List.empty[(Any, Float)])
+  }
+
+  protected def mongoBoolUpdate(op: MongoCollection => WriteResult): Boolean = {
+    val last = op(coll).getLastError 
+    // If it was an exception the updatedExisting doesn't matter
+    last.throwOnError 
+    !last.getAs[Boolean]("updatedExisting").getOrElse(false)
+  }
+
+}
 // vim: set ts=2 sw=2 sts=2 et:

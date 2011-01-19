@@ -12,7 +12,7 @@ import Actor._
 import akka.stm._
 import akka.util.Logging
 
-import MongoStorageBackend._
+import MongoClassicStorageBackend._
 
 case class GET(k: String)
 case class SET(k: String, v: String)
@@ -178,17 +178,17 @@ class MongoTicket343TestIntegration extends
 
 
   override def beforeAll {
-    MongoStorageBackend.drop
+    MongoClassicStorageBackend.drop
     println("** destroyed database")
   }
 
   override def beforeEach {
-    MongoStorageBackend.drop
+    MongoClassicStorageBackend.drop
     println("** destroyed database")
   }
 
   override def afterEach {
-    MongoStorageBackend.drop
+    MongoClassicStorageBackend.drop
     println("** destroyed database")
   }
 

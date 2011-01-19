@@ -12,22 +12,27 @@ import akka.actor.{newUuid}
 import com.mongodb.DBObject
 import org.bson.types.ObjectId
 
-// TODO: Config driven replacement for MongoStorage object which picks an implementation
 
-object MongoStorage extends MongoStorage {
+object MongoNativeStorage extends MongoStorage {
   val backend = MongoNativeBackend
 } 
+
+// For now, default to the classic storage
+// TODO: Config driven replacement for MongoStorage object which picks an implementation
+object MongoStorage extends BytesStorage {
+  val backend = MongoClassicBackend
+}
 
 object MongoClassicStorage extends BytesStorage {
   val backend = MongoClassicBackend
 }
 
 object MongoNativeBackend extends Backend[Any] {
-  val sortedSetStorage = None //Some(MongoNativeSetStorageBackend)
+  val sortedSetStorage = Some(MongoNativeSortedSetStorageBackend)
   val refStorage = None // Some(MongoNativeRefStorageBackend)
   val vectorStorage = None //Some(MongoNativeVectorStorageBackend)
   val queueStorage = None // Some(MongoNativeQueueStorageBackend)
-  val mapStorage = None //Some(MongoNativeMapStorageBackend)
+  val mapStorage = Some(MongoNativeMapStorageBackend)
 }
 
 object MongoClassicBackend extends Backend[Array[Byte]] {
@@ -58,11 +63,11 @@ trait MongoStorage extends Storage with Logging {
 
   def getSortedSet(id: String) = getSortedSet(new ObjectId(id))
 
-  def getSortedSet(oid: ObjectId) =  
+  def getSortedSet(oid: ObjectId) =
     backend.storageManager.getSortedSet(oid.toString, backend.sortedSetStorage match {
         case None => throw new UnsupportedOperationException
         case Some(store) => new MongoPersistentSortedSet {
-          val _id = oid
+          val uuid = oid.toString
           val storage = store
         }
     })
@@ -81,7 +86,7 @@ trait MongoStorage extends Storage with Logging {
     backend.storageManager.getQueue(oid.toString, backend.queueStorage match { 
         case None => throw new UnsupportedOperationException
         case Some(store) => new MongoPersistentQueue {
-          val _id = oid
+          val uuid = oid.toString
           val storage = store
         }
     })
@@ -98,7 +103,7 @@ trait MongoStorage extends Storage with Logging {
     backend.storageManager.getRef(oid.toString, backend.refStorage match { 
         case None => throw new UnsupportedOperationException
         case Some(store) => new MongoPersistentRef {
-          val _id = oid
+          val uuid = oid.toString
           val storage = store
         }
     })
@@ -115,7 +120,7 @@ trait MongoStorage extends Storage with Logging {
     backend.storageManager.getVector(oid.toString, backend.vectorStorage match { 
         case None => throw new UnsupportedOperationException
         case Some(store) => new MongoPersistentVector {
-          val _id = oid
+          val uuid = oid.toString
           val storage = store
         }
     })
@@ -133,7 +138,7 @@ trait MongoStorage extends Storage with Logging {
     backend.storageManager.getMap(oid.toString, backend.mapStorage match { 
         case None => throw new UnsupportedOperationException
         case Some(store) => new MongoPersistentMap {
-          val _id = oid
+          val uuid = oid.toString
           val storage = store
         }
     })

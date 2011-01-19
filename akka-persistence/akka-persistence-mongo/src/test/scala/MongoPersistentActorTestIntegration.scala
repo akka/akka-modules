@@ -96,11 +96,11 @@ class MongoPersistentActorTestIntegration extends
   BeforeAndAfterEach {
 
   override def beforeEach {
-    MongoStorageBackend.drop
+    MongoClassicStorageBackend.drop
   }
 
   override def afterEach {
-    MongoStorageBackend.drop
+    MongoClassicStorageBackend.drop
   }
 
   describe("successful debit") {
