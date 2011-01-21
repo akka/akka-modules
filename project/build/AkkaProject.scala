@@ -906,7 +906,7 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
   // ------------------------------------------------------------
   class AkkaModulesDefaultProject(info: ProjectInfo, val deployPath: Path) extends DefaultProject(info) with DeployProject with OSGiProject with McPom {
     override def disableCrossPaths = true
-    val sourceArtifact = Artifact(artifactID, "src", "jar", Some("sources"), Nil, None)
+    lazy val sourceArtifact = Artifact(artifactID, "src", "jar", Some("sources"), Nil, None)
     lazy val docsArtifact = Artifact(this.artifactID, "doc", "jar", Some("docs"), Nil, None)
     override def runClasspath = super.runClasspath +++ (AkkaModulesParentProject.this.info.projectPath / "config")
     override def testClasspath = super.testClasspath +++ (AkkaModulesParentProject.this.info.projectPath / "config")
