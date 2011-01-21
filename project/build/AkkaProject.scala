@@ -92,10 +92,12 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
   // -------------------------------------------------------------------------------------------------------------------
 
   import Repositories._
+
+  // Change to AkkaRepo before release
+  // release: lazy val akkaRepo                = ModuleConfiguration("se.scalablesolutions.akka", AkkaRepo)
+
   lazy val jettyModuleConfig       = ModuleConfiguration("org.eclipse.jetty", sbt.DefaultMavenRepository)
   lazy val guiceyFruitModuleConfig = ModuleConfiguration("org.guiceyfruit", GuiceyFruitRepo)
-  // lazy val hawtdispatchModuleConfig  = ModuleConfiguration("org.fusesource.hawtdispatch", FusesourceSnapshotRepo)
-  lazy val akkaRepo               = ModuleConfiguration("se.scalablesolutions.akka", AkkaRepo /*Change to AkkaRepo before release*/)
   lazy val jbossModuleConfig       = ModuleConfiguration("org.jboss", JBossRepo)
   lazy val jdmkModuleConfig        = ModuleConfiguration("com.sun.jdmk", SunJDMKRepo)
   lazy val jmsModuleConfig         = ModuleConfiguration("javax.jms", SunJDMKRepo)
@@ -126,7 +128,7 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
   // Versions
   // -------------------------------------------------------------------------------------------------------------------
 
-  lazy val AKKA_VERSION          = "1.0"
+  lazy val AKKA_VERSION          = "1.0-SNAPSHOT"
   lazy val ATMO_VERSION          = "0.6.2"
   lazy val CAMEL_VERSION         = "2.5.0"
   lazy val CASSANDRA_VERSION     = "0.6.1"
