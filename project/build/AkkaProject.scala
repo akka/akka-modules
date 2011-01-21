@@ -30,9 +30,11 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
   // -------------------------------------------------------------------------------------------------------------------
   // Deploy/dist settings
   // -------------------------------------------------------------------------------------------------------------------
-  def distName = "%s-%s".format(name, version)
-  lazy val deployPath = info.projectPath / "deploy"
-  lazy val distPath = info.projectPath / "dist"
+  val distName = "%s-%s".format(name, version)
+  val distArchiveName = distName + ".zip"
+  val deployPath = info.projectPath / "deploy"
+  val distPath = info.projectPath / "dist"
+  val distArchive = (distPath ##) / distArchiveName
 
   //The distribution task, packages Akka into a zipfile and places it into the projectPath/dist directory
   lazy val dist = task {
@@ -51,12 +53,10 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
 
     //Temporary directory to hold the dist currently being generated
     val currentDist = genDistDir / distName
-    //ArchiveName = name of the zip file distribution that will be generated
-    val archiveName = distName + ".zip"
 
     FileUtilities.copy(allArtifacts.get, currentDist, log).left.toOption orElse //Copy all needed artifacts into the root archive
-    FileUtilities.zip(List(currentDist),distName + ".zip",true,log) orElse //Compress the root archive into a zipfile
-    transferFile(info.projectPath / archiveName,distPath / archiveName) orElse //Move the archive into the dist folder
+    FileUtilities.zip(List(currentDist), distArchiveName, true, log) orElse //Compress the root archive into a zipfile
+    transferFile(info.projectPath / distArchiveName, distArchive) orElse //Move the archive into the dist folder
     FileUtilities.clean(genDistDir,log) //Cleanup the generated jars
 
   } dependsOn (`package`) describedAs("Zips up the distribution.")
@@ -401,6 +401,25 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
     }
     None
   } dependsOn(dist) describedAs("Run mvn install for artifacts in dist.")
+
+
+  // Build release
+
+  val localReleasePath = outputPath / "release" / version.toString
+  val localReleaseRepository = Resolver.file("Local Release", localReleasePath / "repository" asFile)
+  val localReleaseDownloads = localReleasePath / "downloads"
+
+  override def otherRepositories = super.otherRepositories ++ Seq(localReleaseRepository)
+
+  lazy val publishRelease = {
+    val releaseConfiguration = new DefaultPublishConfiguration(localReleaseRepository, "release", false)
+    publishTask(publishIvyModule, releaseConfiguration) dependsOn (deliver, publishLocal, makePom)
+  }
+
+  lazy val buildRelease = task {
+    FileUtilities.copy(Seq(distArchive), localReleaseDownloads, log).left.toOption
+  } dependsOn (publishRelease, dist)
+
 
   // -------------------------------------------------------------------------------------------------------------------
   // akka-amqp subproject
@@ -930,6 +949,11 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
         case s: String if stressTestsEnabled.value      => s.endsWith("TestStress")
         case _ => false
       }) :: Nil
+    }
+
+    lazy val publishRelease = {
+      val releaseConfiguration = new DefaultPublishConfiguration(localReleaseRepository, "release", false)
+      publishTask(publishIvyModule, releaseConfiguration) dependsOn (deliver, publishLocal, makePom)
     }
   }
 }
