@@ -575,7 +575,9 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
         </dependency>
       </dependencies>
 
-    override def testOptions = createTestFilter({ s:String=> s.endsWith("Suite") || s.endsWith("Test")})
+    // tests disabled
+    // override def testOptions = createTestFilter({ s:String=> s.endsWith("Suite") || s.endsWith("Test")})
+    override def testOptions = createTestFilter(s => false)
   }
 
   // -------------------------------------------------------------------------------------------------------------------
@@ -595,6 +597,7 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
     val velocity = Dependencies.velocity
     val dbcp = Dependencies.dbcp
     val sjson = Dependencies.sjson_test
+
     override def testOptions = createTestFilter({ s:String=> s.endsWith("Suite") || s.endsWith("Test")})
   }
 
