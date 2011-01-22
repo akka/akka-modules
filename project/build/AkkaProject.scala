@@ -92,10 +92,12 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
   // -------------------------------------------------------------------------------------------------------------------
 
   import Repositories._
+
+  // Change to AkkaRepo before release?
+  // lazy val akkaRepo                = ModuleConfiguration("se.scalablesolutions.akka", AkkaRepo)
+
   lazy val jettyModuleConfig       = ModuleConfiguration("org.eclipse.jetty", sbt.DefaultMavenRepository)
   lazy val guiceyFruitModuleConfig = ModuleConfiguration("org.guiceyfruit", GuiceyFruitRepo)
-  // lazy val hawtdispatchModuleConfig  = ModuleConfiguration("org.fusesource.hawtdispatch", FusesourceSnapshotRepo)
-  //lazy val akkaRepo               = ModuleConfiguration("se.scalablesolutions.akka", AkkaRepo /*Change to AkkaRepo before release*/)
   lazy val jbossModuleConfig       = ModuleConfiguration("org.jboss", JBossRepo)
   lazy val jdmkModuleConfig        = ModuleConfiguration("com.sun.jdmk", SunJDMKRepo)
   lazy val jmsModuleConfig         = ModuleConfiguration("javax.jms", SunJDMKRepo)
@@ -482,6 +484,11 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
       new AkkaMemcachedProject(_), akka_persistence_common)
     lazy val akka_persistence_simpledb= project("akka-persistence-simpledb", "akka-persistence-simpledb",
       new AkkaSimpledbProject(_), akka_persistence_common)
+
+    lazy val publishRelease = {
+      val releaseConfiguration = new DefaultPublishConfiguration(localReleaseRepository, "release", false)
+      publishTask(publishIvyModule, releaseConfiguration) dependsOn (deliver, publishLocal, makePom)
+    }
   }
 
   // -------------------------------------------------------------------------------------------------------------------
