@@ -3,7 +3,7 @@
  */
 package akka.spring
 
-import akka.actor.{Actor, ActorRef}
+import akka.actor.{Actor, ActorRef, ActorInitializationException}
 import akka.spring.foo.PingActor
 
 import org.junit.runner.RunWith
@@ -85,7 +85,7 @@ class ActorFactoryBeanTest extends Spec with ShouldMatchers with BeforeAndAfterA
       ctx.close
     }
 
-    it("should stop the created typed actor when scope is singleton and the context is closed") {
+    it("should stop the created untyped actor when scope is singleton and the context is closed") {
       var ctx = new ClassPathXmlApplicationContext("appContext.xml");
       val target = ctx.getBean("untypedActor").asInstanceOf[ActorRef]
       target.start
@@ -94,12 +94,12 @@ class ActorFactoryBeanTest extends Spec with ShouldMatchers with BeforeAndAfterA
       assert(!target.isRunning)
     }
 
-    it("should stop the created untyped actor when scope is singleton and the context is closed") {
+    it("should stop the created typed actor when scope is singleton and the context is closed") {
       var ctx = new ClassPathXmlApplicationContext("appContext.xml");
       val target = ctx.getBean("bean-singleton").asInstanceOf[SampleBeanIntf]
       assert(!target.down)
       ctx.close
-      assert(target.down)
+      evaluating { target.down } should produce [ActorInitializationException]
     }
 
     it("should not stop the created typed actor when scope is prototype and the context is closed") {
