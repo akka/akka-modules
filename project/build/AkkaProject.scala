@@ -151,6 +151,7 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
   object Dependencies {
 
     // Compile
+    lazy val akka_actor       = "se.scalablesolutions.akka" % "akka-actor"       % AKKA_VERSION % "compile" //ApacheV2
     lazy val akka_stm         = "se.scalablesolutions.akka" % "akka-stm"         % AKKA_VERSION % "compile" //ApacheV2
     lazy val akka_remote      = "se.scalablesolutions.akka" % "akka-remote"      % AKKA_VERSION % "compile" //ApacheV2
     lazy val akka_http        = "se.scalablesolutions.akka" % "akka-http"        % AKKA_VERSION % "compile" //ApacheV2
@@ -217,6 +218,8 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
 
     lazy val sbinary = "sbinary" % "sbinary" % "2.8.0-0.3.1" % "compile" //MIT
 
+    lazy val scalaz = "org.scalaz" % "scalaz-core_2.8.1" % "6.0-SNAPSHOT" % "compile" //New BSD
+
     lazy val sjson = "sjson.json" % "sjson" % "0.8-2.8.0" % "compile" //ApacheV2
     lazy val sjson_test = "sjson.json" % "sjson" % "0.8-2.8.0" % "test" //ApacheV2
     lazy val logback      = "ch.qos.logback" % "logback-classic" % LOGBACK_VERSION % "compile" //LGPL 2.1
@@ -244,8 +247,8 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
     lazy val riak_pb_client = "com.trifork"   %  "riak-java-pb-client"      % "1.0-for-akka-by-ticktock"  % "compile" //ApacheV2
     lazy val scalaj_coll = "org.scalaj" % "scalaj-collection_2.8.0" % "1.0" % "compile" //ApacheV2
 
-	  //Terrastore Client
-	  lazy val terrastore_client = "terrastore" % "terrastore-javaclient" % "2.2" % "compile" intransitive()
+    //Terrastore Client
+    lazy val terrastore_client = "terrastore" % "terrastore-javaclient" % "2.2" % "compile" intransitive()
 
 
     // Test
@@ -262,6 +265,8 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
     lazy val mockito        = "org.mockito"            % "mockito-all"         % "1.8.1"           % "test" //MIT
     lazy val scalatest      = "org.scalatest"          % "scalatest"           % SCALATEST_VERSION % "test" //ApacheV2
     lazy val specs          = "org.scala-tools.testing" %% "specs"             % "1.6.6"           % "test" //MIT
+
+    lazy val scalaz_scalacheck = "org.scalaz" % "scalaz-scalacheck-binding_2.8.1" % "6.0-SNAPSHOT" % "test" //New BSD
 
     //HBase testing
     lazy val hadoop_test    = "org.apache.hadoop"      % "hadoop-test"         % "0.20.2"          % "test" //ApacheV2
@@ -281,9 +286,9 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
     //simpledb
     lazy val simpledb = "com.amazonaws" % "aws-java-sdk" % "1.0.14" % "compile"
 
-	//terrastore
-	lazy val terrastore = "terrastore" % "terrastore" % "0.8.0" % "test"
-	lazy val commons_codec_test = "commons-codec" % "commons-codec" % CODEC_VERSION % "test" //ApacheV2
+    //terrastore
+    lazy val terrastore = "terrastore" % "terrastore" % "0.8.0" % "test"
+    lazy val commons_codec_test = "commons-codec" % "commons-codec" % CODEC_VERSION % "test" //ApacheV2
 
   }
 
@@ -298,6 +303,7 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
   lazy val akka_jta         = project("akka-jta", "akka-jta", new AkkaJTAProject(_))
   lazy val akka_kernel      = project("akka-kernel", "akka-kernel", new AkkaKernelProject(_), akka_jta, akka_spring, akka_camel, akka_persistence, akka_amqp)
   lazy val akka_osgi        = project("akka-osgi", "akka-osgi", new AkkaOSGiParentProject(_))
+  lazy val akka_scalaz      = project("akka-scalaz", "akka-scalaz", new AkkaScalazProject(_))
   lazy val akka_samples     = project("akka-samples", "akka-samples", new AkkaSamplesParentProject(_))
 
   // -------------------------------------------------------------------------------------------------------------------
@@ -811,6 +817,20 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
       }
 
     override def artifacts = Set.empty
+  }
+
+  // -------------------------------------------------------------------------------------------------------------------
+  // akka-scalaz subproject
+  // -------------------------------------------------------------------------------------------------------------------
+
+  class AkkaScalazProject(info: ProjectInfo) extends AkkaModulesDefaultProject(info, distPath) {
+    val akka_actor = Dependencies.akka_actor
+    val scalaz     = Dependencies.scalaz
+
+    // testing
+    val junit             = Dependencies.junit
+    val scalatest         = Dependencies.scalatest
+    val scalaz_scalacheck = Dependencies.scalaz_scalacheck
   }
 
   // -------------------------------------------------------------------------------------------------------------------
