@@ -346,7 +346,8 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
     " dist/akka-persistence-couchdb-%s.jar".format(version) +
     " dist/akka-kernel-%s.jar".format(version) +
     " dist/akka-spring-%s.jar".format(version) +
-    " dist/akka-jta-%s.jar".format(version)
+    " dist/akka-jta-%s.jar".format(version) +
+    " dist/akka-scalaz-%s.jar".format(version)
     )
 
   //Exclude slf4j1.5.11 from the classpath, it's conflicting...
