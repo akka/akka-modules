@@ -200,14 +200,12 @@ class AkkaFuturesSpec extends WordSpec with ShouldMatchers with Checkers with Lo
     "compose with actors" in {
       val a1 = actorOf[DoubleActor].start
       val a2 = actorOf[ToStringActor].start
-      val k1 = a1.future[Int,Int]
-      val k2 = a2.future[Int,String]
-      val k2any = a2.future
+      val k1 = a1.future
+      val k2 = a2.future
       val l = (1 to 5).toList
 
       (l map k1 sequence).get should equal (List(2, 4, 6, 8, 10))
       (l map (k1 >=> k2) sequence).get should equal (List("Int: 2", "Int: 4", "Int: 6", "Int: 8", "Int: 10"))
-      (l map k2any sequence).get should equal (List("Int: 1", "Int: 2", "Int: 3", "Int: 4", "Int: 5"))
       (l map (k1 &&& (k1 >=> k2)) sequence).get should equal (List((2, "Int: 2"), (4, "Int: 4"), (6, "Int: 6"), (8, "Int: 8"), (10, "Int: 10")))
 
       val f = ((_: String).toInt).future

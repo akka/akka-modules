@@ -8,9 +8,6 @@ import akka.dispatch.Future
 import akka.actor.ActorRef
 
 sealed trait ActorRefW extends PimpedType[ActorRef] {
-  // include implicit parameter in order to overload method
-  def future[A, B: Manifest]: Kleisli[Future, A, B] = kleisli((a: A) => value.!!![B](a))
-
   def future: Kleisli[Future, Any, Any] = kleisli(value !!! _)
 }
 
