@@ -38,11 +38,7 @@ package object futures extends Futures
   }
 
   implicit def FuturePure(implicit exec: FutureExecuter) = new Pure[Future] {
-    def pure[A](a: => A) = {
-      val f = new DefaultCompletableFuture[A](TIMEOUT)
-      exec(try {f.completeWithResult(a)} catch {case e => f.completeWithException(e)})
-      f
-    }
+    def pure[A](a: => A) = future(a)
   }
 
   implicit def FutureApply(implicit exec: FutureExecuter) = FunctorBindApply[Future]
@@ -55,6 +51,20 @@ package object futures extends Futures
     semigroup ((fa, fb) => (fa <**> fb)(_ |+| _))
 
   implicit def FutureZero[A](implicit exec: FutureExecuter, zeroA: Zero[A]): Zero[Future[A]] = zero(∅[A].pure[Future])
+
+  implicit def FutureCojoin: Cojoin[Future] = new Cojoin[Future] {
+    def cojoin[A](a: Future[A]) = future(a)(executer.InlineExecuter)
+  }
+
+  implicit def FutureCopure: Copure[Future] = new Copure[Future] {
+    def copure[A](a: Future[A]) = a.getOrThrow
+  }
+
+  def future[A](a: => A, timeout: Long = TIMEOUT)(implicit exec: FutureExecuter): Future[A] = {
+    val f = new DefaultCompletableFuture[A](timeout)
+    exec(try {f.completeWithResult(a)} catch {case e => f.completeWithException(e)})
+    f
+  }
 
   def futureMap[M[_], A, B](ma: M[A])(f: A => B)(implicit t: Traverse[M], exec: FutureExecuter): Future[M[B]] =
     ma ∘ (f.future) sequence

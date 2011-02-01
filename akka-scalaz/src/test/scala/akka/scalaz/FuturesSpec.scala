@@ -118,6 +118,11 @@ class AkkaFuturesSpec extends WordSpec with ShouldMatchers with Checkers with Lo
       (f1 <|**|> (f2, f1)).getOrThrow should equal (25,50,25)
     }
 
+    "have scalaz comonad instance" in {
+      val f = future({Thread.sleep(100); "Result"}) =>> (_.getOrThrow.toUpperCase)
+      f.getOrThrow should equal ("RESULT")
+    }
+
     "calculate fib seq" in {
       def seqFib(n: Int): Int = if (n < 2) n else seqFib(n - 1) + seqFib(n - 2)
 
