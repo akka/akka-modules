@@ -57,7 +57,7 @@ package object futures extends Futures
   }
 
   implicit def FutureCopure: Copure[Future] = new Copure[Future] {
-    def copure[A](a: Future[A]) = a.getOrThrow
+    def copure[A](a: Future[A]) = a.get
   }
 
   def future[A](a: => A, timeout: Long = TIMEOUT)(implicit exec: FutureExecuter): Future[A] = {

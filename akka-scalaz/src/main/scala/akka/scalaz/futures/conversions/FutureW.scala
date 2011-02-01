@@ -13,8 +13,13 @@ sealed trait FutureW[A] extends PimpedType[Future[A]] {
     value.result fold (success(_), failure(value.exception getOrElse (new FutureTimeoutException("Futures timed out after [" + nanosToMillis(value.timeoutInNanos) + "] milliseconds"))))
   }
 
-  def toPromise(implicit s: Strategy): Promise[Validation[Throwable, A]] =
-    promise(this toValidation)
+  def toEither: Either[Throwable, A] = {
+    value.await
+    value.result fold (Right(_), Left(value.exception getOrElse (new FutureTimeoutException("Futures timed out after [" + nanosToMillis(value.timeoutInNanos) + "] milliseconds"))))
+  }
+
+  def toPromise(implicit s: Strategy): Promise[A] =
+    promise(this get)
 
   def timeout(t: Long): Future[A] = {
     val f = new DefaultCompletableFuture[A](t)
@@ -22,19 +27,13 @@ sealed trait FutureW[A] extends PimpedType[Future[A]] {
     f
   }
 
-  def get: Validation[Throwable, A] =
-    this toValidation
-
-  def getOrThrow: A = {
+  def get: A = {
     value.await
     value.result getOrElse (throw value.exception getOrElse new FutureTimeoutException("Futures timed out after [" + nanosToMillis(value.timeoutInNanos) + "] milliseconds"))
   }
 
-  def fold[X](failure: Throwable => X = identity[Throwable] _, success: A => X = identity[A] _): X =
-    this.toValidation fold (failure, success)
-
-  def onCompleteFold(failure: Throwable => Unit = _ => (), success: A => Unit = _ => ()): Unit =
-    value.onComplete(f => f.result.fold(success, f.exception.foreach(failure)))
+  def getOrElse[B >: A](default: => B): B =
+    value.await.result getOrElse default
 }
 
 trait Futures {
