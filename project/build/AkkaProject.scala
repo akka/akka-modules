@@ -68,6 +68,7 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
   object Repositories {
     lazy val AkkaRepo             = MavenRepository("Akka Repository", "http://akka.io/repository")
     lazy val ScalaToolsRepo           = MavenRepository("Scala-Tools Repo", "http://scala-tools.org/repo-releases")
+    lazy val ScalaToolsSnapshotRepo = MavenRepository("Scala-Tools Snapshot Repo", "http://scala-tools.org/repo-snapshots")
     lazy val CodehausRepo         = MavenRepository("Codehaus Repo", "http://repository.codehaus.org")
     lazy val EmbeddedRepo         = MavenRepository("Embedded Repo", (info.projectPath / "embedded-repo").asURL.toString)
     lazy val LocalMavenRepo       = MavenRepository("Local Maven Repo", (Path.userHome / ".m2" / "repository").asURL.toString)
@@ -121,6 +122,7 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
   lazy val args4jModuleConfig      = ModuleConfiguration("args4j", JBossRepo)
   lazy val scannotationModuleConfig= ModuleConfiguration("org.scannotation", JBossRepo)
   lazy val configgyModuleConfig    = ModuleConfiguration("net.lag", AkkaRepo)
+  lazy val scalazModuleConfig      = ModuleConfiguration("org.scalaz", ScalaToolsSnapshotRepo)
   val embeddedRepo                 = EmbeddedRepo // This is the only exception, because the embedded repo is fast!
   val localMavenRepo               = LocalMavenRepo // Second exception, also fast! ;-)
 
