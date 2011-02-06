@@ -13,6 +13,12 @@ sealed trait FutureW[A] extends PimpedType[Future[A]] {
     value.result fold (success(_), failure(value.exception getOrElse (new FutureTimeoutException("Futures timed out after [" + nanosToMillis(value.timeoutInNanos) + "] milliseconds"))))
   }
 
+  def liftValidation: Future[Validation[Throwable, A]] = {
+    val f = new DefaultCompletableFuture[Validation[Throwable, A]]
+    value onComplete (r => f.completeWithResult(r.result fold (success, failure(r.exception.get))))
+    f
+  }
+
   def toEither: Either[Throwable, A] = {
     value.await
     value.result fold (Right(_), Left(value.exception getOrElse (new FutureTimeoutException("Futures timed out after [" + nanosToMillis(value.timeoutInNanos) + "] milliseconds"))))
