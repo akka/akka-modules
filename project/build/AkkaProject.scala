@@ -109,7 +109,6 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
   lazy val scalaTestModuleConfig   = ModuleConfiguration("org.scalatest", ScalaToolsRelRepo)
   lazy val logbackModuleConfig     = ModuleConfiguration("ch.qos.logback",sbt.DefaultMavenRepository)
   lazy val atomikosModuleConfig    = ModuleConfiguration("com.atomikos",sbt.DefaultMavenRepository)
-  lazy val casbahRelease           = ModuleConfiguration("com.mongodb.casbah",ScalaToolsRepo)
   lazy val zookeeperRelease        = ModuleConfiguration("org.apache.hadoop.zookeeper",ZookeeperRepo)
   lazy val casbahModuleConfig      = ModuleConfiguration("com.mongodb.casbah", ScalaToolsRepo)
   lazy val timeModuleConfig        = ModuleConfiguration("org.scala-tools", "time", ScalaToolsRepo)
@@ -200,7 +199,7 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
 
     lazy val jta_1_1 = "org.apache.geronimo.specs" % "geronimo-jta_1.1_spec" % "1.1.1" % "compile" intransitive //ApacheV2
 
-    lazy val casbah = "com.mongodb.casbah" %% "casbah" % "2.0.1" % "compile" //ApacheV2 - provides ApacheV2 mongo-java-driver transiently
+    lazy val casbah = "com.mongodb.casbah" %% "casbah-gridfs" % "2.0.1" % "compile" //ApacheV2 - provides ApacheV2 mongo-java-driver transiently
 
     lazy val multiverse = "org.multiverse" % "multiverse-alpha" % MULTIVERSE_VERSION % "compile" intransitive //ApacheV2
     lazy val multiverse_test = "org.multiverse" % "multiverse-alpha" % MULTIVERSE_VERSION % "test" intransitive //ApacheV2
