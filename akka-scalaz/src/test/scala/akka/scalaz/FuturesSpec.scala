@@ -82,10 +82,10 @@ class AkkaFuturesSpec extends WordSpec with ShouldMatchers with Checkers with Lo
 
     "have scalaz functor instance" in {
       val f1 = f(5 * 5)
-      val f2 = f1 ∘ (_ * 2)
-      val f3 = f2 ∘ (_ * 10)
-      val f4 = f1 ∘ (_ / 0)
-      val f5 = f4 ∘ (_ * 10)
+      val f2 = f1.asMA map (_ * 2)
+      val f3 = f2.asMA map (_ * 10)
+      val f4 = f1.asMA map (_ / 0)
+      val f5 = f4.asMA map (_ * 10)
 
       f2.get should equal (50)
       f3.get should equal (500)
@@ -108,18 +108,18 @@ class AkkaFuturesSpec extends WordSpec with ShouldMatchers with Checkers with Lo
 
     "have scalaz apply instance" in {
       val f1 = f(5 * 5)
-      val f2 = f1 ∘ (_ * 2)
-      val f3 = f2 ∘ (_ / 0)
+      val f2 = f1.asMA map (_ * 2)
+      val f3 = f2.asMA map (_ / 0)
 
-      (f1 ⊛ f2)(_ * _).get should equal (1250)
-      (f1 ⊛ f2).tupled.get should equal (25,50)
-      evaluating ((f1 ⊛ f2 ⊛ f3)(_ * _ * _).get) should produce [ArithmeticException]
-      evaluating ((f3 ⊛ f2 ⊛ f1)(_ * _ * _).get) should produce [ArithmeticException]
+      (f1 |@| f2)(_ * _).get should equal (1250)
+      (f1 |@| f2).tupled.get should equal (25,50)
+      evaluating ((f1 |@| f2 |@| f3)(_ * _ * _).get) should produce [ArithmeticException]
+      evaluating ((f3 |@| f2 |@| f1)(_ * _ * _).get) should produce [ArithmeticException]
       (f1 <|**|> (f2, f1)).get should equal (25,50,25)
     }
 
     "have scalaz comonad instance" in {
-      val f = future("Result") =>> (_ ∘ (_.toUpperCase)) >>= (_ ∘ (s => s + s))
+      val f = future("Result") =>> (_.asMA map (_.toUpperCase)) >>= (_.asMA map (s => s + s))
       f.get should equal ("RESULTRESULT")
     }
 
@@ -130,7 +130,7 @@ class AkkaFuturesSpec extends WordSpec with ShouldMatchers with Checkers with Lo
         if (n < 30)
           f(seqFib(n))
         else
-          (fib(n - 1) ⊛ fib(n - 2))(_ + _)
+          (fib(n - 1) |@| fib(n - 2))(_ + _)
 
       fib(40).get should equal (102334155)
     }
@@ -149,7 +149,7 @@ class AkkaFuturesSpec extends WordSpec with ShouldMatchers with Checkers with Lo
 
     "reduce a list of futures" in {
       val list = (1 to 100).toList.fpure[Future]
-      list.reduceLeft((a,b) => (a ⊛ b)(_ + _)).get should equal (5050)
+      list.reduceLeft((a,b) => (a |@| b)(_ + _)).get should equal (5050)
     }
 
     "fold into a future" in {
@@ -158,9 +158,9 @@ class AkkaFuturesSpec extends WordSpec with ShouldMatchers with Checkers with Lo
     }
 
     "convert to Validation" in {
-      val r1 = (f("34".toInt) ⊛ f("150".toInt) ⊛ f("12".toInt))(_ + _ + _)
+      val r1 = (f("34".toInt) |@| f("150".toInt) |@| f("12".toInt))(_ + _ + _)
       r1.toValidation should equal (Success(196))
-      val r2 = (f("34".toInt) ⊛ f("hello".toInt) ⊛ f("12".toInt))(_ + _ + _)
+      val r2 = (f("34".toInt) |@| f("hello".toInt) |@| f("12".toInt))(_ + _ + _)
       r2.toValidation.fail.map(_.toString).validation should equal (Failure("java.lang.NumberFormatException: For input string: \"hello\""))
     }
 
@@ -226,9 +226,9 @@ class AkkaFuturesSpec extends WordSpec with ShouldMatchers with Checkers with Lo
     "Monoids" in {
       val doubler = ((_: Int) * 2).future
 
-      (List(1,2,3,4,5).fpure[Future] ∑).get should equal (15)
-      (List(1,2,3,4,5) ↣ doubler).get should equal (30)
-      (nil[Int] ↣ doubler).get should equal (0)
+      (List(1,2,3,4,5).fpure[Future].asMA.sum).get should equal (15)
+      (List(1,2,3,4,5) foldMapDefault doubler).get should equal (30)
+      (nil[Int] foldMapDefault doubler).get should equal (0)
 
       1.unfold[Future, String](x => (x < 5).option((x.toString, x + 1))).get should equal ("1234")
     }
@@ -242,7 +242,7 @@ class AkkaFuturesSpec extends WordSpec with ShouldMatchers with Checkers with Lo
         case Nil => nil.pure[Future]
         case x :: Nil => List(x).pure[Future]
         case x :: y :: Nil => (if (ord.lt(x,y)) List(x,y) else List(y,x)).pure[Future]
-        case x :: xs => (f(qsort(xs.filter(ord.lt(_,x)))).join ⊛ x.pure[Future] ⊛ f(qsort(xs.filter(ord.gteq(_,x)))).join)(_ ::: _ :: _)
+        case x :: xs => (f(qsort(xs.filter(ord.lt(_,x)))).join |@| x.pure[Future] |@| f(qsort(xs.filter(ord.gteq(_,x)))).join)(_ ::: _ :: _)
       }
 
       qsort(list).get should equal (list.sorted)
