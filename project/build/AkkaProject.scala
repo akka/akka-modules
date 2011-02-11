@@ -138,7 +138,7 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
   lazy val JACKSON_VERSION       = "1.4.3"
   lazy val JERSEY_VERSION        = "1.3"
   lazy val MULTIVERSE_VERSION    = "0.6.1"
-  lazy val SCALATEST_VERSION     = "1.2"
+  lazy val SCALATEST_VERSION     = "1.3"
   lazy val LOGBACK_VERSION       = "0.9.24"
   lazy val SLF4J_VERSION         = "1.6.0"
   lazy val SPRING_VERSION        = "3.0.4.RELEASE"
