@@ -114,3 +114,15 @@ object StandaloneJmsApplication extends Application {
   stopCamelService
   Actor.registry.shutdownAll
 }
+
+object StandaloneFileApplication {
+  import CamelServiceManager._
+
+  def main(args: Array[String]) {
+    startCamelService
+    mandatoryService.awaitEndpointActivation(1) {
+      Actor.actorOf(new FileConsumer).start
+    }
+  }
+}
+

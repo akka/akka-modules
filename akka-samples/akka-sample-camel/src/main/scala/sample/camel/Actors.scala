@@ -3,7 +3,7 @@ package sample.camel
 import org.apache.camel.Exchange
 
 import akka.actor.{Actor, ActorRef, ActorRegistry}
-import akka.camel.{Failure, Producer, Message, Consumer}
+import akka.camel.{Ack, Failure, Producer, Message, Consumer}
 import akka.util.Logging
 
 /**
@@ -139,5 +139,25 @@ class HttpTransformer extends Actor {
   protected def receive = {
     case msg: Message => self.reply(msg.transformBody {body: String => body replaceAll ("Akka ", "AKKA ")})
     case msg: Failure => self.reply(msg)
+  }
+}
+
+class FileConsumer extends Actor with Consumer {
+  def endpointUri = "file:data/input/actor?delete=true"
+  override def autoack = false
+
+  var counter = 0
+
+  def receive = {
+    case msg: Message => {
+      if (counter == 2) {
+        log.info("received %s" format msg.bodyAs[String])
+        self.reply(Ack)
+      } else {
+        log.info("rejected %s" format msg.bodyAs[String])
+        counter += 1
+        self.reply(Failure(new Exception("message number %s not accepted" format counter)))
+      }
+    }
   }
 }
