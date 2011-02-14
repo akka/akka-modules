@@ -7,8 +7,8 @@ import Scalaz._
 import akka.dispatch.CompletableFuture
 
 sealed trait CompletableFutureW[A] extends PimpedType[CompletableFuture[A]] {
-  def completeWith(validation: Validation[Throwable, A]): Unit =
-    validation.fold(value.completeWithException, value.completeWithResult)
+  def complete(validation: Validation[Throwable, A]): Unit =
+    value.complete(validation.either)
 }
 
 trait CompletableFutures {

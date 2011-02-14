@@ -8,20 +8,10 @@ import scalaz.concurrent.{Promise, Strategy}
 import akka.dispatch.{Future, DefaultCompletableFuture, FutureTimeoutException}
 
 sealed trait FutureW[A] extends PimpedType[Future[A]] {
-  def toValidation: Validation[Throwable, A] = {
-    value.await
-    value.result fold (success(_), failure(value.exception getOrElse (new FutureTimeoutException("Futures timed out after [" + nanosToMillis(value.timeoutInNanos) + "] milliseconds"))))
-  }
-
   def liftValidation: Future[Validation[Throwable, A]] = {
-    val f = new DefaultCompletableFuture[Validation[Throwable, A]]
-    value onComplete (r => f.completeWithResult(r.result fold (success, failure(r.exception.get))))
+    val f = new DefaultCompletableFuture[Validation[Throwable, A]](nanosToMillis(value.timeoutInNanos))
+    value onComplete (r => f.completeWithResult(Scalaz.validation(r.value.get)))
     f
-  }
-
-  def toEither: Either[Throwable, A] = {
-    value.await
-    value.result fold (Right(_), Left(value.exception getOrElse (new FutureTimeoutException("Futures timed out after [" + nanosToMillis(value.timeoutInNanos) + "] milliseconds"))))
   }
 
   def toPromise(implicit s: Strategy): Promise[A] =
@@ -33,13 +23,11 @@ sealed trait FutureW[A] extends PimpedType[Future[A]] {
     f
   }
 
-  def get: A = {
-    value.await
-    value.result getOrElse (throw value.exception getOrElse new FutureTimeoutException("Futures timed out after [" + nanosToMillis(value.timeoutInNanos) + "] milliseconds"))
-  }
+  // Gives Future the same get method as Java Future and Scalaz Promise
+  def get: A = value.await.resultOrException.get
 
   def getOrElse[B >: A](default: => B): B =
-    value.await.result getOrElse default
+    value.awaitResult.flatMap(_.right.toOption) getOrElse default
 }
 
 trait Futures {

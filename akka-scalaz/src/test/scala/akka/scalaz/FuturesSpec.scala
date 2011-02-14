@@ -159,9 +159,9 @@ class AkkaFuturesSpec extends WordSpec with ShouldMatchers with Checkers with Lo
 
     "convert to Validation" in {
       val r1 = (f("34".toInt) |@| f("150".toInt) |@| f("12".toInt))(_ + _ + _)
-      r1.toValidation should equal (Success(196))
+      r1.liftValidation.get should equal (Success(196))
       val r2 = (f("34".toInt) |@| f("hello".toInt) |@| f("12".toInt))(_ + _ + _)
-      r2.toValidation.fail.map(_.toString).validation should equal (Failure("java.lang.NumberFormatException: For input string: \"hello\""))
+      r2.liftValidation.get.fail.map(_.toString).validation should equal (Failure("java.lang.NumberFormatException: For input string: \"hello\""))
     }
 
     "for-comprehension" in {
