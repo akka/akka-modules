@@ -210,6 +210,13 @@ class AkkaFuturesSpec extends WordSpec with ShouldMatchers with Checkers with Lo
 
       ((f *** f) >=> (g *** h) >=> (a1 *** a2) apply ("3", "7") get) should equal (12, "Int: 70")
 
+      val fn = (n: Int) => (a1 >=> a2) apply n map {
+        case "Int: 10" => "10"
+        case _ => "failure"
+      } >>= (f >=> g)
+      fn(5).get should equal (20)
+      evaluating (fn(10).get) should produce[NumberFormatException]
+
       a1.stop
       a2.stop
     }
