@@ -39,7 +39,7 @@ trait FutureExecuter {
 object FutureExecuter {
   import executer._
 
-  implicit val DefaultExecuter: FutureExecuter = config.getString("akka.scalaz.executer", "inline") match {
+  implicit val DefaultExecuter: FutureExecuter = config.getString("akka.scalaz.executer", "spawn") match {
     case "spawn" => Spawn
     case "hawt" => Hawt
     case "inline" => Inline
