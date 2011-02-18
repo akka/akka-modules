@@ -38,8 +38,6 @@ package object futures extends Futures
     def pure[A](a: => A) = executer.Inline.future(a)
   }
 
-  implicit def FutureApply = FunctorBindApply[Future]
-
   implicit def FutureEach = new Each[Future] {
     def each[A](e: Future[A], f: A => Unit) = e onComplete (_.result foreach (r => f(r)))
   }

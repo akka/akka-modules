@@ -17,4 +17,8 @@ trait ActorRefs {
   implicit def ActorRefTo(a: ActorRef): ActorRefW = new ActorRefW {
     val value = a
   }
+
+  implicit def ActorRefToKleisli(a: ActorRef): Kleisli[Future, Any, Any] = kleisli(x => a !!! x)
+
+  implicit def ActorRefMAB(a: ActorRef) = KleisliMAB(a)
 }

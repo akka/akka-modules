@@ -198,19 +198,17 @@ class AkkaFuturesSpec extends WordSpec with ShouldMatchers with Checkers with Lo
     "compose with actors" in {
       val a1 = actorOf[DoubleActor].start
       val a2 = actorOf[ToStringActor].start
-      val k1 = a1.future
-      val k2 = a2.future
       val l = (1 to 5).toList
 
-      (l map k1 sequence).get should equal (List(2, 4, 6, 8, 10))
-      (l map (k1 >=> k2) sequence).get should equal (List("Int: 2", "Int: 4", "Int: 6", "Int: 8", "Int: 10"))
-      (l map (k1 &&& (k1 >=> k2)) sequence).get should equal (List((2, "Int: 2"), (4, "Int: 4"), (6, "Int: 6"), (8, "Int: 8"), (10, "Int: 10")))
+      (l map a1 sequence).get should equal (List(2, 4, 6, 8, 10))
+      (l map (a1 >=> a2) sequence).get should equal (List("Int: 2", "Int: 4", "Int: 6", "Int: 8", "Int: 10"))
+      (l map (a1 &&& (a1 >=> a2)) sequence).get should equal (List((2, "Int: 2"), (4, "Int: 4"), (6, "Int: 6"), (8, "Int: 8"), (10, "Int: 10")))
 
       val f = ((_: String).toInt).future
       val g = ((_: Int) * 2).future
       val h = ((_: Int) * 10).future
 
-      ((f *** f) >=> (g *** h) >=> (k1 *** k2) apply ("3", "7") get) should equal (12, "Int: 70")
+      ((f *** f) >=> (g *** h) >=> (a1 *** a2) apply ("3", "7") get) should equal (12, "Int: 70")
 
       a1.stop
       a2.stop
