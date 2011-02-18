@@ -133,8 +133,8 @@ class AkkaFuturesSpec extends WordSpec with ShouldMatchers with Checkers with Lo
       fib(40).get should equal (102334155)
     }
 
-    "sequence a list" in {
-      val result = (1 to 1000).toList.map(n => future(n * 10)).sequence.get
+    "traverse a list into a future" in {
+      val result = (1 to 1000).toList.traverse(n => future(n * 10)).get
       result should have size (1000)
       result.head should equal (10)
     }
@@ -200,9 +200,9 @@ class AkkaFuturesSpec extends WordSpec with ShouldMatchers with Checkers with Lo
       val a2 = actorOf[ToStringActor].start
       val l = (1 to 5).toList
 
-      (l map a1 sequence).get should equal (List(2, 4, 6, 8, 10))
-      (l map (a1 >=> a2) sequence).get should equal (List("Int: 2", "Int: 4", "Int: 6", "Int: 8", "Int: 10"))
-      (l map (a1 &&& (a1 >=> a2)) sequence).get should equal (List((2, "Int: 2"), (4, "Int: 4"), (6, "Int: 6"), (8, "Int: 8"), (10, "Int: 10")))
+      (l traverse a1).get should equal (List(2, 4, 6, 8, 10))
+      (l traverse (a1 >=> a2)).get should equal (List("Int: 2", "Int: 4", "Int: 6", "Int: 8", "Int: 10"))
+      (l traverse (a1 &&& (a1 >=> a2))).get should equal (List((2, "Int: 2"), (4, "Int: 4"), (6, "Int: 6"), (8, "Int: 8"), (10, "Int: 10")))
 
       val f = ((_: String).toInt).future
       val g = ((_: Int) * 2).future
