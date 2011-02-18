@@ -9,7 +9,7 @@ import akka.dispatch.Future
 sealed trait Function0W[A] {
   val k: () => A
 
-  def future(implicit p: Pure[Future]): Future[A] = p pure k.apply
+  def future(implicit exec: FutureExecuter): Future[A] = exec.future(k.apply)
 }
 
 trait Function0s {

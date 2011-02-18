@@ -19,25 +19,23 @@ import akka.util.Logging
 
 class AkkaFuturesSpec extends WordSpec with ShouldMatchers with Checkers with Logging {
 
-  def f[A](a: => A)(implicit p: Pure[Future]) = (() => a).future(p)
-
   implicit def FutureEqual[A: Equal] = Scalaz.equal[Future[A]]((a1,a2) => a1.get ≟ a2.get)
 
-  implicit def FutureArbitrary[A](implicit arb: Arbitrary[A], p: Pure[Future]): Arbitrary[Future[A]] = arb map ((a: A) => f(a)(p))
+  implicit def FutureArbitrary[A](implicit arb: Arbitrary[A], exec: FutureExecuter): Arbitrary[Future[A]] = arb map ((a: A) => exec.future(a))
 
   "A Future" when {
     "using InlineExecuter" should {
-      import executer.InlineExecuter
+      import executer.Inline
       behave like aFuture
     }
 
     "using SpawnExecuter" should {
-      import executer.SpawnExecuter
+      import executer.Spawn
       behave like aConcurrentFuture
     }
 
     "using HawtExecuter" should {
-      import executer.HawtExecuter
+      import executer.Hawt
       behave like aConcurrentFuture
     }
   }
@@ -81,11 +79,11 @@ class AkkaFuturesSpec extends WordSpec with ShouldMatchers with Checkers with Lo
     behave like aMonoid
 
     "have scalaz functor instance" in {
-      val f1 = f(5 * 5)
-      val f2 = f1.asMA map (_ * 2)
-      val f3 = f2.asMA map (_ * 10)
-      val f4 = f1.asMA map (_ / 0)
-      val f5 = f4.asMA map (_ * 10)
+      val f1 = future(5 * 5)
+      val f2 = f1 map (_ * 2)
+      val f3 = f2 map (_ * 10)
+      val f4 = f1 map (_ / 0)
+      val f5 = f4 map (_ * 10)
 
       f2.get should equal (50)
       f3.get should equal (500)
@@ -94,11 +92,11 @@ class AkkaFuturesSpec extends WordSpec with ShouldMatchers with Checkers with Lo
     }
 
     "have scalaz bind instance" in {
-      val f1 = f(5 * 5)
-      val f2 = f1 >>= ((_: Int) * 2).future
-      val f3 = f2 >>= ((_: Int) * 10).future
-      val f4 = f1 >>= ((_: Int) / 0).future
-      val f5 = f4 >>= ((_: Int) * 10).future
+      val f1 = future(5 * 5)
+      val f2 = f1 >>= (n => future(n * 2))
+      val f3 = f2 >>= (n => future(n * 10))
+      val f4 = f1 >>= (n => future(n / 0))
+      val f5 = f4 >>= (n => future(n * 10))
 
       f2.get should equal (50)
       f3.get should equal (500)
@@ -107,9 +105,9 @@ class AkkaFuturesSpec extends WordSpec with ShouldMatchers with Checkers with Lo
     }
 
     "have scalaz apply instance" in {
-      val f1 = f(5 * 5)
-      val f2 = f1.asMA map (_ * 2)
-      val f3 = f2.asMA map (_ / 0)
+      val f1 = future(5 * 5)
+      val f2 = f1 map (_ * 2)
+      val f3 = f2 map (_ / 0)
 
       (f1 |@| f2)(_ * _).get should equal (1250)
       (f1 |@| f2).tupled.get should equal (25,50)
@@ -119,7 +117,7 @@ class AkkaFuturesSpec extends WordSpec with ShouldMatchers with Checkers with Lo
     }
 
     "have scalaz comonad instance" in {
-      val f = future("Result") =>> (_.asMA map (_.toUpperCase)) >>= (_.asMA map (s => s + s))
+      val f = future("Result") =>> (_ map (_.toUpperCase)) >>= (_ map (s => s + s))
       f.get should equal ("RESULTRESULT")
     }
 
@@ -128,7 +126,7 @@ class AkkaFuturesSpec extends WordSpec with ShouldMatchers with Checkers with Lo
 
       def fib(n: Int): Future[Int] =
         if (n < 30)
-          f(seqFib(n))
+          future(seqFib(n))
         else
           (fib(n - 1) |@| fib(n - 2))(_ + _)
 
@@ -136,7 +134,7 @@ class AkkaFuturesSpec extends WordSpec with ShouldMatchers with Checkers with Lo
     }
 
     "sequence a list" in {
-      val result = (1 to 1000).toList.map((10 * (_: Int)).future).sequence.get
+      val result = (1 to 1000).toList.map(n => future(n * 10)).sequence.get
       result should have size (1000)
       result.head should equal (10)
     }
@@ -154,29 +152,29 @@ class AkkaFuturesSpec extends WordSpec with ShouldMatchers with Checkers with Lo
 
     "fold into a future" in {
       val list = (1 to 100).toList
-      list.foldLeftM(0)((b,a) => f(b + a)).get should equal (5050)
+      list.foldLeftM(0)((b,a) => future(b + a)).get should equal (5050)
     }
 
     "convert to Validation" in {
-      val r1 = (f("34".toInt) |@| f("150".toInt) |@| f("12".toInt))(_ + _ + _)
+      val r1 = (future("34".toInt) |@| future("150".toInt) |@| future("12".toInt))(_ + _ + _)
       r1.liftValidation.get should equal (Success(196))
-      val r2 = (f("34".toInt) |@| f("hello".toInt) |@| f("12".toInt))(_ + _ + _)
+      val r2 = (future("34".toInt) |@| future("hello".toInt) |@| future("12".toInt))(_ + _ + _)
       r2.liftValidation.get.fail.map(_.toString).validation should equal (Failure("java.lang.NumberFormatException: For input string: \"hello\""))
     }
 
     "for-comprehension" in {
       val r1 = for {
-        x1 <- f("34".toInt)
-        x2 <- f("150".toInt)
-        x3 <- f("12".toInt)
+        x1 <- future("34".toInt)
+        x2 <- future("150".toInt)
+        x3 <- future("12".toInt)
       } yield x1 + x2 + x3
 
       r1.get should equal (196)
 
       val r2 = for {
-        x1 <- f("34".toInt)
-        x2 <- f("hello".toInt)
-        x3 <- f("12".toInt)
+        x1 <- future("34".toInt)
+        x2 <- future("hello".toInt)
+        x3 <- future("12".toInt)
       } yield x1 + x2 + x3
 
       evaluating (r2.get) should produce[NumberFormatException]
@@ -219,8 +217,8 @@ class AkkaFuturesSpec extends WordSpec with ShouldMatchers with Checkers with Lo
     }
 
     "Semigroups" in {
-      (f(3) |+| f(4)).get should equal (7)
-      (f(List(1,2,3)) |+| f(List(4,5,6))).get should equal (List(1,2,3,4,5,6))
+      (future(3) |+| future(4)).get should equal (7)
+      (future(List(1,2,3)) |+| future(List(4,5,6))).get should equal (List(1,2,3,4,5,6))
     }
 
     "Monoids" in {
@@ -242,7 +240,7 @@ class AkkaFuturesSpec extends WordSpec with ShouldMatchers with Checkers with Lo
         case Nil => nil.pure[Future]
         case x :: Nil => List(x).pure[Future]
         case x :: y :: Nil => (if (ord.lt(x,y)) List(x,y) else List(y,x)).pure[Future]
-        case x :: xs => (f(qsort(xs.filter(ord.lt(_,x)))).join |@| x.pure[Future] |@| f(qsort(xs.filter(ord.gteq(_,x)))).join)(_ ::: _ :: _)
+        case x :: xs => (future(qsort(xs.filter(ord.lt(_,x)))).join |@| x.pure[Future] |@| future(qsort(xs.filter(ord.gteq(_,x)))).join)(_ ::: _ :: _)
       }
 
       qsort(list).get should equal (list.sorted)
@@ -253,8 +251,8 @@ class AkkaFuturesSpec extends WordSpec with ShouldMatchers with Checkers with Lo
     behave like aFuture
 
     "have a resetable timeout" in {
-      f("test").timeout(100).get should equal ("test")
-      evaluating (f({Thread.sleep(500);"test"}).timeout(100).get) should produce[FutureTimeoutException]
+      future("test").timeout(100).get should equal ("test")
+      evaluating (future({Thread.sleep(500);"test"}).timeout(100).get) should produce[FutureTimeoutException]
     }
   }
 }

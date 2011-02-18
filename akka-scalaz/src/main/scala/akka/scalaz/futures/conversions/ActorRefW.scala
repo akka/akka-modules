@@ -7,8 +7,10 @@ import Scalaz._
 import akka.dispatch.Future
 import akka.actor.ActorRef
 
-sealed trait ActorRefW extends PimpedType[ActorRef] {
+sealed trait ActorRefW extends PimpedType[ActorRef] with Function1[Any, Future[Any]] {
   def future: Kleisli[Future, Any, Any] = kleisli(value !!! _)
+
+  def apply(in: Any): Future[Any] = value !!! in
 }
 
 trait ActorRefs {

@@ -7,9 +7,12 @@ import scalaz.concurrent.{Promise, Strategy}
 
 import akka.dispatch.{Future, DefaultCompletableFuture, FutureTimeoutException}
 
+import java.util.concurrent.TimeUnit
+import TimeUnit.{NANOSECONDS => NANOS, MILLISECONDS => MILLIS}
+
 sealed trait FutureW[A] extends PimpedType[Future[A]] {
   def liftValidation: Future[Validation[Throwable, A]] = {
-    val f = new DefaultCompletableFuture[Validation[Throwable, A]](nanosToMillis(value.timeoutInNanos))
+    val f = new DefaultCompletableFuture[Validation[Throwable, A]](value.timeoutInNanos, NANOS)
     value onComplete (r => f.completeWithResult(Scalaz.validation(r.value.get)))
     f
   }
