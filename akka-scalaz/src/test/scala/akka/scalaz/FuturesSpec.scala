@@ -221,6 +221,18 @@ class AkkaFuturesSpec extends WordSpec with ShouldMatchers with Checkers with Lo
       a2.stop
     }
 
+    "Plus" in {
+      val r1 = future(1)
+      val r2 = future(2)
+      val e1 = future(1 / 0)
+      val e2 = future("Hello".toInt)
+
+      (r1 <+> r2).get should equal (1)
+      (r2 <+> e1).get should equal (2)
+      (e2 <+> r1).get should equal (1)
+      (e1 <+> e2 <+> r1 <+> r2).get should equal (1)
+    }
+
     "Semigroups" in {
       (future(3) |+| future(4)).get should equal (7)
       (future(List(1,2,3)) |+| future(List(4,5,6))).get should equal (List(1,2,3,4,5,6))
