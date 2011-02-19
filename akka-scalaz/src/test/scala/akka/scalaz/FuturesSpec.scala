@@ -245,6 +245,8 @@ class AkkaFuturesSpec extends WordSpec with ShouldMatchers with Checkers with Lo
       (List(1,2,3,4,5) foldMapDefault doubler).get should equal (30)
       (nil[Int] foldMapDefault doubler).get should equal (0)
 
+      (1 +>: 2 +>: 3 +>: doubler(10) |+| doubler(100) map (_ |+| 300)).get should equal (526)
+
       1.unfold[Future, String](x => (x < 5).option((x.toString, x + 1))).get should equal ("1234")
     }
 
