@@ -3,10 +3,10 @@ package akka.scalaz.futures
 import akka.config.Config._
 
 import akka.actor.Actor.TIMEOUT
-import akka.dispatch.{Future, DefaultCompletableFuture}
+import akka.dispatch.{ Future, DefaultCompletableFuture }
 
 import java.util.concurrent.TimeUnit
-import TimeUnit.{NANOSECONDS => NANOS, MILLISECONDS => MILLIS}
+import TimeUnit.{ NANOSECONDS => NANOS, MILLISECONDS => MILLIS }
 
 package object executer {
   implicit object Spawn extends FutureExecuter {
@@ -30,7 +30,7 @@ trait FutureExecuter {
 
   final def future[A](a: => A, timeout: Long = TIMEOUT, timeunit: TimeUnit = MILLIS): Future[A] = {
     val f = new DefaultCompletableFuture[A](timeout, timeunit)
-    apply(f.complete(try {Right(a)} catch {case e => Left(e)}))
+    apply(f.complete(try { Right(a) } catch { case e => Left(e) }))
     f
   }
 
@@ -40,9 +40,9 @@ object FutureExecuter {
   import executer._
 
   implicit val DefaultExecuter: FutureExecuter = config.getString("akka.scalaz.executer", "spawn") match {
-    case "spawn" => Spawn
-    case "hawt" => Hawt
+    case "spawn"  => Spawn
+    case "hawt"   => Hawt
     case "inline" => Inline
-    case _ => error("Invalid config for akka.scalaz.executer")
+    case _        => error("Invalid config for akka.scalaz.executer")
   }
 }

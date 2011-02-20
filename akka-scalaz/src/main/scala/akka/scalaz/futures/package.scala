@@ -4,10 +4,10 @@ import scalaz._
 import Scalaz._
 
 import akka.actor.Actor.TIMEOUT
-import akka.dispatch.{Future, DefaultCompletableFuture}
+import akka.dispatch.{ Future, DefaultCompletableFuture }
 
 import java.util.concurrent.TimeUnit
-import TimeUnit.{NANOSECONDS => NANOS, MILLISECONDS => MILLIS}
+import TimeUnit.{ NANOSECONDS => NANOS, MILLISECONDS => MILLIS }
 
 import futures.conversions._
 
@@ -21,7 +21,7 @@ package object futures extends Futures
   implicit def FutureFunctor = new Functor[Future] {
     def fmap[A, B](r: Future[A], f: A => B): Future[B] = {
       val fb = new DefaultCompletableFuture[B](r.timeoutInNanos, NANOS)
-      r onComplete (_.value.foreach(_.fold(fb.completeWithException, a => fb.complete(try {Right(f(a))} catch {case e => Left(e)}))))
+      r onComplete (_.value.foreach(_.fold(fb.completeWithException, a => fb.complete(try { Right(f(a)) } catch { case e => Left(e) }))))
       fb
     }
   }
@@ -29,7 +29,7 @@ package object futures extends Futures
   implicit def FutureBind = new Bind[Future] {
     def bind[A, B](r: Future[A], f: A => Future[B]) = {
       val fb = new DefaultCompletableFuture[B](r.timeoutInNanos, NANOS)
-      r onComplete (_.value.foreach(_.fold(fb.completeWithException, a => try {f(a).onComplete(fb.completeWith(_))} catch {case e => fb.completeWithException(e)})))
+      r onComplete (_.value.foreach(_.fold(fb.completeWithException, a => try { f(a).onComplete(fb.completeWith(_)) } catch { case e => fb.completeWithException(e) })))
       fb
     }
   }
@@ -53,7 +53,7 @@ package object futures extends Futures
   }
 
   implicit def FutureSemigroup[A: Semigroup]: Semigroup[Future[A]] =
-    semigroup ((fa, fb) => (fa <**> fb)(_ |+| _))
+    semigroup((fa, fb) => (fa <**> fb)(_ |+| _))
 
   implicit def FutureZero[A: Zero]: Zero[Future[A]] = zero(∅[A].pure[Future])
 

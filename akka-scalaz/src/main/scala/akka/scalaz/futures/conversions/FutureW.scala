@@ -3,12 +3,12 @@ package conversions
 
 import scalaz._
 import Scalaz._
-import scalaz.concurrent.{Promise, Strategy}
+import scalaz.concurrent.{ Promise, Strategy }
 
-import akka.dispatch.{Future, DefaultCompletableFuture, FutureTimeoutException}
+import akka.dispatch.{ Future, DefaultCompletableFuture, FutureTimeoutException }
 
 import java.util.concurrent.TimeUnit
-import TimeUnit.{NANOSECONDS => NANOS, MILLISECONDS => MILLIS}
+import TimeUnit.{ NANOSECONDS => NANOS, MILLISECONDS => MILLIS }
 
 sealed trait FutureW[A] extends PimpedType[Future[A]] {
   def liftValidation: Future[Validation[Throwable, A]] = {

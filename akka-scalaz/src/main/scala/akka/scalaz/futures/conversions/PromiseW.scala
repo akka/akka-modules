@@ -6,7 +6,7 @@ import Scalaz._
 import scalaz.concurrent.Promise
 
 import akka.actor.Actor.TIMEOUT
-import akka.dispatch.{Future, DefaultCompletableFuture}
+import akka.dispatch.{ Future, DefaultCompletableFuture }
 
 sealed trait PromiseW[A] extends PimpedType[Promise[A]] {
   def toFuture: Future[A] = {
