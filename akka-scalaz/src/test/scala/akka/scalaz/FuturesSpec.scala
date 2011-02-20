@@ -255,11 +255,11 @@ class AkkaFuturesSpec extends WordSpec with ShouldMatchers with Checkers with Lo
       val rnd = new scala.util.Random(1)
       val list = List.fill(1000)(rnd.nextInt)
 
-      def qsort[T](in: List[T])(implicit ord: math.Ordering[T]): Future[List[T]] = in match {
+      def qsort[T: Order](in: List[T]): Future[List[T]] = in match {
         case Nil           => nil.pure[Future]
         case x :: Nil      => List(x).pure[Future]
-        case x :: y :: Nil => (if (ord.lt(x, y)) List(x, y) else List(y, x)).pure[Future]
-        case x :: xs       => (future(qsort(xs.filter(ord.lt(_, x)))).join |@| x.pure[Future] |@| future(qsort(xs.filter(ord.gteq(_, x)))).join)(_ ::: _ :: _)
+        case x :: y :: Nil => (if (x lt y) List(x, y) else List(y, x)).pure[Future]
+        case x :: xs       => (future(qsort(xs.filter(x.gt))).join |@| x.pure[Future] |@| future(qsort(xs.filter(x.lte))).join)(_ ::: _ :: _)
       }
 
       qsort(list).get should equal(list.sorted)
