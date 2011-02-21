@@ -200,15 +200,14 @@ class AkkaFuturesSpec extends WordSpec with ShouldMatchers with Checkers with Lo
       val a2 = actorOf[ToStringActor].start
       val l = (1 to 5).toList
 
+      a1(5).get should equal(10)
+
       (l traverse a1).get should equal(List(2, 4, 6, 8, 10))
       (l traverse (a1 >=> a2)).get should equal(List("Int: 2", "Int: 4", "Int: 6", "Int: 8", "Int: 10"))
-      (l traverse (a1 &&& (a1 >=> a2))).get should equal(List((2, "Int: 2"), (4, "Int: 4"), (6, "Int: 6"), (8, "Int: 8"), (10, "Int: 10")))
 
       val f = ((_: String).toInt).future
       val g = ((_: Int) * 2).future
       val h = ((_: Int) * 10).future
-
-      ((f *** f) >=> (g *** h) >=> (a1 *** a2) apply ("3", "7") get) should equal(12, "Int: 70")
 
       val fn = (n: Int) => (a1 >=> a2) apply n map {
         case "Int: 10" => "10"

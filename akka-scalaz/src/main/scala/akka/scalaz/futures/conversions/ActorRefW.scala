@@ -7,18 +7,18 @@ import Scalaz._
 import akka.dispatch.Future
 import akka.actor.ActorRef
 
-sealed trait ActorRefW extends PimpedType[ActorRef] with Function1[Any, Future[Any]] {
+sealed trait ActorRefW extends PimpedType[ActorRef] {
   def future: Kleisli[Future, Any, Any] = kleisli(value !!! _)
-
-  def apply(in: Any): Future[Any] = value !!! in
 }
 
-trait ActorRefs {
+trait ActorRefs extends ActorRefsLow {
   implicit def ActorRefTo(a: ActorRef): ActorRefW = new ActorRefW {
     val value = a
   }
 
-  implicit def ActorRefToKleisli(a: ActorRef): Kleisli[Future, Any, Any] = kleisli(x => a !!! x)
+  implicit def ActorRefToFunction1(a: ActorRef): Any => Future[Any] = (x: Any) => a !!! x
+}
 
-  implicit def ActorRefMAB(a: ActorRef) = KleisliMAB(a)
+trait ActorRefsLow {
+  implicit def ActorRefToKleisli(a: ActorRef): Kleisli[Future, Any, Any] = kleisli(x => a !!! x)
 }
