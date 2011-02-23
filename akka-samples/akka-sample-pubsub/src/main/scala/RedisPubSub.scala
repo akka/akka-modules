@@ -5,7 +5,6 @@
 package sample.pubsub
 
 import com.redis.{RedisClient, PubSubMessage, S, U, M}
-import akka.persistence.redis._
 import akka.actor.Actor._
 
 /**
@@ -47,7 +46,7 @@ import akka.actor.Actor._
  *     scala> Pub.publish("b", "-c")  // will unsubscribe the first window from channel "c"
  *     scala> Pub.publish("b", "exit")  // will unsubscribe the first window from all channels
  * </pre>
- */
+ *
 
 object Pub {
   println("starting publishing service ..")
@@ -105,3 +104,4 @@ object Sub {
       }
   }
 }
+*/
