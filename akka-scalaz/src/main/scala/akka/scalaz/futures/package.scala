@@ -19,19 +19,11 @@ package object futures extends Futures
     with conversions.Function1s {
 
   implicit def FutureFunctor = new Functor[Future] {
-    def fmap[A, B](r: Future[A], f: A => B): Future[B] = {
-      val fb = new DefaultCompletableFuture[B](r.timeoutInNanos, NANOS)
-      r onComplete (_.value.foreach(_.fold(fb.completeWithException, a => fb.complete(try { Right(f(a)) } catch { case e => Left(e) }))))
-      fb
-    }
+    def fmap[A, B](r: Future[A], f: A => B): Future[B] = r map f
   }
 
   implicit def FutureBind = new Bind[Future] {
-    def bind[A, B](r: Future[A], f: A => Future[B]) = {
-      val fb = new DefaultCompletableFuture[B](r.timeoutInNanos, NANOS)
-      r onComplete (_.value.foreach(_.fold(fb.completeWithException, a => try { f(a).onComplete(fb.completeWith(_)) } catch { case e => fb.completeWithException(e) })))
-      fb
-    }
+    def bind[A, B](r: Future[A], f: A => Future[B]) = r flatMap f
   }
 
   implicit def FuturePure = new Pure[Future] {
@@ -39,7 +31,7 @@ package object futures extends Futures
   }
 
   implicit def FutureEach = new Each[Future] {
-    def each[A](e: Future[A], f: A => Unit) = e onComplete (_.result foreach (r => f(r)))
+    def each[A](e: Future[A], f: A => Unit) = e foreach f
   }
 
   implicit def FuturePlus = new Plus[Future] {
