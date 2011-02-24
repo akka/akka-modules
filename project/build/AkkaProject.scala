@@ -151,10 +151,6 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
 
     lazy val aspectwerkz = "org.codehaus.aspectwerkz" % "aspectwerkz" % "2.2.3" % "compile" //LGPL 2.1
 
-    lazy val atomikos_transactions     = "com.atomikos" % "transactions"     % "3.2.3" % "compile" //ApacheV2
-    lazy val atomikos_transactions_api = "com.atomikos" % "transactions-api" % "3.2.3" % "compile" //ApacheV2
-    lazy val atomikos_transactions_jta = "com.atomikos" % "transactions-jta" % "3.2.3" % "compile" //ApacheV2
-
     lazy val camel_core = "org.apache.camel" % "camel-core" % CAMEL_VERSION % "compile" //ApacheV2
 
     lazy val commonsHttpClient = "commons-httpclient" % "commons-httpclient" % "3.1" % "compile" //ApacheV2
@@ -239,8 +235,7 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
   lazy val akka_amqp        = project("akka-amqp", "akka-amqp", new AkkaAMQPProject(_))
   lazy val akka_camel       = project("akka-camel", "akka-camel", new AkkaCamelProject(_))
   lazy val akka_spring      = project("akka-spring", "akka-spring", new AkkaSpringProject(_), akka_camel)
-  lazy val akka_jta         = project("akka-jta", "akka-jta", new AkkaJTAProject(_))
-  lazy val akka_kernel      = project("akka-kernel", "akka-kernel", new AkkaKernelProject(_), akka_jta, akka_spring, akka_camel, akka_amqp)
+  lazy val akka_kernel      = project("akka-kernel", "akka-kernel", new AkkaKernelProject(_), akka_spring, akka_camel, akka_amqp)
   lazy val akka_osgi        = project("akka-osgi", "akka-osgi", new AkkaOSGiParentProject(_))
   lazy val akka_scalaz      = project("akka-scalaz", "akka-scalaz", new AkkaScalazProject(_))
   lazy val akka_samples     = project("akka-samples", "akka-samples", new AkkaSamplesParentProject(_))
@@ -274,7 +269,6 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
     " dist/akka-amqp-%s.jar".format(version) +
     " dist/akka-kernel-%s.jar".format(version) +
     " dist/akka-spring-%s.jar".format(version) +
-    " dist/akka-jta-%s.jar".format(version) +
     " dist/akka-scalaz-%s.jar".format(version)
     )
 
@@ -417,24 +411,6 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
   }
 
   // -------------------------------------------------------------------------------------------------------------------
-  // akka-jta subproject
-  // -------------------------------------------------------------------------------------------------------------------
-
-  class AkkaJTAProject(info: ProjectInfo) extends AkkaModulesDefaultProject(info, distPath) {
-    val akka_stm    = Dependencies.akka_stm
-    val akka_remote = Dependencies.akka_remote
-
-    val jta_1_1                   = Dependencies.jta_1_1
-    val atomikos_transactions     = Dependencies.atomikos_transactions
-    val atomikos_transactions_api = Dependencies.atomikos_transactions_api
-    val atomikos_transactions_jta = Dependencies.atomikos_transactions_jta
-
-    //Testing
-    val junit        = Dependencies.junit
-    val scalatest    = Dependencies.scalatest
-  }
-
-  // -------------------------------------------------------------------------------------------------------------------
   // OSGi stuff
   // -------------------------------------------------------------------------------------------------------------------
 
@@ -442,15 +418,14 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
     override def disableCrossPaths = true
 
     lazy val akka_osgi_dependencies_bundle = project("akka-osgi-dependencies-bundle", "akka-osgi-dependencies-bundle",
-      new AkkaOSGiDependenciesBundleProject(_), akka_kernel, akka_jta) // akka_kernel does not depend on akka_jta (why?) therefore we list akka_jta here
+      new AkkaOSGiDependenciesBundleProject(_), akka_kernel)
 
     lazy val akka_osgi_assembly = project("akka-osgi-assembly", "akka-osgi-assembly",
       new AkkaOSGiAssemblyProject(_),
         akka_osgi_dependencies_bundle,
         akka_amqp,
         akka_camel,
-        akka_spring,
-        akka_jta)
+        akka_spring)
   }
 
   class AkkaOSGiDependenciesBundleProject(info: ProjectInfo) extends AkkaModulesDefaultProject(info, distPath) with BNDPlugin {
@@ -463,7 +438,6 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
       // Provided by other bundles
       "!akka.*",
       "!com.google.inject.*",
-      "!javax.transaction.*",
       "!javax.ws.rs.*",
       "!javax.jms.*",
       "!javax.transaction,*",
