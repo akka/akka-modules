@@ -35,13 +35,7 @@ package object futures extends Futures
   }
 
   implicit def FuturePlus = new Plus[Future] {
-    def plus[A](a1: Future[A], a2: => Future[A]): Future[A] = {
-      val f = new DefaultCompletableFuture[A](a1.timeoutInNanos, NANOS)
-      a1 onComplete (_.value.foreach(v1 =>
-        v1.fold(e1 => a2 onComplete (_.value.foreach(v2 =>
-          v2.fold(e2 => f complete v1, r2 => f complete v2))), r1 => f complete v1)))
-      f
-    }
+    def plus[A](a1: Future[A], a2: => Future[A]): Future[A] = a1 orElse a2
   }
 
   implicit def FutureSemigroup[A: Semigroup]: Semigroup[Future[A]] =
