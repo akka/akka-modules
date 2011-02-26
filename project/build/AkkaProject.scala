@@ -195,8 +195,6 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
 
     lazy val rabbit = "com.rabbitmq" % "amqp-client" % "1.8.1" % "compile" //Mozilla public license
 
-    lazy val redis = "com.redis" % "redisclient" % "2.8.1-2.3" % "compile" //ApacheV2
-
     lazy val sbinary = "sbinary" % "sbinary" % "2.8.0-0.3.1" % "compile" //MIT
 
     lazy val scalaz = "org.scalaz" % "scalaz-core_2.8.1" % "6.0-SNAPSHOT" % "compile" //New BSD
@@ -541,10 +539,6 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
     override def spdeSourcePath = mainSourcePath / "spde"
   }
 
-  class AkkaSamplePubSubProject(info: ProjectInfo) extends AkkaModulesDefaultProject(info, deployPath) {
-    val redis = Dependencies.redis
-  }
-
   class AkkaSampleCamelProject(info: ProjectInfo) extends AkkaModulesDefaultProject(info, deployPath) {
     //Must be like this to be able to exclude the geronimo-servlet_2.4_spec which is a too old Servlet spec
     override def ivyXML =
@@ -582,8 +576,6 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
   class AkkaSamplesParentProject(info: ProjectInfo) extends ParentProject(info) {
     override def disableCrossPaths = true
 
-    lazy val akka_sample_pubsub = project("akka-sample-pubsub", "akka-sample-pubsub",
-      new AkkaSamplePubSubProject(_), akka_kernel)
     lazy val akka_sample_camel = project("akka-sample-camel", "akka-sample-camel",
       new AkkaSampleCamelProject(_), akka_kernel)
     lazy val akka_sample_security = project("akka-sample-security", "akka-sample-security",
