@@ -11,9 +11,22 @@ import java.util.concurrent.TimeUnit
 import TimeUnit.{ NANOSECONDS => NANOS, MILLISECONDS => MILLIS }
 
 sealed trait FutureW[A] extends PimpedType[Future[A]] {
+
+  def lift: Future[Either[Throwable, A]] = {
+    val f = new DefaultCompletableFuture[Either[Throwable, A]](value.timeoutInNanos, NANOS)
+    value onComplete (r => f.completeWithResult(r.value.get))
+    f
+  }
+
   def liftValidation: Future[Validation[Throwable, A]] = {
     val f = new DefaultCompletableFuture[Validation[Throwable, A]](value.timeoutInNanos, NANOS)
     value onComplete (r => f.completeWithResult(Scalaz.validation(r.value.get)))
+    f
+  }
+
+  def liftValidationNel: Future[Validation[NonEmptyList[Throwable], A]] = {
+    val f = new DefaultCompletableFuture[Validation[NonEmptyList[Throwable], A]](value.timeoutInNanos, NANOS)
+    value onComplete (r => f.completeWithResult(Scalaz.validation(r.value.get).liftFailNel))
     f
   }
 
@@ -31,6 +44,15 @@ sealed trait FutureW[A] extends PimpedType[Future[A]] {
 
   def getOrElse[B >: A](default: => B): B =
     value.awaitResult.flatMap(_.right.toOption) getOrElse default
+
+  def orElse[B >: A](b: => Future[B]): Future[B] = {
+    val f = new DefaultCompletableFuture[B](value.timeoutInNanos, NANOS)
+    value onComplete (_.value.foreach(v1 =>
+      v1.fold(e1 => b onComplete (_.value.foreach(v2 =>
+        v2.fold(e2 => f complete v1, r2 => f complete v2))), r1 => f complete v1)))
+    f
+  }
+
 }
 
 trait Futures {

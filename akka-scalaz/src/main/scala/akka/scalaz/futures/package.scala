@@ -19,19 +19,11 @@ package object futures extends Futures
     with conversions.Function1s {
 
   implicit def FutureFunctor = new Functor[Future] {
-    def fmap[A, B](r: Future[A], f: A => B): Future[B] = {
-      val fb = new DefaultCompletableFuture[B](r.timeoutInNanos, NANOS)
-      r onComplete (_.value.foreach(_.fold(fb.completeWithException, a => fb.complete(try { Right(f(a)) } catch { case e => Left(e) }))))
-      fb
-    }
+    def fmap[A, B](r: Future[A], f: A => B): Future[B] = r map f
   }
 
   implicit def FutureBind = new Bind[Future] {
-    def bind[A, B](r: Future[A], f: A => Future[B]) = {
-      val fb = new DefaultCompletableFuture[B](r.timeoutInNanos, NANOS)
-      r onComplete (_.value.foreach(_.fold(fb.completeWithException, a => try { f(a).onComplete(fb.completeWith(_)) } catch { case e => fb.completeWithException(e) })))
-      fb
-    }
+    def bind[A, B](r: Future[A], f: A => Future[B]) = r flatMap f
   }
 
   implicit def FuturePure = new Pure[Future] {
@@ -39,17 +31,11 @@ package object futures extends Futures
   }
 
   implicit def FutureEach = new Each[Future] {
-    def each[A](e: Future[A], f: A => Unit) = e onComplete (_.result foreach (r => f(r)))
+    def each[A](e: Future[A], f: A => Unit) = e foreach f
   }
 
   implicit def FuturePlus = new Plus[Future] {
-    def plus[A](a1: Future[A], a2: => Future[A]): Future[A] = {
-      val f = new DefaultCompletableFuture[A](a1.timeoutInNanos, NANOS)
-      a1 onComplete (_.value.foreach(v1 =>
-        v1.fold(e1 => a2 onComplete (_.value.foreach(v2 =>
-          v2.fold(e2 => f complete v1, r2 => f complete v2))), r1 => f complete v1)))
-      f
-    }
+    def plus[A](a1: Future[A], a2: => Future[A]): Future[A] = a1 orElse a2
   }
 
   implicit def FutureSemigroup[A: Semigroup]: Semigroup[Future[A]] =
