@@ -73,15 +73,20 @@ object DispatcherFactoryBean {
     //Create the dispatcher
     properties.dispatcherType match {
       case EXECUTOR_BASED_EVENT_DRIVEN =>
-        configureThreadPool(poolConfig => new ExecutorBasedEventDrivenDispatcher(properties.name, poolConfig)).build
+        configureThreadPool(poolConfig =>
+          new ExecutorBasedEventDrivenDispatcher(properties.name, poolConfig)).build
       case EXECUTOR_BASED_EVENT_DRIVEN_WORK_STEALING =>
-        configureThreadPool(poolConfig => new ExecutorBasedEventDrivenWorkStealingDispatcher(properties.name,Dispatchers.MAILBOX_TYPE,poolConfig)).build
+        configureThreadPool(poolConfig =>
+          new ExecutorBasedEventDrivenWorkStealingDispatcher(
+            properties.name,
+            Dispatchers.THROUGHPUT,
+            Dispatchers.THROUGHPUT_DEADLINE_TIME_MILLIS,
+            Dispatchers.MAILBOX_TYPE,
+            poolConfig)).build
       case THREAD_BASED if actorRef.isEmpty =>
         throw new IllegalArgumentException("Need an ActorRef to create a thread based dispatcher.")
       case THREAD_BASED if actorRef.isDefined =>
         Dispatchers.newThreadBasedDispatcher(actorRef.get)
-      case HAWT =>
-        Dispatchers.newHawtDispatcher(properties.aggregate)
       case unknown =>
         throw new IllegalArgumentException("Unknown dispatcher type " + unknown)
     }

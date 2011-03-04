@@ -19,8 +19,6 @@ class RpcClientActor[I,O](
 
   var rpcClient: Option[RpcClient] = None
 
-  log.info("%s started", this)
-
   def specificMessageHandler = {
     case payload: I => {
       rpcClient match {

@@ -15,9 +15,7 @@ import akka.dispatch._
 import akka.actor.Actor
 import Actor._
 
-import akka.util.Logging
-
-class AkkaFuturesSpec extends WordSpec with ShouldMatchers with Checkers with Logging {
+class AkkaFuturesSpec extends WordSpec with ShouldMatchers with Checkers {
 
   implicit def FutureEqual[A: Equal] = Scalaz.equal[Future[A]]((a1, a2) => a1.get ≟ a2.get)
 

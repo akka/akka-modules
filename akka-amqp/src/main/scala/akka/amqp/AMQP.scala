@@ -466,7 +466,12 @@ object AMQP {
   private val supervisor = actorOf(new AMQPSupervisorActor).start
 
   def shutdownAll() = {
-    supervisor.shutdownLinkedActors
+    val i = supervisor.linkedActors.values.iterator
+    while(i.hasNext) {
+      val ref = i.next
+      ref.stop
+      supervisor.unlink(ref)
+    }
   }
 
   /**

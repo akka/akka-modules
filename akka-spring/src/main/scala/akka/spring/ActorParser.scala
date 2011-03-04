@@ -6,7 +6,6 @@ package akka.spring
 import org.springframework.util.xml.DomUtils
 import org.w3c.dom.Element
 import scala.collection.JavaConversions._
-import akka.util.Logging
 
 /**
  * Parser trait for custom namespace configuration for typed-actor.
@@ -113,7 +112,7 @@ trait ActorForParser extends BeanParser {
 /**
  * Base trait with utility methods for bean parsing.
  */
-trait BeanParser extends Logging {
+trait BeanParser {
 
   /**
    * Get a mandatory element attribute.
@@ -176,14 +175,7 @@ trait DispatcherParser extends BeanParser {
       }
     }
 
-    if (properties.dispatcherType == HAWT) { // no name for HawtDispatcher
-      properties.name = dispatcherElement.getAttribute(NAME)
-      if (dispatcherElement.hasAttribute(AGGREGATE)) {
-        properties.aggregate = dispatcherElement.getAttribute(AGGREGATE).toBoolean
-      }
-    } else {
-      properties.name = mandatory(dispatcherElement, NAME)
-    }
+    properties.name = mandatory(dispatcherElement, NAME)
 
     val threadPoolElement = DomUtils.getChildElementByTagName(dispatcherElement, THREAD_POOL_TAG);
     if (threadPoolElement ne null) {

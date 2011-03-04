@@ -123,7 +123,7 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
   lazy val ATMO_VERSION          = "0.6.2"
   lazy val CAMEL_VERSION         = "2.5.0"
   lazy val DISPATCH_VERSION      = "0.7.4"
-  lazy val HAWT_DISPATCH_VERSION = "1.0"
+  lazy val HAWT_DISPATCH_VERSION = "1.1"
   lazy val JACKSON_VERSION       = "1.4.3"
   lazy val JERSEY_VERSION        = "1.3"
   lazy val MULTIVERSE_VERSION    = "0.6.2"
@@ -511,8 +511,9 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
   // -------------------------------------------------------------------------------------------------------------------
 
   class AkkaScalazProject(info: ProjectInfo) extends AkkaModulesDefaultProject(info, distPath) {
-    val akka_actor = Dependencies.akka_actor
-    val scalaz     = Dependencies.scalaz
+    val akka_actor   = Dependencies.akka_actor
+    val scalaz       = Dependencies.scalaz
+    val hawtdispatch = Dependencies.hawtdispatch
 
     // testing
     val junit             = Dependencies.junit

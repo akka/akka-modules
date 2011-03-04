@@ -7,7 +7,6 @@ package sample.security
 import akka.actor.{SupervisorFactory, Actor}
 import akka.actor.Actor._
 import akka.config.Supervision._
-import akka.util.Logging
 import akka.security.{BasicAuthenticationActor,BasicCredentials,SpnegoAuthenticationActor,DigestAuthenticationActor, UserInfo}
 import akka.stm._
 import akka.stm.TransactionalMap
@@ -132,7 +131,7 @@ class SecureTickService {
   }
 }
 
-class SecureTickActor extends Actor with Logging {
+class SecureTickActor extends Actor {
   private val KEY = "COUNTER"
   private var hasStartedTicking = false
   private val storage = TransactionalMap[String, Integer]()

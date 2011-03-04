@@ -3,7 +3,6 @@
  */
 package akka.spring
 
-import akka.util.Logging
 import org.springframework.beans.factory.support.BeanDefinitionBuilder
 import org.springframework.beans.factory.xml.{ParserContext, AbstractSingleBeanDefinitionParser}
 import akka.config.Supervision._
