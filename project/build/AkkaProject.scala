@@ -124,7 +124,7 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
   lazy val CAMEL_VERSION         = "2.5.0"
   lazy val DISPATCH_VERSION      = "0.7.4"
   lazy val HAWT_DISPATCH_VERSION = "1.1"
-  lazy val JACKSON_VERSION       = "1.4.3"
+  lazy val JACKSON_VERSION       = "1.7.1"
   lazy val JERSEY_VERSION        = "1.3"
   lazy val MULTIVERSE_VERSION    = "0.6.2"
   lazy val SCALATEST_VERSION     = "1.3"
@@ -177,7 +177,16 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
     lazy val jackson          = "org.codehaus.jackson" % "jackson-mapper-asl" % JACKSON_VERSION % "compile" //ApacheV2
     lazy val jackson_core     = "org.codehaus.jackson" % "jackson-core-asl"   % JACKSON_VERSION % "compile" //ApacheV2
 
-    lazy val jsr166x = "jsr166x" % "jsr166x" % "1.0" % "compile" //CC Public Domain
+    lazy val jetty         = "org.eclipse.jetty" % "jetty-server"  % JETTY_VERSION % "compile" //Eclipse license
+    lazy val jetty_util    = "org.eclipse.jetty" % "jetty-util"    % JETTY_VERSION % "compile" //Eclipse license
+    lazy val jetty_xml     = "org.eclipse.jetty" % "jetty-xml"     % JETTY_VERSION % "compile" //Eclipse license
+    lazy val jetty_servlet = "org.eclipse.jetty" % "jetty-servlet" % JETTY_VERSION % "compile" //Eclipse license
+
+    lazy val jersey         = "com.sun.jersey"          % "jersey-core"   % JERSEY_VERSION % "compile" //CDDL v1
+    lazy val jersey_json    = "com.sun.jersey"          % "jersey-json"   % JERSEY_VERSION % "compile" //CDDL v1
+    lazy val jersey_server  = "com.sun.jersey"          % "jersey-server" % JERSEY_VERSION % "compile" //CDDL v1
+    lazy val jersey_contrib = "com.sun.jersey.contribs" % "jersey-scala"  % JERSEY_VERSION % "compile" //CDDL v1
+    lazy val stax_api       = "javax.xml.stream"        % "stax-api"      % "1.0-2"        % "compile" //ApacheV2
 
     lazy val jsr250 = "javax.annotation" % "jsr250-api" % "1.0" % "compile" //CDDL v1
 
@@ -205,8 +214,6 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
 
     lazy val spring_beans   = "org.springframework" % "spring-beans"   % SPRING_VERSION % "compile" //ApacheV2
     lazy val spring_context = "org.springframework" % "spring-context" % SPRING_VERSION % "compile" //ApacheV2
-
-    lazy val stax_api = "javax.xml.stream" % "stax-api" % "1.0-2" % "compile" //ApacheV2
 
     lazy val google_coll    = "com.google.collections" % "google-collections"  % "1.0"             % "compile" //ApacheV2
 
@@ -387,9 +394,19 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
   // -------------------------------------------------------------------------------------------------------------------
 
   class AkkaKernelProject(info: ProjectInfo) extends AkkaModulesDefaultProject(info, distPath) {
-    val akka_stm    = Dependencies.akka_stm
-    val akka_remote = Dependencies.akka_remote
-    val akka_http   = Dependencies.akka_http
+    val akka_stm         = Dependencies.akka_stm
+    val akka_remote      = Dependencies.akka_remote
+    val akka_http        = Dependencies.akka_http
+    val jetty            = Dependencies.jetty
+    val jetty_util       = Dependencies.jetty_util
+    val jetty_xml        = Dependencies.jetty_xml
+    val jetty_servlet    = Dependencies.jetty_servlet
+    val jackson_core     = Dependencies.jackson_core
+    val jersey           = Dependencies.jersey
+    val jersey_contrib   = Dependencies.jersey_contrib
+    val jersey_json      = Dependencies.jersey_json
+    val jersey_server    = Dependencies.jersey_server
+    val stax_api         = Dependencies.stax_api
   }
 
   // -------------------------------------------------------------------------------------------------------------------
