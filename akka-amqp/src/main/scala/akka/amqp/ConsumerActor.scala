@@ -100,7 +100,7 @@ private[amqp] class ConsumerActor(consumerParameters: ConsumerParameters)
     // FIXME: when rabbitmq 1.9 arrives, basicReject should be available on the API and implemented instead of this
     val message = ("Consumer is rejecting delivery with tag [%s] -" +
                    "for now this means we have to self terminate and kill the channel - see you in a second." format deliveryTag)
-    EventHandler notifyListeners EventHandler.Warning(null, this, message)
+    EventHandler notifyListeners EventHandler.Warning(this, message)
     channel.foreach {
       ch =>
         if (remoteAcknowledgement) {

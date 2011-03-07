@@ -38,7 +38,7 @@ private[amqp] class FaultTolerantConnectionActor(connectionParameters: Connectio
           self.reply(Some(chanel))
         }
         case None => {
-          EventHandler notifyListeners EventHandler.Warning(null, this, "Unable to create new channel - no connection")
+          EventHandler notifyListeners EventHandler.Warning(this, "Unable to create new channel - no connection")
           self.reply(None)
         }
       }

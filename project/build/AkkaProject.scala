@@ -110,7 +110,6 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
   lazy val timeModuleConfig        = ModuleConfiguration("org.scala-tools", "time", ScalaToolsRepo)
   lazy val args4jModuleConfig      = ModuleConfiguration("args4j", JBossRepo)
   lazy val scannotationModuleConfig= ModuleConfiguration("org.scannotation", JBossRepo)
-  lazy val configgyModuleConfig    = ModuleConfiguration("net.lag", AkkaRepo)
   lazy val scalazModuleConfig      = ModuleConfiguration("org.scalaz", ScalaToolsSnapshotRepo)
   val embeddedRepo                 = EmbeddedRepo // This is the only exception, because the embedded repo is fast!
   val localMavenRepo               = LocalMavenRepo // Second exception, also fast! ;-)
@@ -153,20 +152,11 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
 
     lazy val camel_core = "org.apache.camel" % "camel-core" % CAMEL_VERSION % "compile" //ApacheV2
 
-    lazy val commonsHttpClient = "commons-httpclient" % "commons-httpclient" % "3.1" % "compile" //ApacheV2
-
     lazy val commons_codec = "commons-codec" % "commons-codec" % CODEC_VERSION % "compile" //ApacheV2
 
     lazy val commons_io = "commons-io" % "commons-io" % "1.4" % "compile" //ApacheV2
 
     lazy val commons_pool = "commons-pool" % "commons-pool" % "1.5.4" % "compile" //ApacheV2
-
-    lazy val configgy = "net.lag" % "configgy" % "2.8.0-1.5.5" % "compile" //ApacheV2
-
-    lazy val dispatch_http = "net.databinder" % "dispatch-http_2.8.0" % DISPATCH_VERSION % "compile" //LGPL v2
-    lazy val dispatch_json = "net.databinder" % "dispatch-json_2.8.0" % DISPATCH_VERSION % "compile" //LGPL v2
-
-    lazy val uuid       = "com.eaio" % "uuid" % "3.2" % "compile" //MIT license
 
     lazy val guicey = "org.guiceyfruit" % "guice-all" % "2.0" % "compile" //ApacheV2
 
