@@ -4,7 +4,7 @@ import scalaz._
 import Scalaz._
 
 import akka.actor.Actor.TIMEOUT
-import akka.dispatch.{ Future, DefaultCompletableFuture }
+import akka.dispatch.{ Future, DefaultCompletableFuture => DCF }
 
 import java.util.concurrent.TimeUnit
 import TimeUnit.{ NANOSECONDS => NANOS, MILLISECONDS => MILLIS }
@@ -27,7 +27,7 @@ package object futures extends Futures
   }
 
   implicit def FuturePure = new Pure[Future] {
-    def pure[A](a: => A) = executer.Inline.future(a)
+    def pure[A](a: => A): Future[A] = new DCF[A](TIMEOUT) complete (try { Right(a) } catch { case e => Left(e) })
   }
 
   implicit def FutureEach = new Each[Future] {
@@ -44,19 +44,10 @@ package object futures extends Futures
   implicit def FutureZero[A: Zero]: Zero[Future[A]] = zero(∅[A].pure[Future])
 
   implicit def FutureCojoin: Cojoin[Future] = new Cojoin[Future] {
-    def cojoin[A](a: Future[A]) = executer.Inline.future(a)
+    def cojoin[A](a: Future[A]) = a.pure[Future]
   }
 
   implicit def FutureCopure: Copure[Future] = new Copure[Future] {
     def copure[A](a: Future[A]) = a.get
   }
-
-  def future[A](a: => A, timeout: Long = TIMEOUT, timeunit: TimeUnit = MILLIS)(implicit exec: FutureExecuter): Future[A] =
-    exec.future(a, timeout, timeunit)
-
-  def futureMap[M[_], A, B](ma: M[A])(f: A => B)(implicit t: Traverse[M], exec: FutureExecuter): Future[M[B]] =
-    ma map (a => exec.future(f(a))) sequence
-
-  def futureBind[M[_], A, B](ma: M[A])(f: A => M[B])(implicit m: Monad[M], t: Traverse[M], exec: FutureExecuter): Future[M[B]] =
-    futureMap(ma)(f).map(_.join)
 }

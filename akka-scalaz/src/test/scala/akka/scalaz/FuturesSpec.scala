@@ -21,39 +21,22 @@ class AkkaFuturesSpec extends WordSpec with ShouldMatchers with Checkers with Lo
 
   implicit def FutureEqual[A: Equal] = Scalaz.equal[Future[A]]((a1, a2) => a1.get ≟ a2.get)
 
-  implicit def FutureArbitrary[A](implicit arb: Arbitrary[A], exec: FutureExecuter): Arbitrary[Future[A]] = arb map ((a: A) => exec.future(a))
+  implicit def FutureArbitrary[A](implicit arb: Arbitrary[A]): Arbitrary[Future[A]] = arb map ((a: A) => Future(a))
 
-  "A Future" when {
-    "using InlineExecuter" should {
-      import executer.Inline
-      behave like aFuture
-    }
-
-    "using SpawnExecuter" should {
-      import executer.Spawn
-      behave like aConcurrentFuture
-    }
-
-    "using HawtExecuter" should {
-      import executer.Hawt
-      behave like aConcurrentFuture
-    }
-  }
-
-  def aFunctor(implicit exec: FutureExecuter) {
+  def aFunctor {
     import ScalazProperties.Functor._
     "satisfy the functor law of identity" in check(identity[Future, Int])
     "satisfy the functor law of associativity" in check(associative[Future, Int, Int, Int])
   }
 
-  def aMonad(implicit exec: FutureExecuter) {
+  def aMonad {
     import ScalazProperties.Monad._
     "satisfy the monad law of left identity" in check(leftIdentity[Future, Int, Int])
     "satisfy the monad law of right identity" in check(rightIdentity[Future, Int])
     "satisfy the monad law of associativity" in check(associativity[Future, Int, Int, Int])
   }
 
-  def anApplicative(implicit exec: FutureExecuter) {
+  def anApplicative {
     import ScalazProperties.Applicative._
     "satisfy the applicative law of identity" in check(identity[Future, Int])
     "satisfy the applicative law of composition" in check(composition[Future, Int, Int, Int])
@@ -61,17 +44,17 @@ class AkkaFuturesSpec extends WordSpec with ShouldMatchers with Checkers with Lo
     "satisfy the applicative law of interchange" in check(interchange[Future, Int, Int])
   }
 
-  def aSemigroup(implicit exec: FutureExecuter) {
+  def aSemigroup {
     import ScalazProperties.Semigroup._
     "satisfy the semigroup law of associativity" in check(associative[Future[Int]])
   }
 
-  def aMonoid(implicit exec: FutureExecuter) {
+  def aMonoid {
     import ScalazProperties.Monoid._
     "satisfy the monoid law of identity" in check(identity[Future[Int]])
   }
 
-  def aFuture(implicit exec: FutureExecuter) {
+  "A Future" should {
     behave like aFunctor
     behave like aMonad
     behave like anApplicative
@@ -79,7 +62,7 @@ class AkkaFuturesSpec extends WordSpec with ShouldMatchers with Checkers with Lo
     behave like aMonoid
 
     "have scalaz functor instance" in {
-      val f1 = future(5 * 5)
+      val f1 = Future(5 * 5)
       val f2 = f1 map (_ * 2)
       val f3 = f2 map (_ * 10)
       val f4 = f1 map (_ / 0)
@@ -92,11 +75,11 @@ class AkkaFuturesSpec extends WordSpec with ShouldMatchers with Checkers with Lo
     }
 
     "have scalaz bind instance" in {
-      val f1 = future(5 * 5)
-      val f2 = f1 >>= (n => future(n * 2))
-      val f3 = f2 >>= (n => future(n * 10))
-      val f4 = f1 >>= (n => future(n / 0))
-      val f5 = f4 >>= (n => future(n * 10))
+      val f1 = Future(5 * 5)
+      val f2 = f1 >>= (n => Future(n * 2))
+      val f3 = f2 >>= (n => Future(n * 10))
+      val f4 = f1 >>= (n => Future(n / 0))
+      val f5 = f4 >>= (n => Future(n * 10))
 
       f2.get should equal(50)
       f3.get should equal(500)
@@ -105,7 +88,7 @@ class AkkaFuturesSpec extends WordSpec with ShouldMatchers with Checkers with Lo
     }
 
     "have scalaz apply instance" in {
-      val f1 = future(5 * 5)
+      val f1 = Future(5 * 5)
       val f2 = f1 map (_ * 2)
       val f3 = f2 map (_ / 0)
 
@@ -117,7 +100,7 @@ class AkkaFuturesSpec extends WordSpec with ShouldMatchers with Checkers with Lo
     }
 
     "have scalaz comonad instance" in {
-      val f = future("Result") =>> (_ map (_.toUpperCase)) >>= (_ map (s => s + s))
+      val f = Future("Result") =>> (_ map (_.toUpperCase)) >>= (_ map (s => s + s))
       f.get should equal("RESULTRESULT")
     }
 
@@ -126,7 +109,7 @@ class AkkaFuturesSpec extends WordSpec with ShouldMatchers with Checkers with Lo
 
       def fib(n: Int): Future[Int] =
         if (n < 30)
-          future(seqFib(n))
+          Future(seqFib(n))
         else
           (fib(n - 1) |@| fib(n - 2))(_ + _)
 
@@ -134,13 +117,7 @@ class AkkaFuturesSpec extends WordSpec with ShouldMatchers with Checkers with Lo
     }
 
     "traverse a list into a future" in {
-      val result = (1 to 1000).toList.traverse(n => future(n * 10)).get
-      result should have size (1000)
-      result.head should equal(10)
-    }
-
-    "map a list in parallel" in {
-      val result = futureMap((1 to 1000).toList)(10*).get
+      val result = (1 to 1000).toList.traverse(n => Future(n * 10)).get
       result should have size (1000)
       result.head should equal(10)
     }
@@ -152,29 +129,29 @@ class AkkaFuturesSpec extends WordSpec with ShouldMatchers with Checkers with Lo
 
     "fold into a future" in {
       val list = (1 to 100).toList
-      list.foldLeftM(0)((b, a) => future(b + a)).get should equal(5050)
+      list.foldLeftM(0)((b, a) => Future(b + a)).get should equal(5050)
     }
 
     "convert to Validation" in {
-      val r1 = (future("34".toInt) |@| future("150".toInt) |@| future("12".toInt))(_ + _ + _)
+      val r1 = (Future("34".toInt) |@| Future("150".toInt) |@| Future("12".toInt))(_ + _ + _)
       r1.liftValidation.get should equal(Success(196))
-      val r2 = (future("34".toInt) |@| future("hello".toInt) |@| future("12".toInt))(_ + _ + _)
+      val r2 = (Future("34".toInt) |@| Future("hello".toInt) |@| Future("12".toInt))(_ + _ + _)
       r2.liftValidation.get.fail.map(_.toString).validation should equal(Failure("java.lang.NumberFormatException: For input string: \"hello\""))
     }
 
     "for-comprehension" in {
       val r1 = for {
-        x1 <- future("34".toInt)
-        x2 <- future("150".toInt)
-        x3 <- future("12".toInt)
+        x1 <- Future("34".toInt)
+        x2 <- Future("150".toInt)
+        x3 <- Future("12".toInt)
       } yield x1 + x2 + x3
 
       r1.get should equal(196)
 
       val r2 = for {
-        x1 <- future("34".toInt)
-        x2 <- future("hello".toInt)
-        x3 <- future("12".toInt)
+        x1 <- Future("34".toInt)
+        x2 <- Future("hello".toInt)
+        x3 <- Future("12".toInt)
       } yield x1 + x2 + x3
 
       evaluating(r2.get) should produce[NumberFormatException]
@@ -221,10 +198,10 @@ class AkkaFuturesSpec extends WordSpec with ShouldMatchers with Checkers with Lo
     }
 
     "Plus" in {
-      val r1 = future(1)
-      val r2 = future(2)
-      val e1 = future(1 / 0)
-      val e2 = future("Hello".toInt)
+      val r1 = Future(1)
+      val r2 = Future(2)
+      val e1 = Future(1 / 0)
+      val e2 = Future("Hello".toInt)
 
       (r1 <+> r2).get should equal(1)
       (r2 <+> e1).get should equal(2)
@@ -233,8 +210,8 @@ class AkkaFuturesSpec extends WordSpec with ShouldMatchers with Checkers with Lo
     }
 
     "Semigroups" in {
-      (future(3) |+| future(4)).get should equal(7)
-      (future(List(1, 2, 3)) |+| future(List(4, 5, 6))).get should equal(List(1, 2, 3, 4, 5, 6))
+      (Future(3) |+| Future(4)).get should equal(7)
+      (Future(List(1, 2, 3)) |+| Future(List(4, 5, 6))).get should equal(List(1, 2, 3, 4, 5, 6))
     }
 
     "Monoids" in {
@@ -249,6 +226,11 @@ class AkkaFuturesSpec extends WordSpec with ShouldMatchers with Checkers with Lo
       1.unfold[Future, String](x => (x < 5).option((x.toString, x + 1))).get should equal("1234")
     }
 
+    "have a resetable timeout" in {
+      Future("test").timeout(100).get should equal("test")
+      evaluating(Future({ Thread.sleep(500); "test" }).timeout(100).get) should produce[FutureTimeoutException]
+    }
+
     // Taken from Haskell example, performance is very poor, this is only here as a test
     "quicksort a list" in {
       val rnd = new scala.util.Random(1)
@@ -258,19 +240,10 @@ class AkkaFuturesSpec extends WordSpec with ShouldMatchers with Checkers with Lo
         case Nil           => nil.pure[Future]
         case x :: Nil      => List(x).pure[Future]
         case x :: y :: Nil => (if (x lt y) List(x, y) else List(y, x)).pure[Future]
-        case x :: xs       => (future(qsort(xs.filter(x.gt))).join |@| x.pure[Future] |@| future(qsort(xs.filter(x.lte))).join)(_ ::: _ :: _)
+        case x :: xs       => (Future(qsort(xs.filter(x.gt))).join |@| x.pure[Future] |@| Future(qsort(xs.filter(x.lte))).join)(_ ::: _ :: _)
       }
 
       qsort(list).get should equal(list.sorted)
-    }
-  }
-
-  def aConcurrentFuture(implicit exec: FutureExecuter) {
-    behave like aFuture
-
-    "have a resetable timeout" in {
-      future("test").timeout(100).get should equal("test")
-      evaluating(future({ Thread.sleep(500); "test" }).timeout(100).get) should produce[FutureTimeoutException]
     }
   }
 }
