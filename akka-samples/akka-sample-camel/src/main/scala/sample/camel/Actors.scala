@@ -4,7 +4,6 @@ import org.apache.camel.Exchange
 
 import akka.actor.{Actor, ActorRef, ActorRegistry}
 import akka.camel.{Ack, Failure, Producer, Message, Consumer}
-import akka.util.Logging
 
 /**
  * Client-initiated remote actor.
@@ -33,11 +32,11 @@ class Producer1 extends Actor with Producer {
   override def oneway = false // default
 }
 
-class Consumer1 extends Actor with Consumer with Logging {
+class Consumer1 extends Actor with Consumer {
   def endpointUri = "file:data/input/actor"
 
   def receive = {
-    case msg: Message => log.info("received %s" format msg.bodyAs[String])
+    case msg: Message => println("received %s" format msg.bodyAs[String])
   }
 }
 
@@ -57,7 +56,7 @@ class Consumer3(transformer: ActorRef) extends Actor with Consumer {
   }
 }
 
-class Consumer4 extends Actor with Consumer with Logging {
+class Consumer4 extends Actor with Consumer {
   def endpointUri = "jetty:http://0.0.0.0:8877/camel/stop"
 
   def receive = {
@@ -71,7 +70,7 @@ class Consumer4 extends Actor with Consumer with Logging {
   }
 }
 
-class Consumer5 extends Actor with Consumer with Logging {
+class Consumer5 extends Actor with Consumer {
   def endpointUri = "jetty:http://0.0.0.0:8877/camel/start"
 
   def receive = {
@@ -88,11 +87,11 @@ class Transformer(producer: ActorRef) extends Actor {
   }
 }
 
-class Subscriber(name:String, uri: String) extends Actor with Consumer with Logging {
+class Subscriber(name:String, uri: String) extends Actor with Consumer {
   def endpointUri = uri
 
   protected def receive = {
-    case msg: Message => log.info("%s received: %s" format (name, msg.body))
+    case msg: Message => println("%s received: %s" format (name, msg.body))
   }
 }
 
@@ -151,10 +150,10 @@ class FileConsumer extends Actor with Consumer {
   def receive = {
     case msg: Message => {
       if (counter == 2) {
-        log.info("received %s" format msg.bodyAs[String])
+        println("received %s" format msg.bodyAs[String])
         self.reply(Ack)
       } else {
-        log.info("rejected %s" format msg.bodyAs[String])
+        println("rejected %s" format msg.bodyAs[String])
         counter += 1
         self.reply(Failure(new Exception("message number %s not accepted" format counter)))
       }

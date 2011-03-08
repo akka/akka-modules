@@ -40,7 +40,6 @@
       <xsd:enumeration value="executor-based-event-driven"/>
       <xsd:enumeration value="executor-based-event-driven-work-stealing"/>
       <xsd:enumeration value="thread-based"/>
-      <xsd:enumeration value="hawt"/>
     </xsd:restriction>
   </xsd:simpleType>
 

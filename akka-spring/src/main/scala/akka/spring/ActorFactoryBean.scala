@@ -9,9 +9,9 @@ import org.springframework.beans.factory.config.AbstractFactoryBean
 import org.springframework.context.{ApplicationContext,ApplicationContextAware}
 import org.springframework.util.StringUtils
 
-import akka.actor.{ActorRef, ActorRegistry, AspectInitRegistry, TypedActorConfiguration, TypedActor,Actor}
+import akka.actor.{ActorRef, ActorRegistry, AspectInitRegistry, EventHandler, TypedActorConfiguration, TypedActor,Actor}
 import akka.dispatch.MessageDispatcher
-import akka.util.{Logging, Duration}
+import akka.util.Duration
 import scala.reflect.BeanProperty
 import java.net.InetSocketAddress
 
@@ -32,7 +32,7 @@ class AkkaBeansException(message: String, cause:Throwable) extends BeansExceptio
  * @author Martin Krasser
  * @author <a href="http://jonasboner.com">Jonas Bon&#233;r</a>
  */
-class ActorFactoryBean extends AbstractFactoryBean[AnyRef] with Logging with ApplicationContextAware {
+class ActorFactoryBean extends AbstractFactoryBean[AnyRef] with ApplicationContextAware {
   import StringReflect._
   import AkkaSpringConfigurationTags._
   @BeanProperty var id: String = ""
@@ -56,7 +56,7 @@ class ActorFactoryBean extends AbstractFactoryBean[AnyRef] with Logging with App
     if (!timeoutStr.isEmpty) timeoutStr.toLong else -1L
   } catch {
     case nfe: NumberFormatException =>
-      log.error(nfe, "could not parse timeout %s", timeoutStr)
+      EventHandler notifyListeners EventHandler.Error(nfe, this, "could not parse timeout %s" format timeoutStr)
       throw nfe
   }
 
@@ -166,20 +166,16 @@ class ActorFactoryBean extends AbstractFactoryBean[AnyRef] with Logging with App
 
   private def setProperties(ref: AnyRef): AnyRef = {
     if (hasSetDependecies) return ref
-    log.debug("Processing properties and dependencies for implementation class\n\t[%s]", implementation)
     val beanWrapper = new BeanWrapperImpl(ref)
     if (ref.isInstanceOf[ApplicationContextAware]) {
-      log.debug("Setting application context")
       beanWrapper.setPropertyValue("applicationContext", applicationContext)
     }
     for (entry <- property.entryList) {
       val propertyDescriptor = BeanUtils.getPropertyDescriptor(ref.getClass, entry.name)
       val method = propertyDescriptor.getWriteMethod
       if (StringUtils.hasText(entry.ref)) {
-        log.debug("Setting property %s with bean ref %s using method %s", entry.name, entry.ref, method.getName)
         method.invoke(ref,getBeanFactory().getBean(entry.ref))
       } else if(StringUtils.hasText(entry.value)) {
-        log.debug("Setting property %s with value %s using method %s", entry.name, entry.value, method.getName)
         beanWrapper.setPropertyValue(entry.name,entry.value)
       } else throw new AkkaBeansException("Either property@ref or property@value must be set on property element")
     }
@@ -225,7 +221,7 @@ class ActorFactoryBean extends AbstractFactoryBean[AnyRef] with Logging with App
  *
  * @author michaelkober
  */
-class ActorForFactoryBean extends AbstractFactoryBean[AnyRef] with Logging with ApplicationContextAware {
+class ActorForFactoryBean extends AbstractFactoryBean[AnyRef] with ApplicationContextAware {
   import StringReflect._
   import AkkaSpringConfigurationTags._
 

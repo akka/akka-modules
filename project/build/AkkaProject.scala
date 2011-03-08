@@ -110,7 +110,6 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
   lazy val timeModuleConfig        = ModuleConfiguration("org.scala-tools", "time", ScalaToolsRepo)
   lazy val args4jModuleConfig      = ModuleConfiguration("args4j", JBossRepo)
   lazy val scannotationModuleConfig= ModuleConfiguration("org.scannotation", JBossRepo)
-  lazy val configgyModuleConfig    = ModuleConfiguration("net.lag", AkkaRepo)
   lazy val scalazModuleConfig      = ModuleConfiguration("org.scalaz", ScalaToolsSnapshotRepo)
   val embeddedRepo                 = EmbeddedRepo // This is the only exception, because the embedded repo is fast!
   val localMavenRepo               = LocalMavenRepo // Second exception, also fast! ;-)
@@ -123,8 +122,8 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
   lazy val ATMO_VERSION          = "0.6.2"
   lazy val CAMEL_VERSION         = "2.5.0"
   lazy val DISPATCH_VERSION      = "0.7.4"
-  lazy val HAWT_DISPATCH_VERSION = "1.0"
-  lazy val JACKSON_VERSION       = "1.4.3"
+  lazy val HAWT_DISPATCH_VERSION = "1.1"
+  lazy val JACKSON_VERSION       = "1.7.1"
   lazy val JERSEY_VERSION        = "1.3"
   lazy val MULTIVERSE_VERSION    = "0.6.2"
   lazy val SCALATEST_VERSION     = "1.3"
@@ -153,20 +152,11 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
 
     lazy val camel_core = "org.apache.camel" % "camel-core" % CAMEL_VERSION % "compile" //ApacheV2
 
-    lazy val commonsHttpClient = "commons-httpclient" % "commons-httpclient" % "3.1" % "compile" //ApacheV2
-
     lazy val commons_codec = "commons-codec" % "commons-codec" % CODEC_VERSION % "compile" //ApacheV2
 
     lazy val commons_io = "commons-io" % "commons-io" % "1.4" % "compile" //ApacheV2
 
     lazy val commons_pool = "commons-pool" % "commons-pool" % "1.5.4" % "compile" //ApacheV2
-
-    lazy val configgy = "net.lag" % "configgy" % "2.8.0-1.5.5" % "compile" //ApacheV2
-
-    lazy val dispatch_http = "net.databinder" % "dispatch-http_2.8.0" % DISPATCH_VERSION % "compile" //LGPL v2
-    lazy val dispatch_json = "net.databinder" % "dispatch-json_2.8.0" % DISPATCH_VERSION % "compile" //LGPL v2
-
-    lazy val uuid       = "com.eaio" % "uuid" % "3.2" % "compile" //MIT license
 
     lazy val guicey = "org.guiceyfruit" % "guice-all" % "2.0" % "compile" //ApacheV2
 
@@ -177,7 +167,16 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
     lazy val jackson          = "org.codehaus.jackson" % "jackson-mapper-asl" % JACKSON_VERSION % "compile" //ApacheV2
     lazy val jackson_core     = "org.codehaus.jackson" % "jackson-core-asl"   % JACKSON_VERSION % "compile" //ApacheV2
 
-    lazy val jsr166x = "jsr166x" % "jsr166x" % "1.0" % "compile" //CC Public Domain
+    lazy val jetty         = "org.eclipse.jetty" % "jetty-server"  % JETTY_VERSION % "compile" //Eclipse license
+    lazy val jetty_util    = "org.eclipse.jetty" % "jetty-util"    % JETTY_VERSION % "compile" //Eclipse license
+    lazy val jetty_xml     = "org.eclipse.jetty" % "jetty-xml"     % JETTY_VERSION % "compile" //Eclipse license
+    lazy val jetty_servlet = "org.eclipse.jetty" % "jetty-servlet" % JETTY_VERSION % "compile" //Eclipse license
+
+    lazy val jersey         = "com.sun.jersey"          % "jersey-core"   % JERSEY_VERSION % "compile" //CDDL v1
+    lazy val jersey_json    = "com.sun.jersey"          % "jersey-json"   % JERSEY_VERSION % "compile" //CDDL v1
+    lazy val jersey_server  = "com.sun.jersey"          % "jersey-server" % JERSEY_VERSION % "compile" //CDDL v1
+    lazy val jersey_contrib = "com.sun.jersey.contribs" % "jersey-scala"  % JERSEY_VERSION % "compile" //CDDL v1
+    lazy val stax_api       = "javax.xml.stream"        % "stax-api"      % "1.0-2"        % "compile" //ApacheV2
 
     lazy val jsr250 = "javax.annotation" % "jsr250-api" % "1.0" % "compile" //CDDL v1
 
@@ -205,8 +204,6 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
 
     lazy val spring_beans   = "org.springframework" % "spring-beans"   % SPRING_VERSION % "compile" //ApacheV2
     lazy val spring_context = "org.springframework" % "spring-context" % SPRING_VERSION % "compile" //ApacheV2
-
-    lazy val stax_api = "javax.xml.stream" % "stax-api" % "1.0-2" % "compile" //ApacheV2
 
     lazy val google_coll    = "com.google.collections" % "google-collections"  % "1.0"             % "compile" //ApacheV2
 
@@ -387,9 +384,19 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
   // -------------------------------------------------------------------------------------------------------------------
 
   class AkkaKernelProject(info: ProjectInfo) extends AkkaModulesDefaultProject(info, distPath) {
-    val akka_stm    = Dependencies.akka_stm
-    val akka_remote = Dependencies.akka_remote
-    val akka_http   = Dependencies.akka_http
+    val akka_stm         = Dependencies.akka_stm
+    val akka_remote      = Dependencies.akka_remote
+    val akka_http        = Dependencies.akka_http
+    val jetty            = Dependencies.jetty
+    val jetty_util       = Dependencies.jetty_util
+    val jetty_xml        = Dependencies.jetty_xml
+    val jetty_servlet    = Dependencies.jetty_servlet
+    val jackson_core     = Dependencies.jackson_core
+    val jersey           = Dependencies.jersey
+    val jersey_contrib   = Dependencies.jersey_contrib
+    val jersey_json      = Dependencies.jersey_json
+    val jersey_server    = Dependencies.jersey_server
+    val stax_api         = Dependencies.stax_api
   }
 
   // -------------------------------------------------------------------------------------------------------------------
@@ -511,8 +518,9 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
   // -------------------------------------------------------------------------------------------------------------------
 
   class AkkaScalazProject(info: ProjectInfo) extends AkkaModulesDefaultProject(info, distPath) {
-    val akka_actor = Dependencies.akka_actor
-    val scalaz     = Dependencies.scalaz
+    val akka_actor   = Dependencies.akka_actor
+    val scalaz       = Dependencies.scalaz
+    val hawtdispatch = Dependencies.hawtdispatch
 
     // testing
     val junit             = Dependencies.junit

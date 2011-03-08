@@ -3,9 +3,9 @@
  */
 package akka.spring
 
+import akka.config.Configure
 import org.springframework.beans.factory.config.PropertyPlaceholderConfigurer
 import org.springframework.core.io.Resource
-import net.lag.configgy.Configgy
 import java.util.Properties
 
 /**
@@ -27,8 +27,8 @@ class ConfiggyPropertyPlaceholderConfigurer extends PropertyPlaceholderConfigure
    * Load the akka.conf and transform to properties.
    */
   private def loadAkkaConfig(configgyResource: Resource) : Properties = {
-    Configgy.configure(configgyResource.getFile.getPath)
-    val config = Configgy.config
+    Configure.configure(configgyResource.getFile.getPath)
+    val config = Configure.config
     val properties = new Properties()
     config.asMap.foreach {case (k, v) => properties.put(k, v); println("(k,v)=" + k + ", " + v)}
     properties

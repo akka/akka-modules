@@ -6,6 +6,7 @@ package akka.amqp
 
 import com.rabbitmq.client._
 
+import akka.actor.EventHandler
 import akka.amqp.AMQP.ProducerParameters
 
 private[amqp] class ProducerActor(producerParameters: ProducerParameters)
@@ -21,11 +22,10 @@ private[amqp] class ProducerActor(producerParameters: ProducerParameters)
   def specificMessageHandler = {
 
     case message@Message(payload, routingKey, mandatory, immediate, properties) if channel.isDefined => {
-      log.debug("Sending message [%s]", message)
       channel.foreach(_.basicPublish(exchangeName.getOrElse(""), routingKey, mandatory, immediate, properties.getOrElse(null), payload))
     }
     case message@Message(payload, routingKey, mandatory, immediate, properties) => {
-      log.warning("Unable to send message [%s]", message)
+      EventHandler notifyListeners EventHandler.Warning(this, "Unable to send message [%s]" format message)
       // FIXME: If channel is not available, messages should be queued back into the actor mailbox and actor should only react on 'Start'
     }
   }

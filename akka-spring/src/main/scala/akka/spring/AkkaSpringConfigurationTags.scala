@@ -63,7 +63,6 @@ object AkkaSpringConfigurationTags {
   val NAME = "name"
   val REF = "ref"
   val TYPE = "type"
-  val AGGREGATE = "aggregate"  // HawtDispatcher
 
   // thread pool attributes
   val QUEUE = "queue"
@@ -108,7 +107,6 @@ object AkkaSpringConfigurationTags {
   val EXECUTOR_BASED_EVENT_DRIVEN = "executor-based-event-driven"
   val EXECUTOR_BASED_EVENT_DRIVEN_WORK_STEALING = "executor-based-event-driven-work-stealing"
   val THREAD_BASED = "thread-based"
-  val HAWT = "hawt"
 
   // managed by types
   val SERVER_MANAGED = "server"

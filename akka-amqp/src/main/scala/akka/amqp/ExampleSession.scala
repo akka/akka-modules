@@ -70,7 +70,7 @@ object ExampleSession {
     val exchangeParameters = ExchangeParameters("my_direct_exchange", Direct)
 
     val consumer = AMQP.newConsumer(connection, ConsumerParameters("some.routing", actorOf(new Actor { def receive = {
-      case Delivery(payload, _, _, _, _, _) => log.info("@george_bush received message from: %s", new String(payload))
+      case Delivery(payload, _, _, _, _, _) => println("@george_bush received message from: %s".format(new String(payload)))
     }}), None, Some(exchangeParameters)))
 
     val producer = AMQP.newProducer(connection, ProducerParameters(Some(exchangeParameters)))
@@ -85,11 +85,11 @@ object ExampleSession {
     val exchangeParameters = ExchangeParameters("my_fanout_exchange", Fanout)
 
     val bushConsumer = AMQP.newConsumer(connection, ConsumerParameters("@george_bush", actorOf(new Actor { def receive = {
-      case Delivery(payload, _, _, _, _, _) => log.info("@george_bush received message from: %s", new String(payload))
+      case Delivery(payload, _, _, _, _, _) => println("@george_bush received message from: %s".format(new String(payload)))
     }}), None, Some(exchangeParameters)))
 
     val obamaConsumer = AMQP.newConsumer(connection, ConsumerParameters("@barack_obama", actorOf(new Actor { def receive = {
-      case Delivery(payload, _, _, _, _, _) => log.info("@barack_obama received message from: %s", new String(payload))
+      case Delivery(payload, _, _, _, _, _) => println("@barack_obama received message from: %s".format(new String(payload)))
     }}), None, Some(exchangeParameters)))
 
     val producer = AMQP.newProducer(connection, ProducerParameters(Some(exchangeParameters)))
@@ -104,11 +104,11 @@ object ExampleSession {
     val exchangeParameters = ExchangeParameters("my_topic_exchange", Topic)
 
     val bushConsumer = AMQP.newConsumer(connection, ConsumerParameters("@george_bush", actorOf(new Actor { def receive = {
-      case Delivery(payload, _, _, _, _, _) => log.info("@george_bush received message from: %s", new String(payload))
+      case Delivery(payload, _, _, _, _, _) => println("@george_bush received message from: %s".format(new String(payload)))
     }}), None, Some(exchangeParameters)))
 
     val obamaConsumer = AMQP.newConsumer(connection, ConsumerParameters("@barack_obama", actorOf(new Actor { def receive = {
-      case Delivery(payload, _, _, _, _, _) => log.info("@barack_obama received message from: %s", new String(payload))
+      case Delivery(payload, _, _, _, _, _) => println("@barack_obama received message from: %s".format(new String(payload)))
     }}), None, Some(exchangeParameters)))
 
     val producer = AMQP.newProducer(connection, ProducerParameters(Some(exchangeParameters)))
@@ -121,19 +121,19 @@ object ExampleSession {
     val channelCountdown = new CountDownLatch(2)
 
     val connectionCallback = actorOf(new Actor { def receive = {
-      case Connected => log.info("Connection callback: Connected!")
+      case Connected => println("Connection callback: Connected!")
       case Reconnecting => () // not used, sent when connection fails and initiates a reconnect
-      case Disconnected => log.info("Connection callback: Disconnected!")
+      case Disconnected => println("Connection callback: Disconnected!")
     }})
     val connection = AMQP.newConnection(new ConnectionParameters(connectionCallback = Some(connectionCallback)))
 
     val channelCallback = actorOf(new Actor { def receive = {
       case Started => {
-        log.info("Channel callback: Started")
+        println("Channel callback: Started")
         channelCountdown.countDown
       }
       case Restarting => // not used, sent when channel or connection fails and initiates a restart
-      case Stopped => log.info("Channel callback: Stopped")
+      case Stopped => println("Channel callback: Stopped")
     }})
     val exchangeParameters = ExchangeParameters("my_callback_exchange", Direct)
     val channelParameters = ChannelParameters(channelCallback = Some(channelCallback))
@@ -174,7 +174,7 @@ object ExampleSession {
     val exchangeName = "easy.protobuf"
 
     def protobufMessageHandler(message: AddressProtocol) = {
-      log.info("Received "+message)
+      println("Received "+message)
     }
 
     AMQP.newProtobufConsumer(connection, protobufMessageHandler _, Some(exchangeName))
@@ -216,7 +216,7 @@ object ExampleSession {
     val rpcClient = RPC.newRpcClient(connection, exchangeName, rpcClientSerializer, Some("rpc.in.key"))
 
     val response = rpcClient.call("rpc_request")
-    log.info("Response: " + response)
+    println("Response: " + response)
   }
 
   def easyStringRpc = {
@@ -230,7 +230,7 @@ object ExampleSession {
     // routingKey = <exchange>.request
     // queueName = <routingKey>.in
     RPC.newStringRpcServer(connection, exchangeName, request => {
-      log.info("Got request: "+request)
+      println("Got request: "+request)
       "Response to: '"+request+"'"
     })
 
@@ -240,10 +240,10 @@ object ExampleSession {
     val stringRpcClient = RPC.newStringRpcClient(connection, exchangeName)
 
     val response = stringRpcClient.call("AMQP Rocks!")
-    log.info("Got response: "+response)
+    println("Got response: "+response)
 
     stringRpcClient.callAsync("AMQP is dead easy") {
-      case response => log.info("This is handled async: "+response)
+      case response => println("This is handled async: "+response)
     }
   }
 
@@ -263,6 +263,6 @@ object ExampleSession {
 
     val response = protobufRpcClient.call(AddressProtocol.newBuilder.setHostname("localhost").setPort(4321).build)
 
-    log.info("Got response: "+response)
+    println("Got response: "+response)
   }
 }

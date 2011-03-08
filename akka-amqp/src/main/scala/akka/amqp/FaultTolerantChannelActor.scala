@@ -6,7 +6,7 @@ package akka.amqp
 
 import collection.JavaConversions
 import java.lang.Throwable
-import akka.actor.Actor
+import akka.actor.{Actor, EventHandler}
 import Actor._
 import com.rabbitmq.client.{ShutdownSignalException, Channel, ShutdownListener}
 import scala.PartialFunction
@@ -15,7 +15,6 @@ import akka.amqp.AMQP._
 abstract private[amqp] class FaultTolerantChannelActor(
         exchangeParameters: Option[ExchangeParameters], channelParameters: Option[ChannelParameters]) extends Actor {
   protected[amqp] var channel: Option[Channel] = None
-  log.info("%s is started", toString)
 
   override def receive = channelMessageHandler orElse specificMessageHandler
 
@@ -27,7 +26,6 @@ abstract private[amqp] class FaultTolerantChannelActor(
       // ask the connection for a new channel
       self.supervisor.foreach {
         sup =>
-          log.info("%s is requesting new channel from supervising connection", toString)
           val newChannel: Option[Option[Channel]] = (sup !! ChannelRequest).as[Option[Channel]]
           newChannel.foreach(ch => ch.foreach(c => setupChannelInternal(c)))
       }
@@ -39,19 +37,19 @@ abstract private[amqp] class FaultTolerantChannelActor(
       if (cause.isHardError) {
         // connection error
         if (cause.isInitiatedByApplication) {
-          log.info("%s got normal shutdown", toString)
+          EventHandler notifyListeners EventHandler.Info(this, "%s got normal shutdown" format toString)
         } else {
-          log.error(cause, "%s got hard error", toString)
+          EventHandler notifyListeners EventHandler.Error(cause, this, "%s got hard error" format toString)
         }
       } else {
         // channel error
-        log.error(cause, "%s self restarting because of channel shutdown", toString)
+        EventHandler notifyListeners EventHandler.Error(cause, this, "%s self restarting because of channel shutdown" format toString)
         notifyCallback(Restarting)
         self ! Start
       }
     }
     case Failure(cause) =>
-      log.error(cause, "%s self restarting because of channel failure", toString)
+      EventHandler notifyListeners EventHandler.Error(cause, this, "%s self restarting because of channel failure" format toString)
       closeChannel
       notifyCallback(Restarting)
       self ! Start
@@ -82,7 +80,6 @@ abstract private[amqp] class FaultTolerantChannelActor(
     setupChannel(ch)
     channel = Some(ch)
     notifyCallback(Started)
-    log.info("Channel setup for %s", toString)
   }
 
   private def closeChannel = {
@@ -90,7 +87,7 @@ abstract private[amqp] class FaultTolerantChannelActor(
       ch =>
         if (ch.isOpen) ch.close
         notifyCallback(Stopped)
-        log.info("%s channel closed", toString)
+        EventHandler notifyListeners EventHandler.Info(this, "%s channel closed" format toString)
     }
     channel = None
   }

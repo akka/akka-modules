@@ -97,17 +97,9 @@ class DispatcherSpringFeatureTest extends FeatureSpec with ShouldMatchers {
       val context = new ClassPathXmlApplicationContext("/dispatcher-config.xml")
       val dispatcher = context.getBean("executor-based-event-driven-work-stealing-dispatcher").asInstanceOf[ExecutorBasedEventDrivenWorkStealingDispatcher]
       assert(dispatcher ne null)
-      assert(dispatcher.name === "akka:event-driven-work-stealing:dispatcher:workStealingDispatcher")
+      assert(dispatcher.name === "akka:event-driven:dispatcher:workStealingDispatcher")
       val executor = getThreadPoolExecutorAndAssert(dispatcher)
       assert(executor.getQueue().isInstanceOf[BlockingQueue[Runnable]])
-    }
-
-    scenario("get a hawt-dispatcher from context") {
-      val context = new ClassPathXmlApplicationContext("/dispatcher-config.xml")
-      val dispatcher = context.getBean("hawt-dispatcher").asInstanceOf[HawtDispatcher]
-      assert(dispatcher ne null)
-      assert(dispatcher.toString === "HawtDispatcher")
-      assert(dispatcher.aggregate === false)
     }
 
     scenario("get a thread-based-dispatcher for typed actor from context") {
@@ -139,7 +131,6 @@ class DispatcherSpringFeatureTest extends FeatureSpec with ShouldMatchers {
 
     unpackExecutorService(dispatcher match {
       case e: ExecutorBasedEventDrivenDispatcher => e.executorService.get()
-      case e: ExecutorBasedEventDrivenWorkStealingDispatcher => e.executorService.get()
       case x => throw new IllegalStateException("Illegal dispatcher type: " + x)
     }).asInstanceOf[ThreadPoolExecutor]
   }

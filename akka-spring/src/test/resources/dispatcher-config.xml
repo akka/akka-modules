@@ -69,9 +69,6 @@ http://akka.io/akka-1.1-SNAPSHOT.xsd">
   <!-- executor-based-event-driven-work-stealing-dispatcher -->
   <akka:dispatcher id="executor-based-event-driven-work-stealing-dispatcher" type="executor-based-event-driven-work-stealing" name="workStealingDispatcher" />
 
-  <!-- hawt-dispatcher -->
-  <akka:dispatcher id="hawt-dispatcher" type="hawt" aggregate="false" name="test" />
-
   <!-- thread-based-dispatcher -->
    <akka:typed-actor id="typed-actor-with-thread-based-dispatcher"
                     interface="akka.spring.foo.IMyPojo"
