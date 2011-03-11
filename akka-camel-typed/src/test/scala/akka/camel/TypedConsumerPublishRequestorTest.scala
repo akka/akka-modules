@@ -7,10 +7,10 @@ import org.scalatest.junit.JUnitSuite
 
 import akka.actor._
 import akka.actor.Actor._
-import akka.camel.support.{SetExpectedMessageCount => SetExpectedTestMessageCount, _}
+import akka.camel.TypedCamelTestSupport.{SetExpectedMessageCount => SetExpectedTestMessageCount, _}
 
-class PublishRequestorTest extends JUnitSuite {
-  import PublishRequestorTest._
+class TypedConsumerPublishRequestorTest extends JUnitSuite {
+  import TypedConsumerPublishRequestorTest._
 
   var publisher: ActorRef = _
   var requestor: ActorRef = _
@@ -20,9 +20,9 @@ class PublishRequestorTest extends JUnitSuite {
     r1.method.getName < r2.method.getName
 
   @Before def setUp: Unit = {
-    publisher = actorOf[PublisherMock].start
-    requestor = actorOf[PublishRequestor].start
-    requestor ! PublishRequestorInit(publisher)
+    publisher = actorOf(new TypedConsumerPublisherMock).start
+    requestor = actorOf(new TypedConsumerPublishRequestor).start
+    requestor ! InitPublishRequestor(publisher)
     consumer = actorOf(new Actor with Consumer {
       def endpointUri = "mock:test"
       protected def receive = null
@@ -77,26 +77,10 @@ class PublishRequestorTest extends JUnitSuite {
     val events = (publisher !! request).as[List[ConsumerMethodUnregistered]].get
     assert(events.map(_.method.getName).sortWith(_ < _) === List("m2", "m3", "m4"))
   }
-
-  @Test def shouldReceiveOneConsumerRegisteredEvent = {
-    val latch = (publisher !! SetExpectedTestMessageCount(1)).as[CountDownLatch].get
-    requestor ! ActorRegistered(consumer)
-    assert(latch.await(5000, TimeUnit.MILLISECONDS))
-    assert((publisher !! GetRetainedMessage) ===
-      Some(ConsumerActorRegistered(consumer, consumer.actor.asInstanceOf[Consumer])))
-  }
-
-  @Test def shouldReceiveOneConsumerUnregisteredEvent = {
-    val latch = (publisher !! SetExpectedTestMessageCount(1)).as[CountDownLatch].get
-    requestor ! ActorUnregistered(consumer)
-    assert(latch.await(5000, TimeUnit.MILLISECONDS))
-    assert((publisher !! GetRetainedMessage) ===
-      Some(ConsumerActorUnregistered(consumer, consumer.actor.asInstanceOf[Consumer])))
-  }
 }
 
-object PublishRequestorTest {
-  class PublisherMock extends TestActor with Retain with Countdown {
+object TypedConsumerPublishRequestorTest {
+  class TypedConsumerPublisherMock extends TestActor with Retain with Countdown {
     def handler = retain andThen countdown
   }
 }
