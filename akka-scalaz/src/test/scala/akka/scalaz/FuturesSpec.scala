@@ -184,7 +184,7 @@ class AkkaFuturesSpec extends WordSpec with ShouldMatchers with Checkers {
       val g = ((_: Int) * 2).future
       val h = ((_: Int) * 10).future
 
-      val fn = (n: Int) => (a1 >=> a2) apply n map {
+      val fn = (n: Int) => (a1 >=> a2) apply n collect {
         case "Int: 10" => "10"
         case _         => "failure"
       } >>= (f >=> g)
