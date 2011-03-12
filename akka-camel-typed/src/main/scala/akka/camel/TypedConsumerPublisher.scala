@@ -10,6 +10,10 @@ import akka.actor._
 import akka.camel.component.TypedActorComponent
 
 /**
+ * Concrete publish requestor that requests publication of typed consumer actor methods on
+ * <code>ActorRegistered</code> events and unpublication of typed consumer actor methods on
+ * <code>ActorUnregistered</code> events.
+ *
  * @author Martin Krasser
  */
 private[camel] class TypedConsumerPublishRequestor extends PublishRequestor {
@@ -20,26 +24,13 @@ private[camel] class TypedConsumerPublishRequestor extends PublishRequestor {
 }
 
 /**
+ * Publishes a typed consumer actor method on <code>ConsumerMethodRegistered</code> events and
+ * unpublishes a typed consumer actor method on <code>ConsumerMethodUnregistered</code> events.
+ * Publications are tracked by sending an <code>activationTracker</code> an <code>EndpointActivated</code>
+ * event, unpublications are tracked by sending an <code>EndpointActivated</code> event.
+ *
  * @author Martin Krasser
  */
-private[camel] object TypedConsumerPublisher {
-  /**
-   * Creates a route to an typed actor method.
-   */
-  def handleConsumerMethodRegistered(event: ConsumerMethodRegistered) {
-    CamelContextManager.mandatoryContext.addRoutes(new ConsumerMethodRouteBuilder(event))
-    EventHandler notifyListeners EventHandler.Info(this, "published method %s of %s at endpoint %s" format (event.methodName, event.typedActor, event.endpointUri))
-  }
-
-  /**
-   * Stops the route to the already un-registered consumer actor method.
-   */
-  def handleConsumerMethodUnregistered(event: ConsumerMethodUnregistered) {
-    CamelContextManager.mandatoryContext.stopRoute(event.methodUuid)
-    EventHandler notifyListeners EventHandler.Info(this, "unpublished method %s of %s from endpoint %s" format (event.methodName, event.typedActor, event.endpointUri))
-  }
-}
-
 private[camel] class TypedConsumerPublisher(activationTracker: ActorRef) extends Actor {
   import TypedConsumerPublisher._
 
@@ -57,7 +48,28 @@ private[camel] class TypedConsumerPublisher(activationTracker: ActorRef) extends
 }
 
 /**
- * Defines the route to a typed actor method.
+ * @author Martin Krasser
+ */
+private[camel] object TypedConsumerPublisher {
+  /**
+   * Creates a route to a typed actor method.
+   */
+  def handleConsumerMethodRegistered(event: ConsumerMethodRegistered) {
+    CamelContextManager.mandatoryContext.addRoutes(new ConsumerMethodRouteBuilder(event))
+    EventHandler notifyListeners EventHandler.Info(this, "published method %s of %s at endpoint %s" format (event.methodName, event.typedActor, event.endpointUri))
+  }
+
+  /**
+   * Stops the route to the already un-registered typed consumer actor method.
+   */
+  def handleConsumerMethodUnregistered(event: ConsumerMethodUnregistered) {
+    CamelContextManager.mandatoryContext.stopRoute(event.methodUuid)
+    EventHandler notifyListeners EventHandler.Info(this, "unpublished method %s of %s from endpoint %s" format (event.methodName, event.typedActor, event.endpointUri))
+  }
+}
+
+/**
+ * Builder of a route to a typed consumer actor method.
  *
  * @author Martin Krasser
  */
@@ -67,7 +79,7 @@ private[camel] class ConsumerMethodRouteBuilder(event: ConsumerMethodRegistered)
 }
 
 /**
- * A consumer method (un)registration event.
+ * A typed consumer method (un)registration event.
  */
 private[camel] trait ConsumerMethodEvent extends ConsumerEvent {
   val actorRef: ActorRef
@@ -84,16 +96,14 @@ private[camel] trait ConsumerMethodEvent extends ConsumerEvent {
 }
 
 /**
- * Event indicating that a typed actor has been registered at the actor registry. For
- * each <code>@consume</code> annotated typed actor method a separate instance of this
- * class is created.
+ * Event indicating that a typed consumer actor has been registered at the actor registry. For
+ * each <code>@consume</code> annotated typed actor method a separate event is created.
  */
 private[camel] case class ConsumerMethodRegistered(actorRef: ActorRef, method: Method) extends ConsumerMethodEvent
 
 /**
- * Event indicating that a typed actor has been unregistered from the actor registry. For
- * each <code>@consume</code> annotated typed actor method a separate instance of this
- * class is created.
+ * Event indicating that a typed consumer actor has been unregistered from the actor registry. For
+ * each <code>@consume</code> annotated typed actor method a separate event is created.
  */
 private[camel] case class ConsumerMethodUnregistered(actorRef: ActorRef, method: Method) extends ConsumerMethodEvent
 
@@ -102,9 +112,8 @@ private[camel] case class ConsumerMethodUnregistered(actorRef: ActorRef, method:
  */
 private[camel] object ConsumerMethodRegistered {
   /**
-   * Creates a list of ConsumerMethodRegistered event messages for a typed actor or an empty
-   * list if the typed actor is a proxy for a remote typed actor or the typed actor doesn't
-   * have any <code>@consume</code> annotated methods.
+   * Creates a list of ConsumerMethodRegistered event messages for a typed consumer actor or an empty
+   * list if <code>actorRef</code> doesn't reference a typed consumer actor.
    */
   def eventsFor(actorRef: ActorRef): List[ConsumerMethodRegistered] = {
     TypedConsumer.withTypedConsumer(actorRef: ActorRef) {
@@ -118,9 +127,8 @@ private[camel] object ConsumerMethodRegistered {
  */
 private[camel] object ConsumerMethodUnregistered {
   /**
-   * Creates a list of ConsumerMethodUnregistered event messages for a typed actor or an empty
-   * list if the typed actor is a proxy for a remote typed actor or the typed actor doesn't
-   * have any <code>@consume</code> annotated methods.
+   * Creates a list of ConsumerMethodUnregistered event messages for a typed consumer actor or an empty
+   * list if <code>actorRef</code> doesn't reference a typed consumer actor.
    */
   def eventsFor(actorRef: ActorRef): List[ConsumerMethodUnregistered] = {
     TypedConsumer.withTypedConsumer(actorRef) {

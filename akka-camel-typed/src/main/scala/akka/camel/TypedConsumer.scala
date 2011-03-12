@@ -13,10 +13,13 @@ import akka.actor.{TypedActor, ActorRef}
  */
 private[camel] object TypedConsumer {
   /**
-   * Applies a function <code>f</code> to each consumer method of <code>TypedActor</code> and
-   * returns the function results as a list. A consumer method is one that is annotated with
-   * <code>@consume</code>. If <code>actorRef</code> is a remote actor reference, <code>f</code>
-   * is never called and <code>Nil</code> is returned.
+   * Applies a function <code>f</code> to <code>actorRef</code> if <code>actorRef</code>
+   * references a typed consumer actor. A valid reference to a typed consumer actor is a
+   * local actor reference with a target actor that implements <code>TypedActor</code> and
+   * has at least one of its methods annotated with <code>@consume</code> (on interface or
+   * implementation class). For each <code>@consume</code>-annotated method, <code>f</code>
+   * is called with the corresponding <code>method</code> instance and the return value is
+   * added to a list which is then returned by this method.
    */
   def withTypedConsumer[T](actorRef: ActorRef)(f: Method => T): List[T] = {
     if (!actorRef.actor.isInstanceOf[TypedActor]) Nil
