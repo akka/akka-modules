@@ -112,12 +112,6 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
   lazy val rabbitModuleConfig      = ModuleConfiguration("com.rabbitmq","rabbitmq-client", "0.9.1", AkkaRepo)
   val localMavenRepo               = LocalMavenRepo // Second exception, also fast! ;-)
 
-  // Change to AkkaRepo before release?
-  // lazy val akkaRepo                = ModuleConfiguration("se.scalablesolutions.akka", AkkaRepo)
-
-  //Remove me on release
-  lazy val akkaModuleConfig        = ModuleConfiguration("se.scalablesolutions.akka", LocalMavenRepo)
-
   // -------------------------------------------------------------------------------------------------------------------
   // Versions
   // -------------------------------------------------------------------------------------------------------------------
