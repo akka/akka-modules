@@ -4,13 +4,9 @@
 
 package akka.camel
 
-import java.net.InetSocketAddress
-
-import org.apache.camel.{Exchange, Processor}
 import org.apache.camel.model.{RouteDefinition, ProcessorDefinition}
 
 import akka.actor._
-import akka.japi.{Function => JFunction}
 
 /**
  * Mixed in by Actor implementations that consume message from Camel endpoints.
@@ -138,11 +134,12 @@ private[camel] object Consumer {
    * Applies a function <code>f</code> to <code>actorRef</code> if <code>actorRef</code>
    * references a consumer actor. A valid reference to a consumer actor is a local actor
    * reference with a target actor that implements the <code>Consumer</code> trait. The
-   * target <code>Consumer</code> object is passed as argument to <code>f</code>. This
+   * target <code>Consumer</code> instance is passed as argument to <code>f</code>. This
    * method returns <code>None</code> if <code>actorRef</code> is not a valid reference
-   * to a consumer actor, <code>Some</code> consumer actor otherwise.
+   * to a consumer actor, <code>Some</code> contained the return value of <code>f</code>
+   * otherwise.
    */
-  def forConsumer[T](actorRef: ActorRef)(f: Consumer => T): Option[T] = {
+  def withConsumer[T](actorRef: ActorRef)(f: Consumer => T): Option[T] = {
     if (!actorRef.actor.isInstanceOf[Consumer]) None
     else if (actorRef.homeAddress.isDefined) None
     else Some(f(actorRef.actor.asInstanceOf[Consumer]))

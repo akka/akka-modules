@@ -229,8 +229,9 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
 
   lazy val akka_amqp        = project("akka-amqp", "akka-amqp", new AkkaAMQPProject(_))
   lazy val akka_camel       = project("akka-camel", "akka-camel", new AkkaCamelProject(_))
-  lazy val akka_spring      = project("akka-spring", "akka-spring", new AkkaSpringProject(_), akka_camel)
-  lazy val akka_kernel      = project("akka-kernel", "akka-kernel", new AkkaKernelProject(_), akka_spring, akka_camel, akka_amqp)
+  lazy val akka_camel_typed = project("akka-camel-typed", "akka-camel-typed", new AkkaCamelTypedProject(_), akka_camel)
+  lazy val akka_spring      = project("akka-spring", "akka-spring", new AkkaSpringProject(_), akka_camel, akka_camel_typed)
+  lazy val akka_kernel      = project("akka-kernel", "akka-kernel", new AkkaKernelProject(_), akka_spring, akka_amqp)
   lazy val akka_osgi        = project("akka-osgi", "akka-osgi", new AkkaOSGiParentProject(_))
   lazy val akka_scalaz      = project("akka-scalaz", "akka-scalaz", new AkkaScalazProject(_))
   lazy val akka_samples     = project("akka-samples", "akka-samples", new AkkaSamplesParentProject(_))
@@ -370,8 +371,22 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
   // -------------------------------------------------------------------------------------------------------------------
 
   class AkkaCamelProject(info: ProjectInfo) extends AkkaModulesDefaultProject(info, distPath) {
-    val akka_remote = Dependencies.akka_remote
-    val camel_core  = Dependencies.camel_core
+    val akka_actor = Dependencies.akka_actor
+    val camel_core = Dependencies.camel_core
+
+    // testing
+    val junit     = Dependencies.junit
+    val scalatest = Dependencies.scalatest
+    override def testOptions = createTestFilter( _.endsWith("Test"))
+  }
+
+  // -------------------------------------------------------------------------------------------------------------------
+  // akka-camel-typed subproject
+  // -------------------------------------------------------------------------------------------------------------------
+
+  class AkkaCamelTypedProject(info: ProjectInfo) extends AkkaModulesDefaultProject(info, distPath) {
+    val akka_typed_actor = Dependencies.akka_typed_actor
+    val camel_core       = Dependencies.camel_core
 
     // testing
     val junit     = Dependencies.junit

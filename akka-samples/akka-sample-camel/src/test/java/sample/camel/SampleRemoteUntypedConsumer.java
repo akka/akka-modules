@@ -1,5 +1,6 @@
-package akka.camel;
+package sample.camel;
 
+import akka.camel.Message;
 import akka.camel.UntypedConsumerActor;
 
 /**

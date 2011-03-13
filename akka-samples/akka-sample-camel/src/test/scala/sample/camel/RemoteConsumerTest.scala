@@ -1,11 +1,12 @@
-package akka.camel
+package sample.camel
 
 import java.util.concurrent.{CountDownLatch, TimeUnit}
 
 import org.scalatest.{GivenWhenThen, BeforeAndAfterAll, FeatureSpec}
 import akka.remote.netty.NettyRemoteSupport
-import akka.actor._
 import akka.actor.Actor._
+import akka.actor._
+import akka.camel._
 
 /**
  * @author Martin Krasser

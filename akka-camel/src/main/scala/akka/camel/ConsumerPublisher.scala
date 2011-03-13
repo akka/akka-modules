@@ -4,14 +4,49 @@
 package akka.camel
 
 import java.io.InputStream
-import java.lang.reflect.Method
 import java.util.concurrent.CountDownLatch
 
 import org.apache.camel.builder.RouteBuilder
-import org.apache.camel.model.{ProcessorDefinition, RouteDefinition}
+import org.apache.camel.model.RouteDefinition
 
 import akka.actor._
-import akka.camel.component.TypedActorComponent
+
+/**
+ * Concrete publish requestor that requests publication of consumer actors on <code>ActorRegistered</code>
+ * events and unpublication of consumer actors on <code>ActorUnregistered</code> events.
+ *
+ * @author Martin Krasser
+ */
+private[camel] class ConsumerPublishRequestor extends PublishRequestor {
+  def receiveActorRegistryEvent = {
+    case ActorRegistered(actor)   => for (event <- ConsumerActorRegistered.eventFor(actor)) deliverCurrentEvent(event)
+    case ActorUnregistered(actor) => for (event <- ConsumerActorUnregistered.eventFor(actor)) deliverCurrentEvent(event)
+  }
+}
+
+/**
+ * Publishes consumer actors on <code>ConsumerActorRegistered</code> events and unpublishes
+ * consumer actors on <code>ConsumerActorUnregistered</code> events. Publications are tracked
+ * by sending an <code>activationTracker</code> an <code>EndpointActivated</code> event,
+ * unpublications are tracked by sending an <code>EndpointActivated</code> event.
+ *
+ * @author Martin Krasser
+ */
+private[camel] class ConsumerPublisher(activationTracker: ActorRef) extends Actor {
+  import ConsumerPublisher._
+
+  def receive = {
+    case r: ConsumerActorRegistered => {
+      handleConsumerActorRegistered(r)
+      activationTracker ! EndpointActivated
+    }
+    case u: ConsumerActorUnregistered => {
+      handleConsumerActorUnregistered(u)
+      activationTracker ! EndpointDeactivated
+    }
+    case _ => { /* ignore */}
+  }
+}
 
 /**
  * @author Martin Krasser
@@ -32,80 +67,13 @@ private[camel] object ConsumerPublisher {
     CamelContextManager.mandatoryContext.stopRoute(event.uuid)
     EventHandler notifyListeners EventHandler.Info(this, "unpublished actor %s from endpoint %s" format (event.actorRef, event.endpointUri))
   }
-
-  /**
-   * Creates a route to an typed actor method.
-   */
-  def handleConsumerMethodRegistered(event: ConsumerMethodRegistered) {
-    CamelContextManager.typedActorRegistry.put(event.methodUuid, event.typedActor)
-    CamelContextManager.mandatoryContext.addRoutes(new ConsumerMethodRouteBuilder(event))
-    EventHandler notifyListeners EventHandler.Info(this, "published method %s of %s at endpoint %s" format (event.methodName, event.typedActor, event.endpointUri))
-  }
-
-  /**
-   * Stops the route to the already un-registered consumer actor method.
-   */
-  def handleConsumerMethodUnregistered(event: ConsumerMethodUnregistered) {
-    CamelContextManager.typedActorRegistry.remove(event.methodUuid)
-    CamelContextManager.mandatoryContext.stopRoute(event.methodUuid)
-    EventHandler notifyListeners EventHandler.Info(this, "unpublished method %s of %s from endpoint %s" format (event.methodName, event.typedActor, event.endpointUri))
-  }
 }
 
 /**
- * Actor that publishes consumer actors and typed actor methods at Camel endpoints.
- * The Camel context used for publishing is obtained via CamelContextManager.context.
- * This actor accepts messages of type
- * akka.camel.ConsumerActorRegistered,
- * akka.camel.ConsumerActorUnregistered,
- * akka.camel.ConsumerMethodRegistered and
- * akka.camel.ConsumerMethodUnregistered.
- *
- * @author Martin Krasser
- */
-private[camel] class ConsumerPublisher extends Actor {
-  import ConsumerPublisher._
-
-  @volatile private var registrationLatch = new CountDownLatch(0)
-  @volatile private var unregistrationLatch = new CountDownLatch(0)
-
-  protected def receive = {
-    case r: ConsumerActorRegistered => {
-      handleConsumerActorRegistered(r)
-      registrationLatch.countDown
-    }
-    case u: ConsumerActorUnregistered => {
-      handleConsumerActorUnregistered(u)
-      unregistrationLatch.countDown
-    }
-    case mr: ConsumerMethodRegistered => {
-      handleConsumerMethodRegistered(mr)
-      registrationLatch.countDown
-    }
-    case mu: ConsumerMethodUnregistered => {
-      handleConsumerMethodUnregistered(mu)
-      unregistrationLatch.countDown
-    }
-    case SetExpectedRegistrationCount(num) => {
-      registrationLatch = new CountDownLatch(num)
-      self.reply(registrationLatch)
-    }
-    case SetExpectedUnregistrationCount(num) => {
-      unregistrationLatch = new CountDownLatch(num)
-      self.reply(unregistrationLatch)
-    }
-    case _ => { /* ignore */}
-  }
-}
-
-private[camel] case class SetExpectedRegistrationCount(num: Int)
-private[camel] case class SetExpectedUnregistrationCount(num: Int)
-
-/**
- * Abstract route to a target which is either an actor or an typed actor method.
+ * Abstract builder of a route to a target which can be either an actor or an typed actor method.
  *
  * @param endpointUri endpoint URI of the consumer actor or typed actor method.
- * @param id actor identifier or typed actor identifier (registry key).
+ * @param id unique route identifier.
  *
  * @author Martin Krasser
  */
@@ -125,7 +93,7 @@ private[camel] abstract class ConsumerRouteBuilder(endpointUri: String, id: Stri
   protected def routeDefinitionHandler: RouteDefinitionHandler
   protected def targetUri: String
 
-  private def onRouteDefinition(rd: RouteDefinition) = routeDefinitionHandler.onRouteDefinition(rd)  
+  private def onRouteDefinition(rd: RouteDefinition) = routeDefinitionHandler.onRouteDefinition(rd)
   private def startRouteDefinition(bodyConversion: Option[Class[_]]): RouteDefinition = bodyConversion match {
     case Some(clazz) => from(endpointUri).routeId(id).convertBodyTo(clazz)
     case None        => from(endpointUri).routeId(id)
@@ -133,7 +101,7 @@ private[camel] abstract class ConsumerRouteBuilder(endpointUri: String, id: Stri
 }
 
 /**
- * Defines the route to a (untyped) consumer actor.
+ * Builder of a route to a consumer actor.
  *
  * @author Martin Krasser
  */
@@ -143,88 +111,56 @@ private[camel] class ConsumerActorRouteBuilder(event: ConsumerActorRegistered) e
 }
 
 /**
- * Defines the route to a typed actor method.
+ * Tracks <code>EndpointActivated</code> and <code>EndpointDectivated</code> events. Used to wait for a
+ * certain number of endpoints activations and de-activations to occur.
+ *
+ * @see SetExpectedActivationCount
+ * @see SetExpectedDeactivationCount
  *
  * @author Martin Krasser
  */
-private[camel] class ConsumerMethodRouteBuilder(event: ConsumerMethodRegistered) extends ConsumerRouteBuilder(event.endpointUri, event.methodUuid) {
-  protected def routeDefinitionHandler: RouteDefinitionHandler = event.routeDefinitionHandler
-  protected def targetUri = "%s:%s?method=%s" format (TypedActorComponent.InternalSchema, event.methodUuid, event.methodName)
-}
+private[camel] class ActivationTracker extends Actor {
+  private var activationLatch = new CountDownLatch(0)
+  private var deactivationLatch = new CountDownLatch(0)
 
-/**
- * A registration listener that triggers publication of consumer actors and typed actor
- * methods as well as un-publication of consumer actors and typed actor methods. This actor
- * needs to be initialized with a <code>PublishRequestorInit</code> command message for
- * obtaining a reference to a <code>publisher</code> actor. Before initialization it buffers
- * all outbound messages and delivers them to the <code>publisher</code> when receiving a
- * <code>PublishRequestorInit</code> message. After initialization, outbound messages are
- * delivered directly without buffering.
- *
- * @see PublishRequestorInit
- *
- * @author Martin Krasser
- */
-private[camel] class PublishRequestor extends Actor {
-  private val events = collection.mutable.Map[String, ConsumerEvent]()
-  private var publisher: Option[ActorRef] = None
-
-  protected def receive = {
-    case ActorRegistered(actor) =>
-      for (event <- ConsumerActorRegistered.forConsumer(actor)) deliverCurrentEvent(event)
-    case ActorUnregistered(actor) =>
-      for (event <- ConsumerActorUnregistered.forConsumer(actor)) deliverCurrentEvent(event)
-    case AspectInitRegistered(proxy, init) =>
-      for (event <- ConsumerMethodRegistered.forConsumer(proxy, init)) deliverCurrentEvent(event)
-    case AspectInitUnregistered(proxy, init) =>
-      for (event <- ConsumerMethodUnregistered.forConsumer(proxy, init)) deliverCurrentEvent(event)
-    case PublishRequestorInit(pub) => {
-      publisher = Some(pub)
-      deliverBufferedEvents
+  def receive = {
+    case SetExpectedActivationCount(num) => {
+      activationLatch = new CountDownLatch(num)
+      self.reply(activationLatch)
     }
-    case _ => { /* ignore */ }
-  }
-
-  private def deliverCurrentEvent(event: ConsumerEvent) = {
-    publisher match {
-      case Some(pub) => pub ! event
-      case None      => events += event.uuid -> event
+    case SetExpectedDeactivationCount(num) => {
+      deactivationLatch = new CountDownLatch(num)
+      self.reply(deactivationLatch)
     }
-  }
-
-  private def deliverBufferedEvents = {
-    for (event <- events.values) deliverCurrentEvent(event)
-    events.clear
+    case EndpointActivated =>   activationLatch.countDown
+    case EndpointDeactivated => deactivationLatch.countDown
   }
 }
 
 /**
- * @author Martin Krasser
+ * Command message that sets the number of expected endpoint activations on <code>ActivationTracker</code>.
  */
-private[camel] object PublishRequestor {
-  def pastActorRegisteredEvents =
-    for {
-      actor <- Actor.registry.actors
-    } yield ActorRegistered(actor)
-
-  def pastAspectInitRegisteredEvents =
-    for {
-      actor <- Actor.registry.typedActors
-      init = AspectInitRegistry.initFor(actor)
-      if (init ne null)
-    } yield AspectInitRegistered(actor, init)
-}
+private[camel] case class SetExpectedActivationCount(num: Int)
 
 /**
- * Command message to initialize a PublishRequestor to use <code>consumerPublisher</code>
- * for publishing actors or typed actor methods.
+ * Command message that sets the number of expected endpoint de-activations on <code>ActivationTracker</code>.
  */
-private[camel] case class PublishRequestorInit(consumerPublisher: ActorRef)
+private[camel] case class SetExpectedDeactivationCount(num: Int)
+
+/**
+ * Event message indicating that a single endpoint has been activated.
+ */
+private[camel] case class EndpointActivated()
+
+/**
+ * Event message indicating that a single endpoint has been de-activated.
+ */
+private[camel] case class EndpointDeactivated()
 
 /**
  * A consumer (un)registration event.
  */
-private[camel] sealed trait ConsumerEvent {
+private[camel] trait ConsumerEvent {
   val uuid: String
 }
 
@@ -243,23 +179,6 @@ private[camel] trait ConsumerActorEvent extends ConsumerEvent {
 }
 
 /**
- * A consumer method (un)registration event.
- */
-private[camel] trait ConsumerMethodEvent extends ConsumerEvent {
-  val typedActor: AnyRef
-  val init: AspectInit
-  val method: Method
-
-  val uuid = init.actorRef.uuid.toString
-  val methodName = method.getName
-  val methodUuid = "%s_%s" format (uuid, methodName)
-
-  lazy val routeDefinitionHandler = consumeAnnotation.routeDefinitionHandler.newInstance
-  lazy val consumeAnnotation = method.getAnnotation(classOf[consume])
-  lazy val endpointUri = consumeAnnotation.value
-}
-
-/**
  * Event indicating that a consumer actor has been registered at the actor registry.
  */
 private[camel] case class ConsumerActorRegistered(actorRef: ActorRef, actor: Consumer) extends ConsumerActorEvent
@@ -270,18 +189,6 @@ private[camel] case class ConsumerActorRegistered(actorRef: ActorRef, actor: Con
 private[camel] case class ConsumerActorUnregistered(actorRef: ActorRef, actor: Consumer) extends ConsumerActorEvent
 
 /**
- * Event indicating that an typed actor proxy has been created for a typed actor. For each <code>@consume</code>
- * annotated typed actor method a separate instance of this class is created.
- */
-private[camel] case class ConsumerMethodRegistered(typedActor: AnyRef, init: AspectInit, method: Method) extends ConsumerMethodEvent
-
-/**
- * Event indicating that an typed actor has been stopped. For each <code>@consume</code>
- * annotated typed object method a separate instance of this class is created.
- */
-private[camel] case class ConsumerMethodUnregistered(typedActor: AnyRef, init: AspectInit, method: Method) extends ConsumerMethodEvent
-
-/**
  * @author Martin Krasser
  */
 private[camel] object ConsumerActorRegistered {
@@ -289,8 +196,8 @@ private[camel] object ConsumerActorRegistered {
    * Creates an ConsumerActorRegistered event message for a consumer actor or None if
    * <code>actorRef</code> is not a consumer actor.
    */
-  def forConsumer(actorRef: ActorRef): Option[ConsumerActorRegistered] = {
-    Consumer.forConsumer[ConsumerActorRegistered](actorRef) {
+  def eventFor(actorRef: ActorRef): Option[ConsumerActorRegistered] = {
+    Consumer.withConsumer[ConsumerActorRegistered](actorRef) {
       actor => ConsumerActorRegistered(actorRef, actor)
     }
   }
@@ -304,65 +211,10 @@ private[camel] object ConsumerActorUnregistered {
    * Creates an ConsumerActorUnregistered event message for a consumer actor or None if
    * <code>actorRef</code> is not a consumer actor.
    */
-  def forConsumer(actorRef: ActorRef): Option[ConsumerActorUnregistered] = {
-    Consumer.forConsumer[ConsumerActorUnregistered](actorRef) {
+  def eventFor(actorRef: ActorRef): Option[ConsumerActorUnregistered] = {
+    Consumer.withConsumer[ConsumerActorUnregistered](actorRef) {
       actor => ConsumerActorUnregistered(actorRef, actor)
     }
   }
 }
 
-/**
- * @author Martin Krasser
- */
-private[camel] object ConsumerMethod {
-  /**
-   * Applies a function <code>f</code> to each consumer method of <code>TypedActor</code> and
-   * returns the function results as a list. A consumer method is one that is annotated with
-   * <code>@consume</code>. If <code>typedActor</code> is a proxy for a remote typed actor
-   * <code>f</code> is never called and <code>Nil</code> is returned.
-   */
-  def forConsumer[T](typedActor: AnyRef, init: AspectInit)(f: Method => T): List[T] = {
-    if (init.remoteAddress.isDefined) Nil // let remote node publish typed actor methods on endpoints
-    else {
-      // TODO: support consumer annotation inheritance
-      // - visit overridden methods in superclasses
-      // - visit implemented method declarations in interfaces
-      val intfClass = typedActor.getClass
-      val implClass = init.targetInstance.getClass
-      (for (m <- intfClass.getMethods.toList; if (m.isAnnotationPresent(classOf[consume]))) yield f(m)) ++
-      (for (m <- implClass.getMethods.toList; if (m.isAnnotationPresent(classOf[consume]))) yield f(m))
-    }
-  }
-}
-
-/**
- * @author Martin Krasser
- */
-private[camel] object ConsumerMethodRegistered {
-  /**
-   * Creates a list of ConsumerMethodRegistered event messages for a typed actor or an empty
-   * list if the typed actor is a proxy for a remote typed actor or the typed actor doesn't
-   * have any <code>@consume</code> annotated methods.
-   */
-  def forConsumer(typedActor: AnyRef, init: AspectInit): List[ConsumerMethodRegistered] = {
-    ConsumerMethod.forConsumer(typedActor, init) {
-      m => ConsumerMethodRegistered(typedActor, init, m)
-    }
-  }
-}
-
-/**
- * @author Martin Krasser
- */
-private[camel] object ConsumerMethodUnregistered {
-  /**
-   * Creates a list of ConsumerMethodUnregistered event messages for a typed actor or an empty
-   * list if the typed actor is a proxy for a remote typed actor or the typed actor doesn't
-   * have any <code>@consume</code> annotated methods.
-   */
-  def forConsumer(typedActor: AnyRef, init: AspectInit): List[ConsumerMethodUnregistered] = {
-    ConsumerMethod.forConsumer(typedActor, init) {
-      m => ConsumerMethodUnregistered(typedActor, init, m)
-    }
-  }
-}

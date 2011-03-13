@@ -1,5 +1,6 @@
 package akka.camel;
 
+import akka.actor.TypedActor;
 import akka.japi.SideEffect;
 
 import org.junit.AfterClass;
@@ -15,7 +16,9 @@ import static org.junit.Assert.*;
 /**
  * @author Martin Krasser
  */
-public class ConsumerJavaTestBase {
+public class TypedConsumerJavaTestBase {
+
+    private SampleErrorHandlingTypedConsumer consumer;
 
     @BeforeClass
     public static void setUpBeforeClass() {
@@ -29,13 +32,15 @@ public class ConsumerJavaTestBase {
     }
 
     @Test
-    public void shouldHandleExceptionThrownByActorAndGenerateCustomResponse() {
+    public void shouldHandleExceptionThrownByTypedActorAndGenerateCustomResponse() {
         getMandatoryService().awaitEndpointActivation(1, new SideEffect() {
             public void apply() {
-                actorOf(SampleErrorHandlingConsumer.class).start();
+                consumer = TypedActor.newInstance(
+                        SampleErrorHandlingTypedConsumer.class,
+                        SampleErrorHandlingTypedConsumerImpl.class);
             }
         });
-        String result = getMandatoryTemplate().requestBody("direct:error-handler-test-java", "hello", String.class);
+        String result = getMandatoryTemplate().requestBody("direct:error-handler-test-java-typed", "hello", String.class);
         assertEquals("error: hello", result);
     }
 }

@@ -9,36 +9,39 @@ import java.util.concurrent.TimeUnit
 import org.apache.camel.CamelContext
 
 import akka.actor.Actor._
-import akka.actor.{AspectInitRegistry, ActorRegistry}
 import akka.config.Config._
 import akka.japi.{SideEffect, Option => JOption}
 import akka.util.Bootable
 
+import TypedCamelAccess._
+
 /**
- * Publishes (untyped) consumer actors and typed consumer actors via Camel endpoints. Actors
- * are published (asynchronously) when they are started and unpublished (asynchronously) when
- * they are stopped. The CamelService is notified about actor start- and stop-events by
- * registering listeners at ActorRegistry and AspectInitRegistry.
+ * Publishes consumer actors at their Camel endpoints. Consumer actors are published asynchronously when
+ * they are started and un-published asynchronously when they are stopped. The CamelService is notified
+ * about actor life cycle by registering listeners at Actor.registry.
+ * <p>
+ * If the akka-camel-typed jar is on the classpath, it is automatically detected by the CamelService. The
+ * optional akka-camel-typed jar provides support for typed consumer actors.
  *
  * @author Martin Krasser
  */
 trait CamelService extends Bootable {
-  private[camel] val consumerPublisher = actorOf[ConsumerPublisher]
-  private[camel] val publishRequestor =  actorOf[PublishRequestor]
+  private[camel] val activationTracker = actorOf(new ActivationTracker)
+  private[camel] val consumerPublisher = actorOf(new ConsumerPublisher(activationTracker))
+  private[camel] val publishRequestor =  actorOf(new ConsumerPublishRequestor)
 
   private val serviceEnabled = config.getList("akka.enabled-modules").exists(_ == "camel")
 
   /**
-   * Starts this CamelService unless <code>akka.camel.service</code> is set to <code>false</code>.
+   * Starts this CamelService if the <code>akka.enabled-modules</code> list contains <code>"camel"</code>.
    */
   abstract override def onLoad = {
-    if (serviceEnabled) registerPublishRequestor
     super.onLoad
     if (serviceEnabled) start
   }
 
   /**
-   * Stops this CamelService unless <code>akka.camel.service</code> is set to <code>false</code>.
+   * Stops this CamelService if the <code>akka.enabled-modules</code> list contains <code>"camel"</code>.
    */
   abstract override def onUnload = {
     if (serviceEnabled) stop
@@ -52,29 +55,25 @@ trait CamelService extends Bootable {
   def unload = stop
 
   /**
-   * Starts this CamelService. Any started actor that is a consumer actor will be (asynchronously)
-   * published as Camel endpoint. Consumer actors that are started after this method returned will
-   * be published as well. Actor publishing is done asynchronously. A started (loaded) CamelService
-   * also publishes <code>@consume</code> annotated methods of typed actors that have been created
-   * with <code>TypedActor.newInstance(..)</code> (and <code>TypedActor.newRemoteInstance(..)</code>
-   * on a remote node).
+   * Starts this CamelService.
    */
   def start: CamelService = {
-    if (!publishRequestorRegistered) registerPublishRequestor
-
     // Only init and start if not already done by application
     if (!CamelContextManager.initialized) CamelContextManager.init
     if (!CamelContextManager.started) CamelContextManager.start
 
-    // start actor that exposes consumer actors and typed actors via Camel endpoints
+    registerPublishRequestor
+
+    activationTracker.start
     consumerPublisher.start
 
     // send registration events for all (un)typed actors that have been registered in the past.
     for (event <- PublishRequestor.pastActorRegisteredEvents) publishRequestor ! event
-    for (event <- PublishRequestor.pastAspectInitRegisteredEvents) publishRequestor ! event
 
     // init publishRequestor so that buffered and future events are delivered to consumerPublisher
-    publishRequestor ! PublishRequestorInit(consumerPublisher)
+    publishRequestor ! InitPublishRequestor(consumerPublisher)
+
+    for (tc <- TypedCamelModule.typedCamelObject) tc.onCamelServiceStart(this)
 
     // Register this instance as current CamelService and return it
     CamelServiceManager.register(this)
@@ -82,26 +81,27 @@ trait CamelService extends Bootable {
   }
 
   /**
-   * Stops this CamelService. All published consumer actors and typed consumer actor methods will be
-   * unpublished asynchronously.
+   * Stops this CamelService.
    */
   def stop = {
     // Unregister this instance as current CamelService
     CamelServiceManager.unregister(this)
+
+    for (tc <- TypedCamelModule.typedCamelObject) tc.onCamelServiceStop(this)
 
     // Remove related listeners from registry
     unregisterPublishRequestor
 
     // Stop related services
     consumerPublisher.stop
+    activationTracker.stop
     CamelContextManager.stop
   }
 
   /**
-   * Waits for an expected number (<code>count</code>) of endpoints to be activated
-   * during execution of <code>f</code>. The wait-timeout is by default 10 seconds.
-   * Other timeout values can be set via the <code>timeout</code> and <code>timeUnit</code>
-   * parameters.
+   * Waits for an expected number (<code>count</code>) of consumer actor endpoints to be activated
+   * during execution of <code>f</code>. The wait-timeout is by default 10 seconds. Other timeout
+   * values can be set via the <code>timeout</code> and <code>timeUnit</code> parameters.
    */
   def awaitEndpointActivation(count: Int, timeout: Long = 10, timeUnit: TimeUnit = TimeUnit.SECONDS)(f: => Unit): Boolean = {
     val activation = expectEndpointActivationCount(count)
@@ -109,9 +109,9 @@ trait CamelService extends Bootable {
   }
 
   /**
-   * Waits for an expected number (<code>count</code>) of endpoints to be de-activated
-   * during execution of <code>f</code>. The wait-timeout is by default 10 seconds.
-   * Other timeout values can be set via the <code>timeout</code> and <code>timeUnit</code>
+   * Waits for an expected number (<code>count</code>) of consumer actor endpoints to be de-activated
+   * during execution of <code>f</code>. The wait-timeout is by default 10 seconds. Other timeout
+   * values can be set via the <code>timeout</code> and <code>timeUnit</code>
    * parameters.
    */
   def awaitEndpointDeactivation(count: Int, timeout: Long = 10, timeUnit: TimeUnit = TimeUnit.SECONDS)(f: => Unit): Boolean = {
@@ -120,7 +120,7 @@ trait CamelService extends Bootable {
   }
 
   /**
-   * Waits for an expected number (<code>count</code>) of endpoints to be activated
+   * Waits for an expected number (<code>count</code>) of consumer actor endpoints to be activated
    * during execution of <code>p</code>. The wait timeout is 10 seconds.
    * <p>
    * Java API
@@ -130,7 +130,7 @@ trait CamelService extends Bootable {
   }
 
   /**
-   * Waits for an expected number (<code>count</code>) of endpoints to be activated
+   * Waits for an expected number (<code>count</code>) of consumer actor endpoints to be activated
    * during execution of <code>p</code>. Timeout values can be set via the
    * <code>timeout</code> and <code>timeUnit</code> parameters.
    * <p>
@@ -141,7 +141,7 @@ trait CamelService extends Bootable {
   }
 
   /**
-   * Waits for an expected number (<code>count</code>) of endpoints to be de-activated
+   * Waits for an expected number (<code>count</code>) of consumer actor endpoints to be de-activated
    * during execution of <code>p</code>. The wait timeout is 10 seconds.
    * <p>
    * Java API
@@ -151,7 +151,7 @@ trait CamelService extends Bootable {
   }
 
   /**
-   * Waits for an expected number (<code>count</code>) of endpoints to be de-activated
+   * Waits for an expected number (<code>count</code>) of consumer actor endpoints to be de-activated
    * during execution of <code>p</code>. Timeout values can be set via the
    * <code>timeout</code> and <code>timeUnit</code> parameters.
    * <p>
@@ -167,7 +167,7 @@ trait CamelService extends Bootable {
    * activations that occurred in the past are not considered.
    */
   private def expectEndpointActivationCount(count: Int): CountDownLatch =
-    (consumerPublisher !! SetExpectedRegistrationCount(count)).as[CountDownLatch].get
+    (activationTracker !! SetExpectedActivationCount(count)).as[CountDownLatch].get
 
   /**
    * Sets an expectation on the number of upcoming endpoint de-activations and returns
@@ -175,38 +175,29 @@ trait CamelService extends Bootable {
    * de-activations that occurred in the past are not considered.
    */
   private def expectEndpointDeactivationCount(count: Int): CountDownLatch =
-    (consumerPublisher !! SetExpectedUnregistrationCount(count)).as[CountDownLatch].get
+    (activationTracker !! SetExpectedDeactivationCount(count)).as[CountDownLatch].get
 
-  private[camel] def publishRequestorRegistered: Boolean = {
-    registry.hasListener(publishRequestor) ||
-    AspectInitRegistry.hasListener(publishRequestor)
-  }
-
-  private[camel] def registerPublishRequestor: Unit = {
+  private[camel] def registerPublishRequestor: Unit =
     registry.addListener(publishRequestor)
-    AspectInitRegistry.addListener(publishRequestor)
-  }
 
-  private[camel] def unregisterPublishRequestor: Unit = {
+  private[camel] def unregisterPublishRequestor: Unit =
     registry.removeListener(publishRequestor)
-    AspectInitRegistry.removeListener(publishRequestor)
-  }
 }
 
 /**
- * Manages a global CamelService (the 'current' CamelService).
+ * Manages a CamelService (the 'current' CamelService).
  *
  * @author Martin Krasser
  */
 object CamelServiceManager {
 
   /**
-   * The current (optional) CamelService. Is defined when a CamelService has been started.
+   * The current CamelService which is defined when a CamelService has been started.
    */
   private var _current: Option[CamelService] = None
 
   /**
-   * Starts a new CamelService and makes it the current CamelService.
+   * Starts a new CamelService, makes it the current CamelService and returns it.
    *
    * @see CamelService#start
    * @see CamelService#onLoad
@@ -214,7 +205,7 @@ object CamelServiceManager {
   def startCamelService = CamelServiceFactory.createCamelService.start
 
   /**
-   * Stops the current CamelService.
+   * Stops the current CamelService (if defined).
    *
    * @see CamelService#stop
    * @see CamelService#onUnload

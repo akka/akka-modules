@@ -4,14 +4,13 @@
 
 package akka.camel
 
-import java.util.Map
-
 import org.apache.camel.{ProducerTemplate, CamelContext}
 import org.apache.camel.impl.DefaultCamelContext
 
 import akka.actor.EventHandler
-import akka.camel.component.TypedActorComponent
 import akka.japi.{Option => JOption}
+
+import TypedCamelAccess._
 
 /**
  * Manages the lifecycle of a CamelContext. Allowed transitions are
@@ -28,17 +27,6 @@ trait CamelContextLifecycle {
 
   private var _initialized = false
   private var _started = false
-
-  /**
-   * Camel component for accessing typed actors.
-   */
-  private[camel] var typedActorComponent: TypedActorComponent = _
-
-  /**
-   * Registry in which typed actors are TEMPORARILY registered during
-   * creation of Camel routes to these actors.
-   */
-  private[camel] var typedActorRegistry: Map[String, AnyRef] = _
 
   /**
    * Returns <code>Some(CamelContext)</code> (containing the current CamelContext)
@@ -135,23 +123,19 @@ trait CamelContextLifecycle {
   }
 
   /**
-   * Initializes this lifecycle object with the a DefaultCamelContext.
+   * Initializes this instance a new DefaultCamelContext.
    */
   def init(): Unit = init(new DefaultCamelContext)
 
   /**
-   * Initializes this lifecycle object with the given CamelContext. For the passed
-   * CamelContext, stream-caching is enabled. If applications want to disable stream-
-   * caching they can do so after this method returned and prior to calling start.
-   * This method also registers a new TypedActorComponent at the passes CamelContext
-   * under a name defined by TypedActorComponent.InternalSchema.
+   * Initializes this instance with the given CamelContext. For the passed <code>context</code>
+   * stream-caching is enabled. If applications want to disable stream-caching they can do so
+   * after this method returned and prior to calling start.
    */
   def init(context: CamelContext) {
-    this.typedActorComponent = new TypedActorComponent
-    this.typedActorRegistry = typedActorComponent.typedActorRegistry
-
     context.setStreamCaching(true)
-    context.addComponent(TypedActorComponent.InternalSchema, typedActorComponent)
+
+    for (tc <- TypedCamelModule.typedCamelObject) tc.onCamelContextInit(context)
 
     this._context = Some(context)
     this._template = Some(context.createProducerTemplate)
