@@ -7,12 +7,12 @@ package akka.amqp.test
 import java.util.concurrent.TimeUnit
 import akka.actor.{Actor, ActorRef}
 import org.multiverse.api.latches.StandardLatch
-import com.rabbitmq.client.ShutdownSignalException
 import akka.amqp._
 import akka.amqp.AMQP.ConnectionParameters
 import org.scalatest.matchers.MustMatchers
 import org.scalatest.junit.JUnitSuite
 import org.junit.Test
+import com.rabbitmq.client.{Address, ShutdownSignalException}
 
 class AMQPConnectionRecoveryTestIntegration extends JUnitSuite with MustMatchers {
 
@@ -37,7 +37,9 @@ class AMQPConnectionRecoveryTestIntegration extends JUnitSuite with MustMatchers
       }
     }).start
 
-    val connection = AMQP.newConnection(ConnectionParameters(initReconnectDelay = 50, connectionCallback = Some(connectionCallback)))
+    // second address is default local rabbitmq instance, tests multiple address connection
+    val localAddresses = Array(new Address("localhost", 9999), new Address("localhost", 5672))
+    val connection = AMQP.newConnection(ConnectionParameters(addresses = localAddresses, initReconnectDelay = 50, connectionCallback = Some(connectionCallback)))
     try {
       connectedLatch.tryAwait(2, TimeUnit.SECONDS) must be(true)
 

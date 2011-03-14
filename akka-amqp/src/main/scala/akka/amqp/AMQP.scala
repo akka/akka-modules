@@ -7,13 +7,13 @@ package akka.amqp
 import akka.actor.{Actor, ActorRef}
 import akka.actor.Actor._
 import akka.config.Supervision.OneForOneStrategy
-import com.rabbitmq.client.{ReturnListener, ShutdownListener, ConnectionFactory}
-import ConnectionFactory._
 import com.rabbitmq.client.AMQP.BasicProperties
 import java.lang.{String, IllegalArgumentException}
 import reflect.Manifest
 import akka.japi.Procedure
 import akka.dispatch.Dispatchers
+import com.rabbitmq.client._
+import ConnectionFactory._
 
 /**
  * AMQP Actor API. Implements Connection, Producer and Consumer materialized as Actors.
@@ -30,8 +30,7 @@ object AMQP {
    * Parameters used to make the connection to the amqp broker. Uses the rabbitmq defaults.
    */
   case class ConnectionParameters(
-          host: String = DEFAULT_HOST,
-          port: Int = DEFAULT_AMQP_PORT,
+          addresses: Array[Address] = Array(new Address(DEFAULT_HOST, DEFAULT_AMQP_PORT)),
           username: String = DEFAULT_USER,
           password: String = DEFAULT_PASS,
           virtualHost: String = DEFAULT_VHOST,
@@ -39,19 +38,19 @@ object AMQP {
           connectionCallback: Option[ActorRef] = None) {
 
     // Needed for Java API usage
-    def this() = this (DEFAULT_HOST, DEFAULT_AMQP_PORT, DEFAULT_USER, DEFAULT_PASS, DEFAULT_VHOST, 5000, None)
+    def this() = this (Array(new Address(DEFAULT_HOST, DEFAULT_AMQP_PORT)), DEFAULT_USER, DEFAULT_PASS, DEFAULT_VHOST, 5000, None)
 
     // Needed for Java API usage
-    def this(host: String, port: Int, username: String, password: String, virtualHost: String) =
-      this (host, port, username, password, virtualHost, 5000, None)
+    def this(addresses: Array[Address], username: String, password: String, virtualHost: String) =
+      this (addresses, username, password, virtualHost, 5000, None)
 
     // Needed for Java API usage
-    def this(host: String, port: Int, username: String, password: String, virtualHost: String, initReconnectDelay: Long, connectionCallback: ActorRef) =
-      this (host, port, username, password, virtualHost, initReconnectDelay, Some(connectionCallback))
+    def this(addresses: Array[Address], username: String, password: String, virtualHost: String, initReconnectDelay: Long, connectionCallback: ActorRef) =
+      this (addresses, username, password, virtualHost, initReconnectDelay, Some(connectionCallback))
 
     // Needed for Java API usage
     def this(connectionCallback: ActorRef) =
-      this (DEFAULT_HOST, DEFAULT_AMQP_PORT, DEFAULT_USER, DEFAULT_PASS, DEFAULT_VHOST, 5000, Some(connectionCallback))
+      this (Array(new Address(DEFAULT_HOST, DEFAULT_AMQP_PORT)), DEFAULT_USER, DEFAULT_PASS, DEFAULT_VHOST, 5000, Some(connectionCallback))
 
   }
 
@@ -246,7 +245,6 @@ object AMQP {
     val consumer: ActorRef = actorOf(new ConsumerActor(consumerParameters))
     consumer.dispatcher = consumerDispatcher
     val handler = consumerParameters.deliveryHandler
-    if (handler.isUnstarted) handler.dispatcher = consumerDispatcher
     if (handler.supervisor.isEmpty) consumer.startLink(handler)
     connection.startLink(consumer)
     consumer ! Start

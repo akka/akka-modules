@@ -6,12 +6,12 @@ package akka.amqp
 
 import rpc.RPC
 import rpc.RPC.{RpcClientSerializer, RpcServerSerializer}
-import akka.actor.{Actor, ActorRegistry}
+import akka.actor.{Actor}
 import Actor._
 import java.util.concurrent.{CountDownLatch, TimeUnit}
 import java.lang.String
 import akka.amqp.AMQP._
-import akka.remote.protocol.RemoteProtocol.AddressProtocol
+import akka.amqp.AkkaAmqp.TestMessage
 
 object ExampleSession {
 
@@ -173,14 +173,14 @@ object ExampleSession {
 
     val exchangeName = "easy.protobuf"
 
-    def protobufMessageHandler(message: AddressProtocol) = {
+    def protobufMessageHandler(message: TestMessage) = {
       println("Received "+message)
     }
 
     AMQP.newProtobufConsumer(connection, protobufMessageHandler _, Some(exchangeName))
 
-    val producerClient = AMQP.newProtobufProducer[AddressProtocol](connection, Some(exchangeName))
-    producerClient.send(AddressProtocol.newBuilder.setHostname("akkarocks.com").setPort(1234).build)
+    val producerClient = AMQP.newProtobufProducer[TestMessage](connection, Some(exchangeName))
+    producerClient.send(TestMessage.newBuilder.setMessage("akka-amqp rocks!").build)
   }
 
   def rpc = {
@@ -253,15 +253,15 @@ object ExampleSession {
 
     val exchangeName = "easy.protobuf.rpc"
 
-    def protobufRequestHandler(request: AddressProtocol): AddressProtocol = {
-      AddressProtocol.newBuilder.setHostname(request.getHostname.reverse).setPort(request.getPort).build
+    def protobufRequestHandler(request: TestMessage): TestMessage = {
+      TestMessage.newBuilder.setMessage(request.getMessage.reverse).build
     }
 
     RPC.newProtobufRpcServer(connection, exchangeName, protobufRequestHandler)
 
-    val protobufRpcClient = RPC.newProtobufRpcClient[AddressProtocol, AddressProtocol](connection, exchangeName)
+    val protobufRpcClient = RPC.newProtobufRpcClient[TestMessage, TestMessage](connection, exchangeName)
 
-    val response = protobufRpcClient.call(AddressProtocol.newBuilder.setHostname("localhost").setPort(4321).build)
+    val response = protobufRpcClient.call(TestMessage.newBuilder.setMessage("akka-amqp rocks!").build)
 
     println("Got response: "+response)
   }

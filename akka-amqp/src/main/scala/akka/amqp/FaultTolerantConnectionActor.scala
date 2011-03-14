@@ -9,25 +9,23 @@ import java.io.IOException
 import com.rabbitmq.client._
 import akka.amqp.AMQP.ConnectionParameters
 import akka.config.Supervision.{ Permanent, OneForOneStrategy }
-import akka.actor.{Exit, Actor, EventHandler}
+import akka.actor.{Scheduler, Exit, Actor, EventHandler}
+import java.util.concurrent.{ScheduledFuture, TimeUnit}
 
 private[amqp] class FaultTolerantConnectionActor(connectionParameters: ConnectionParameters) extends Actor {
   import connectionParameters._
 
-  self.id = "amqp-connection-%s".format(host)
+  self.id = "amqp-connection"
   self.lifeCycle = Permanent
   self.faultHandler = OneForOneStrategy(List(classOf[Throwable]))
 
-  val reconnectionTimer = new Timer("%s-timer".format(self.id))
-
   val connectionFactory: ConnectionFactory = new ConnectionFactory()
-  connectionFactory.setHost(host)
-  connectionFactory.setPort(port)
   connectionFactory.setUsername(username)
   connectionFactory.setPassword(password)
   connectionFactory.setVirtualHost(virtualHost)
 
   var connection: Option[Connection] = None
+  var reconnectionFuture: Option[ScheduledFuture[scala.AnyRef]] = None
 
   protected def receive = {
     case Connect => connect
@@ -58,9 +56,11 @@ private[amqp] class FaultTolerantConnectionActor(connectionParameters: Connectio
 
   private def connect = if (connection.isEmpty || !connection.get.isOpen) {
     try {
-      connection = Some(connectionFactory.newConnection)
+      EventHandler notifyListeners EventHandler.Info(this, "Connecting to one of [%s]" format addresses)
+      connection = Some(connectionFactory.newConnection(addresses))
       connection.foreach {
         conn =>
+          EventHandler notifyListeners EventHandler.Info(this, "Connected to [%s:%s]" format (conn.getHost, conn.getPort))
           conn.addShutdownListener(new ShutdownListener {
             def shutdownCompleted(cause: ShutdownSignalException) = {
               self ! ConnectionShutdown(cause)
@@ -72,13 +72,13 @@ private[amqp] class FaultTolerantConnectionActor(connectionParameters: Connectio
       }
     } catch {
       case e: Exception =>
+        EventHandler notifyListeners EventHandler.Error(e, this, "Unable to connect to one of [%s]" format addresses)
+        EventHandler notifyListeners EventHandler.Info(this, "Reconnecting in %d ms " format initReconnectDelay)
         connection = None
-        reconnectionTimer.schedule(new TimerTask() {
-          override def run = {
-            notifyCallback(Reconnecting)
-            self ! Connect
-          }
-        }, connectionParameters.initReconnectDelay)
+        reconnectionFuture = Some(Scheduler.scheduleOnce(() => {
+          notifyCallback(Reconnecting)
+          self ! Connect
+        }, initReconnectDelay, TimeUnit.MILLISECONDS))
     }
   }
 
@@ -88,7 +88,7 @@ private[amqp] class FaultTolerantConnectionActor(connectionParameters: Connectio
       notifyCallback(Disconnected)
     } catch {
       case e: IOException =>
-        EventHandler notifyListeners EventHandler.Error(null, this, "Could not close AMQP connection %s:%s [%s]".format(host, port, self.id))
+        EventHandler notifyListeners EventHandler.Error(e, this, "Could not close AMQP connection")
       case _ => ()
     }
     connection = None
@@ -99,7 +99,7 @@ private[amqp] class FaultTolerantConnectionActor(connectionParameters: Connectio
   }
 
   override def postStop = {
-    reconnectionTimer.cancel
+    reconnectionFuture.foreach(_.cancel(true))
     // make sure postStop is called on all linked actors so they can do channel cleanup before connection is killed
     val i = self.linkedActors.values.iterator
     while(i.hasNext) {

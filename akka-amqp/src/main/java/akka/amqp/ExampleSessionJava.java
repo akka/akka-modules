@@ -1,6 +1,5 @@
 package akka.amqp;
 
-import org.multiverse.api.latches.StandardLatch;
 import scala.Option;
 import akka.actor.ActorRef;
 import akka.actor.Actors;
@@ -8,7 +7,6 @@ import akka.actor.UntypedActor;
 import akka.actor.UntypedActorFactory;
 
 import akka.amqp.rpc.RPC;
-import akka.remote.protocol.RemoteProtocol;
 
 import akka.japi.Function;
 import akka.japi.Procedure;
@@ -144,17 +142,17 @@ public class ExampleSessionJava {
 
         String exchangeName = "easy.protobuf";
 
-        Procedure<RemoteProtocol.AddressProtocol> procedure = new Procedure<RemoteProtocol.AddressProtocol>() {
-            public void apply(RemoteProtocol.AddressProtocol message) {
+        Procedure<AkkaAmqp.TestMessage> procedure = new Procedure<AkkaAmqp.TestMessage>() {
+            public void apply(AkkaAmqp.TestMessage message) {
                 System.out.println("### >> Received message: " + message);
             }
         };
 
-        AMQP.newProtobufConsumer(connection, procedure, exchangeName, RemoteProtocol.AddressProtocol.class);
+        AMQP.newProtobufConsumer(connection, procedure, exchangeName, AkkaAmqp.TestMessage.class);
 
-        AMQP.ProducerClient<RemoteProtocol.AddressProtocol> producerClient = AMQP.newProtobufProducer(connection, exchangeName);
+        AMQP.ProducerClient<AkkaAmqp.TestMessage> producerClient = AMQP.newProtobufProducer(connection, exchangeName);
 
-        producerClient.send(RemoteProtocol.AddressProtocol.newBuilder().setHostname("akkarocks.com").setPort(1234).build());
+        producerClient.send(AkkaAmqp.TestMessage.newBuilder().setMessage("akka-amqp rocks!").build());
     }
 
     public void easyStringRpc() {
@@ -182,15 +180,14 @@ public class ExampleSessionJava {
         Option<String> response = stringRpcClient.call("AMQP Rocks!");
         System.out.println("### >> Got response: " + response);
 
-        final StandardLatch standardLatch = new StandardLatch();
         stringRpcClient.callAsync("AMQP is dead easy", new Procedure<String>() {
             public void apply(String request) {
                 System.out.println("### >> This is handled async: " + request);
-                standardLatch.open();
             }
         });
+
         try {
-            standardLatch.tryAwait(2, TimeUnit.SECONDS);
+            TimeUnit.SECONDS.sleep(2);
         } catch (InterruptedException ignore) {
         }
     }
@@ -202,17 +199,17 @@ public class ExampleSessionJava {
 
         String exchangeName = "easy.protobuf.rpc";
 
-        RPC.newProtobufRpcServer(connection, exchangeName, new Function<RemoteProtocol.AddressProtocol, RemoteProtocol.AddressProtocol>() {
-            public RemoteProtocol.AddressProtocol apply(RemoteProtocol.AddressProtocol request) {
-                return RemoteProtocol.AddressProtocol.newBuilder().setHostname(request.getHostname()).setPort(request.getPort()).build();
+        RPC.newProtobufRpcServer(connection, exchangeName, new Function<AkkaAmqp.TestMessage, AkkaAmqp.TestMessage>() {
+            public AkkaAmqp.TestMessage apply(AkkaAmqp.TestMessage request) {
+                return AkkaAmqp.TestMessage.newBuilder().setMessage(request.getMessage()).build();
             }
-        }, RemoteProtocol.AddressProtocol.class);
+        }, AkkaAmqp.TestMessage.class);
 
-        RPC.RpcClient<RemoteProtocol.AddressProtocol, RemoteProtocol.AddressProtocol> protobufRpcClient =
-                RPC.newProtobufRpcClient(connection, exchangeName, RemoteProtocol.AddressProtocol.class);
+        RPC.RpcClient<AkkaAmqp.TestMessage, AkkaAmqp.TestMessage> protobufRpcClient =
+                RPC.newProtobufRpcClient(connection, exchangeName, AkkaAmqp.TestMessage.class);
 
-        scala.Option<RemoteProtocol.AddressProtocol> response =
-                protobufRpcClient.call(RemoteProtocol.AddressProtocol.newBuilder().setHostname("localhost").setPort(4321).build());
+        scala.Option<AkkaAmqp.TestMessage> response =
+                protobufRpcClient.call(AkkaAmqp.TestMessage.newBuilder().setMessage("akka-amqp rocks!").build());
 
         System.out.println("### >> Got response: " + response);
     }

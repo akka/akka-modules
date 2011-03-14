@@ -189,7 +189,7 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
 
     lazy val osgi_core = "org.osgi" % "org.osgi.core" % "4.2.0" //ApacheV2
 
-    lazy val rabbit = "com.rabbitmq" % "amqp-client" % "1.8.1" % "compile" //Mozilla public license
+    lazy val rabbit = "com.rabbitmq" % "amqp-client" % "2.3.1" % "compile" //Mozilla public license
 
     lazy val scalaz = "org.scalaz" % "scalaz-core_2.8.1" % "6.0-SNAPSHOT" % "compile" //New BSD
 
@@ -346,7 +346,7 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
   // -------------------------------------------------------------------------------------------------------------------
 
   class AkkaAMQPProject(info: ProjectInfo) extends AkkaModulesDefaultProject(info, distPath) {
-    val akka_remote = Dependencies.akka_remote
+    val akka_actor = Dependencies.akka_actor
 
     val commons_io = Dependencies.commons_io
     val rabbit     = Dependencies.rabbit

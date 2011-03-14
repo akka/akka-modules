@@ -10,7 +10,7 @@ import org.junit.Test
 import org.multiverse.api.latches.StandardLatch
 import java.util.concurrent.TimeUnit
 import akka.amqp.rpc.RPC
-import akka.remote.protocol.RemoteProtocol.AddressProtocol
+import akka.amqp.AkkaAmqp.TestMessage
 
 class AMQPProtobufProducerConsumerTestIntegration extends JUnitSuite with MustMatchers {
 
@@ -23,21 +23,21 @@ class AMQPProtobufProducerConsumerTestIntegration extends JUnitSuite with MustMa
 
     RPC.newProtobufRpcServer(connection, "protoexchange", requestHandler)
 
-    val request = AddressProtocol.newBuilder.setHostname("testhost").setPort(4321).build
+    val request = TestMessage.newBuilder.setMessage("testmessage").build
 
-    def responseHandler(response: AddressProtocol) = {
-      assert(response.getHostname == request.getHostname.reverse)
+    def responseHandler(response: TestMessage) = {
+      assert(response.getMessage == request.getMessage.reverse)
       responseLatch.open
     }
     AMQP.newProtobufConsumer(connection, responseHandler _, None, Some("proto.reply.key"))
 
-    val producer = AMQP.newProtobufProducer[AddressProtocol](connection, Some("protoexchange"))
+    val producer = AMQP.newProtobufProducer[TestMessage](connection, Some("protoexchange"))
     producer.send(request, Some("proto.reply.key"))
 
     responseLatch.tryAwait(2, TimeUnit.SECONDS) must be (true)
   }
 
-  def requestHandler(request: AddressProtocol): AddressProtocol = {
-    AddressProtocol.newBuilder.setHostname(request.getHostname.reverse).setPort(request.getPort).build
+  def requestHandler(request: TestMessage): TestMessage = {
+    TestMessage.newBuilder.setMessage(request.getMessage.reverse).build
   }
 }
