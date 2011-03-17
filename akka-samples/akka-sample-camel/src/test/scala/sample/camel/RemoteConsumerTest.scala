@@ -1,12 +1,12 @@
 package sample.camel
 
-import java.util.concurrent.{CountDownLatch, TimeUnit}
-
 import org.scalatest.{GivenWhenThen, BeforeAndAfterAll, FeatureSpec}
-import akka.remote.netty.NettyRemoteSupport
+
 import akka.actor.Actor._
 import akka.actor._
 import akka.camel._
+import akka.remote.netty.NettyRemoteSupport
+import akka.remoteinterface.RemoteServerModule
 
 /**
  * @author Martin Krasser
@@ -15,6 +15,8 @@ class RemoteConsumerTest extends FeatureSpec with BeforeAndAfterAll with GivenWh
   import CamelServiceManager._
   import RemoteConsumerTest._
 
+  var server: RemoteServerModule = _
+
   override protected def beforeAll = {
     registry.shutdownAll
 
@@ -22,9 +24,8 @@ class RemoteConsumerTest extends FeatureSpec with BeforeAndAfterAll with GivenWh
 
     remote.shutdown
     remote.asInstanceOf[NettyRemoteSupport].optimizeLocal.set(false)
-    remote.start(host,port)
 
-    Thread.sleep(1000)
+    server = remote.start(host,port)
   }
 
   override protected def afterAll = {
@@ -34,17 +35,16 @@ class RemoteConsumerTest extends FeatureSpec with BeforeAndAfterAll with GivenWh
 
     registry.shutdownAll
     remote.asInstanceOf[NettyRemoteSupport].optimizeLocal.set(true)
-    Thread.sleep(1000)
   }
 
   feature("Publish consumer on remote node") {
     scenario("access published remote consumer") {
-      given("a client-initiated remote consumer")
-      val consumer = remote.actorOf[RemoteConsumer](host, port).start
+      given("a consumer actor")
+      val consumer = Actor.actorOf[RemoteConsumer]
 
-      when("remote consumer publication is triggered")
+      when("registered at the server")
       assert(mandatoryService.awaitEndpointActivation(1) {
-        consumer !! "init"
+        remote.register(consumer)
       })
 
       then("the published consumer is accessible via its endpoint URI")
@@ -55,12 +55,12 @@ class RemoteConsumerTest extends FeatureSpec with BeforeAndAfterAll with GivenWh
 
   feature("Publish typed consumer on remote node") {
     scenario("access published remote consumer method") {
-      given("a client-initiated remote typed consumer")
-      val consumer = TypedActor.newRemoteInstance(classOf[SampleRemoteTypedConsumer], classOf[SampleRemoteTypedConsumerImpl], host, port)
-
-      when("remote typed consumer publication is triggered")
+      given("a typed consumer actor")
+      when("registered at the server")
       assert(mandatoryService.awaitEndpointActivation(1) {
-        consumer.foo("init")
+        remote.registerTypedActor("whatever", TypedActor.newInstance(
+          classOf[SampleRemoteTypedConsumer],
+          classOf[SampleRemoteTypedConsumerImpl]))
       })
       then("the published method is accessible via its endpoint URI")
       val response = CamelContextManager.mandatoryTemplate.requestBody("direct:remote-typed-consumer", "test")
@@ -70,12 +70,12 @@ class RemoteConsumerTest extends FeatureSpec with BeforeAndAfterAll with GivenWh
 
   feature("Publish untyped consumer on remote node") {
     scenario("access published remote untyped consumer") {
-      given("a client-initiated remote untyped consumer")
-      val consumer = remote.actorOf(classOf[SampleRemoteUntypedConsumer], host, port).start
+      given("an untyped consumer actor")
+      val consumer = Actor.actorOf(classOf[SampleRemoteUntypedConsumer])
 
-      when("remote untyped consumer publication is triggered")
+      when("registered at the server")
       assert(mandatoryService.awaitEndpointActivation(1) {
-        consumer.sendRequestReply(Message("init", Map("test" -> "init")))
+        remote.register(consumer)
       })
       then("the published untyped consumer is accessible via its endpoint URI")
       val response = CamelContextManager.mandatoryTemplate.requestBodyAndHeader("direct:remote-untyped-consumer", "a", "test", "b")
