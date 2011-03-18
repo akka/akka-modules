@@ -112,6 +112,9 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
   lazy val rabbitModuleConfig      = ModuleConfiguration("com.rabbitmq","rabbitmq-client", "0.9.1", AkkaRepo)
   val localMavenRepo               = LocalMavenRepo // Second exception, also fast! ;-)
 
+  // Temporary
+  val camelStagingRepo             = MavenRepository("Camel Staging Repo", "https://repository.apache.org/content/repositories/orgapachecamel-018/")
+
   // Change to AkkaRepo before release?
   // lazy val akkaRepo                = ModuleConfiguration("se.scalablesolutions.akka", AkkaRepo)
 
@@ -124,7 +127,7 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
 
   lazy val AKKA_VERSION          = "1.1-SNAPSHOT"
   lazy val ATMO_VERSION          = "0.6.2"
-  lazy val CAMEL_VERSION         = "2.8-SNAPSHOT"
+  lazy val CAMEL_VERSION         = "2.7.0"
   lazy val DISPATCH_VERSION      = "0.7.4"
   lazy val HAWT_DISPATCH_VERSION = "1.1"
   lazy val JACKSON_VERSION       = "1.7.1"
