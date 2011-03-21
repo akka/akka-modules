@@ -5,10 +5,9 @@
 package akka.http
 
 import akka.config.Config
-import akka.util.{Bootable}
+import akka.util.{Bootable, AkkaLoader}
 import akka.remote.BootableRemoteActorService
 import akka.actor.BootableActorLoaderService
-import akka.servlet.AkkaLoader
 
 class DefaultAkkaLoader extends AkkaLoader {
   def boot(): Unit = boot(true, new EmbeddedAppServer with BootableActorLoaderService with BootableRemoteActorService)

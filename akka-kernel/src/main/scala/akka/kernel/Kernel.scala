@@ -5,7 +5,7 @@
 package akka.kernel
 
 import akka.http.EmbeddedAppServer
-import akka.servlet.AkkaLoader
+import akka.util.AkkaLoader
 import akka.remote.BootableRemoteActorService
 import akka.actor.BootableActorLoaderService
 import akka.camel.CamelService
