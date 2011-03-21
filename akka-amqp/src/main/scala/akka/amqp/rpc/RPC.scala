@@ -191,12 +191,28 @@ object RPC {
     newProtobufRpcServer(connection, exchangeName, requestHandler.apply _, Some(routingKey), Some(queueName))
   }
 
+  // Needed for Java API usage
+  def newProtobufRpcServer[I <: Message, O <: Message](
+          connection: ActorRef,
+          exchangeName: String,
+          requestHandler: japi.Function[I,O],
+          routingKey: String,
+          queueName: String,
+          channelParameters: ChannelParameters,
+          resultClazz: Class[I]): RpcServerHandle = {
+
+    implicit val manifest = Manifest.classType[I](resultClazz)
+    newProtobufRpcServer(connection, exchangeName, requestHandler.apply _, Some(routingKey), Some(queueName), Some(channelParameters))
+  }
+
   def newProtobufRpcServer[I <: Message, O <: Message](
           connection: ActorRef,
           exchangeName: String,
           requestHandler: I => O,
           routingKey: Option[String] = None,
-          queueName: Option[String] = None)(implicit manifest: Manifest[I]): RpcServerHandle = {
+          queueName: Option[String] = None,
+          channelParameters: Option[ChannelParameters] = None,
+          poolSize: Int = 1)(implicit manifest: Manifest[I]): RpcServerHandle = {
 
     val serializer = new RpcServerSerializer[I, O](
       new FromBinary[I] {
@@ -207,7 +223,7 @@ object RPC {
         def toBinary(t: O) = t.toByteArray
       })
 
-    newRpcServer(connection, exchangeName, serializer, requestHandler, routingKey, queueName)
+    newRpcServer(connection, exchangeName, serializer, requestHandler, routingKey, queueName, channelParameters, poolSize)
   }
 
   // Needed for Java API usage
@@ -273,11 +289,23 @@ object RPC {
     newStringRpcServer(connection, exchangeName, requestHandler.apply _, Some(routingKey), Some(queueName))
   }
 
+  // Needed for Java API usage
+  def newStringRpcServer(connection: ActorRef,
+                        exchangeName: String,
+                        requestHandler: japi.Function[String,String],
+                        routingKey: String,
+                        queueName: String,
+                        channelParameters: ChannelParameters): RpcServerHandle = {
+    newStringRpcServer(connection, exchangeName, requestHandler.apply _, Some(routingKey), Some(queueName), Some(channelParameters))
+  }
+
   def newStringRpcServer(connection: ActorRef,
                         exchangeName: String,
                         requestHandler: String => String,
                         routingKey: Option[String] = None,
-                        queueName: Option[String] = None): RpcServerHandle = {
+                        queueName: Option[String] = None,
+                        channelParameters: Option[ChannelParameters] = None,
+                        poolSize: Int = 1): RpcServerHandle = {
 
     val serializer = new RpcServerSerializer[String, String](
       new FromBinary[String] {
@@ -288,7 +316,7 @@ object RPC {
         def toBinary(t: String) = t.getBytes
       })
 
-    newRpcServer(connection, exchangeName, serializer, requestHandler, routingKey, queueName)
+    newRpcServer(connection, exchangeName, serializer, requestHandler, routingKey, queueName, channelParameters, poolSize)
   }
 
   // Needed for Java API usage
