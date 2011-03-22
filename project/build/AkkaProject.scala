@@ -573,6 +573,8 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
         </dependency>
       </dependencies>
 
+    val commons_codec = Dependencies.commons_codec
+
     override def testOptions = createTestFilter( _.endsWith("Test"))
   }
 
