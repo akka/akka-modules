@@ -107,8 +107,8 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
   lazy val args4jModuleConfig      = ModuleConfiguration("args4j", JBossRepo)
   lazy val scannotationModuleConfig= ModuleConfiguration("org.scannotation", JBossRepo)
   lazy val scalazModuleConfig      = ModuleConfiguration("org.scalaz", ScalaToolsSnapshotRepo)
-  lazy val lzfModuleConfig         = ModuleConfiguration("voldemort.store.compress", "h2-lzf", AkkaRepo)
   lazy val aspectWerkzModuleConfig = ModuleConfiguration("org.codehaus.aspectwerkz", "aspectwerkz", "2.2.3", AkkaRepo)
+  lazy val lzfModuleConfig         = ModuleConfiguration("voldemort.store.compress", "h2-lzf", AkkaRepo)
   lazy val rabbitModuleConfig      = ModuleConfiguration("com.rabbitmq","rabbitmq-client", "0.9.1", AkkaRepo)
   val localMavenRepo               = LocalMavenRepo // Second exception, also fast! ;-)
 
@@ -117,17 +117,14 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
   // -------------------------------------------------------------------------------------------------------------------
 
   lazy val AKKA_VERSION          = "1.1-SNAPSHOT"
-  lazy val ATMO_VERSION          = "0.6.2"
-  lazy val CAMEL_VERSION         = "2.5.0"
-  lazy val DISPATCH_VERSION      = "0.7.4"
-  lazy val HAWT_DISPATCH_VERSION = "1.1"
+  lazy val CAMEL_VERSION         = "2.7.0"
   lazy val JACKSON_VERSION       = "1.7.1"
   lazy val JERSEY_VERSION        = "1.3"
   lazy val MULTIVERSE_VERSION    = "0.6.2"
   lazy val SCALATEST_VERSION     = "1.3"
-  lazy val SLF4J_VERSION         = "1.6.0"
-  lazy val SPRING_VERSION        = "3.0.4.RELEASE"
-  lazy val JETTY_VERSION         = "7.1.6.v20100715"
+  lazy val SLF4J_VERSION         = "1.5.11"
+  lazy val SPRING_VERSION        = "3.0.5.RELEASE"
+  lazy val JETTY_VERSION         = "7.2.2.v20101205"
   lazy val CODEC_VERSION         = "1.4"
 
   // -------------------------------------------------------------------------------------------------------------------
@@ -145,8 +142,6 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
 
     lazy val aopalliance = "aopalliance" % "aopalliance" % "1.0" % "compile" //Public domain
 
-    lazy val aspectwerkz = "org.codehaus.aspectwerkz" % "aspectwerkz" % "2.2.3" % "compile" //LGPL 2.1
-
     lazy val camel_core = "org.apache.camel" % "camel-core" % CAMEL_VERSION % "compile" //ApacheV2
 
     lazy val commons_codec = "commons-codec" % "commons-codec" % CODEC_VERSION % "compile" //ApacheV2
@@ -156,10 +151,6 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
     lazy val commons_pool = "commons-pool" % "commons-pool" % "1.5.4" % "compile" //ApacheV2
 
     lazy val guicey = "org.guiceyfruit" % "guice-all" % "2.0" % "compile" //ApacheV2
-
-    lazy val h2_lzf = "voldemort.store.compress" % "h2-lzf" % "1.0" % "compile" //ApacheV2
-
-    lazy val hawtdispatch = "org.fusesource.hawtdispatch" % "hawtdispatch-scala" % HAWT_DISPATCH_VERSION % "compile" //ApacheV2
 
     lazy val jackson          = "org.codehaus.jackson" % "jackson-mapper-asl" % JACKSON_VERSION % "compile" //ApacheV2
     lazy val jackson_core     = "org.codehaus.jackson" % "jackson-core-asl"   % JACKSON_VERSION % "compile" //ApacheV2
@@ -193,13 +184,10 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
 
     lazy val scalaz = "org.scalaz" % "scalaz-core_2.8.1" % "6.0-SNAPSHOT" % "compile" //New BSD
 
-    lazy val sjson = "net.debasishg" % "sjson_2.8.1" % "0.9.1" % "compile" //ApacheV2
-    lazy val sjson_test = "net.debasishg" % "sjson_2.8.1" % "0.9.1" % "test" //ApacheV2
-
     lazy val spring_beans   = "org.springframework" % "spring-beans"   % SPRING_VERSION % "compile" //ApacheV2
     lazy val spring_context = "org.springframework" % "spring-context" % SPRING_VERSION % "compile" //ApacheV2
 
-    lazy val google_coll    = "com.google.collections" % "google-collections"  % "1.0"             % "compile" //ApacheV2
+    lazy val slf4j          = "org.slf4j"              % "slf4j-simple"        % SLF4J_VERSION     % "compile" // MIT
 
     // Test
 
@@ -256,17 +244,12 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
     " config/" +
     " scala-library.jar" +
     " dist/akka-camel-%s.jar".format(version) +
+    " dist/akka-camel-typed-%s.jar".format(version) +
     " dist/akka-amqp-%s.jar".format(version) +
     " dist/akka-kernel-%s.jar".format(version) +
     " dist/akka-spring-%s.jar".format(version) +
     " dist/akka-scalaz-%s.jar".format(version)
     )
-
-  //Exclude slf4j1.5.11 from the classpath, it's conflicting...
-  override def fullClasspath(config: Configuration): PathFinder = {
-    super.fullClasspath(config) ---
-    (super.fullClasspath(config) ** "slf4j*1.5.11.jar")
-  }
 
   override def mainResources = super.mainResources +++
           (info.projectPath / "config").descendentsExcept("*", "logback-test.xml")
@@ -367,10 +350,12 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
   class AkkaCamelProject(info: ProjectInfo) extends AkkaModulesDefaultProject(info, distPath) {
     val akka_actor = Dependencies.akka_actor
     val camel_core = Dependencies.camel_core
+    val slf4j      = Dependencies.slf4j
 
     // testing
     val junit     = Dependencies.junit
     val scalatest = Dependencies.scalatest
+
     override def testOptions = createTestFilter( _.endsWith("Test"))
   }
 
@@ -385,6 +370,7 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
     // testing
     val junit     = Dependencies.junit
     val scalatest = Dependencies.scalatest
+
     override def testOptions = createTestFilter( _.endsWith("Test"))
   }
 
@@ -529,7 +515,6 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
   class AkkaScalazProject(info: ProjectInfo) extends AkkaModulesDefaultProject(info, distPath) {
     val akka_actor   = Dependencies.akka_actor
     val scalaz       = Dependencies.scalaz
-    val hawtdispatch = Dependencies.hawtdispatch
 
     // testing
     val junit             = Dependencies.junit
@@ -569,9 +554,11 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
         </dependency>
         <dependency org="org.apache.camel" name="camel-jms" rev={CAMEL_VERSION}>
         </dependency>
-        <dependency org="org.apache.activemq" name="activemq-core" rev="5.3.2">
+        <dependency org="org.apache.activemq" name="activemq-core" rev="5.4.2">
         </dependency>
       </dependencies>
+
+    val commons_codec = Dependencies.commons_codec
 
     override def testOptions = createTestFilter( _.endsWith("Test"))
   }
