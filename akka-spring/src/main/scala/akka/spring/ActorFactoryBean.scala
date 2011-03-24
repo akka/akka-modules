@@ -9,10 +9,13 @@ import org.springframework.beans.factory.config.AbstractFactoryBean
 import org.springframework.context.{ApplicationContext,ApplicationContextAware}
 import org.springframework.util.StringUtils
 
-import akka.actor.{ActorRef, ActorRegistry, AspectInitRegistry, EventHandler, TypedActorConfiguration, TypedActor,Actor}
+import akka.actor.{ActorRef, ActorRegistry, AspectInitRegistry, TypedActorConfiguration, TypedActor,Actor}
+import akka.event.EventHandler
 import akka.dispatch.MessageDispatcher
 import akka.util.Duration
+
 import scala.reflect.BeanProperty
+
 import java.net.InetSocketAddress
 
 /**

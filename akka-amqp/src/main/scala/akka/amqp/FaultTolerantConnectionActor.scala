@@ -9,7 +9,8 @@ import java.io.IOException
 import com.rabbitmq.client._
 import akka.amqp.AMQP.ConnectionParameters
 import akka.config.Supervision.{ Permanent, OneForOneStrategy }
-import akka.actor.{Scheduler, Exit, Actor, EventHandler}
+import akka.actor.{Scheduler, Exit, Actor}
+import akka.event.EventHandler
 import java.util.concurrent.{ScheduledFuture, TimeUnit}
 
 private[amqp] class FaultTolerantConnectionActor(connectionParameters: ConnectionParameters) extends Actor {

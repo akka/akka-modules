@@ -6,7 +6,7 @@ package akka.amqp
 
 import collection.JavaConversions
 
-import akka.actor.EventHandler
+import akka.event.EventHandler
 
 import com.rabbitmq.client.AMQP.BasicProperties
 import com.rabbitmq.client.{Channel, Envelope, DefaultConsumer}

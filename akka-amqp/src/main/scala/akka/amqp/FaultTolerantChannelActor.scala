@@ -6,7 +6,8 @@ package akka.amqp
 
 import collection.JavaConversions
 import java.lang.Throwable
-import akka.actor.{Actor, EventHandler}
+import akka.actor.Actor
+import akka.event.EventHandler
 import Actor._
 import com.rabbitmq.client.{ShutdownSignalException, Channel, ShutdownListener}
 import scala.PartialFunction

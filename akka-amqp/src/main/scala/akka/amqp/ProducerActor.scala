@@ -6,7 +6,7 @@ package akka.amqp
 
 import com.rabbitmq.client._
 
-import akka.actor.EventHandler
+import akka.event.EventHandler
 import akka.amqp.AMQP.ProducerParameters
 
 private[amqp] class ProducerActor(producerParameters: ProducerParameters)

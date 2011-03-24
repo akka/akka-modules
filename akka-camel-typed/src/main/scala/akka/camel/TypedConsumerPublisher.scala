@@ -7,6 +7,7 @@ package akka.camel
 import java.lang.reflect.Method
 
 import akka.actor._
+import akka.event.EventHandler
 import akka.camel.component.TypedActorComponent
 
 /**

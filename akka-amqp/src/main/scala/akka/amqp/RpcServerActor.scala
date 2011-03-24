@@ -5,7 +5,9 @@
 package akka.amqp
 
 import rpc.RPC.RpcServerSerializer
-import akka.actor.{ActorRef, Actor, EventHandler}
+import akka.actor.{ActorRef, Actor}
+import akka.event.EventHandler
+
 import com.rabbitmq.client.AMQP.BasicProperties
 
 class RpcServerActor[I,O](
