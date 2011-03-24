@@ -117,6 +117,7 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
   // -------------------------------------------------------------------------------------------------------------------
 
   lazy val AKKA_VERSION          = "1.1-SNAPSHOT"
+  lazy val HAWT_DISPATCH_VERSION = "1.1"
   lazy val CAMEL_VERSION         = "2.7.0"
   lazy val JACKSON_VERSION       = "1.7.1"
   lazy val JERSEY_VERSION        = "1.3"
@@ -151,6 +152,8 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
     lazy val commons_pool = "commons-pool" % "commons-pool" % "1.5.4" % "compile" //ApacheV2
 
     lazy val guicey = "org.guiceyfruit" % "guice-all" % "2.0" % "compile" //ApacheV2
+
+    lazy val hawtdispatch = "org.fusesource.hawtdispatch" % "hawtdispatch-scala" % HAWT_DISPATCH_VERSION % "compile" //ApacheV2
 
     lazy val jackson          = "org.codehaus.jackson" % "jackson-mapper-asl" % JACKSON_VERSION % "compile" //ApacheV2
     lazy val jackson_core     = "org.codehaus.jackson" % "jackson-core-asl"   % JACKSON_VERSION % "compile" //ApacheV2
@@ -216,6 +219,7 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
   lazy val akka_kernel      = project("akka-kernel", "akka-kernel", new AkkaKernelProject(_), akka_spring, akka_amqp)
   lazy val akka_osgi        = project("akka-osgi", "akka-osgi", new AkkaOSGiParentProject(_))
   lazy val akka_scalaz      = project("akka-scalaz", "akka-scalaz", new AkkaScalazProject(_))
+  lazy val akka_disp_extras = project("akka-dispatcher-extras", "akka-dispatcher-extras", new AkkaDispatcherExtrasProject(_))
   lazy val akka_samples     = project("akka-samples", "akka-samples", new AkkaSamplesParentProject(_))
 
   // -------------------------------------------------------------------------------------------------------------------
@@ -520,6 +524,15 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
     val junit             = Dependencies.junit
     val scalatest         = Dependencies.scalatest
     val scalaz_scalacheck = Dependencies.scalaz_scalacheck
+  }
+
+  class AkkaDispatcherExtrasProject(info: ProjectInfo) extends AkkaModulesDefaultProject(info, distPath) {
+    val akka_actor    = Dependencies.akka_actor
+    val hawt_dispatch = Dependencies.hawtdispatch
+
+    // testing
+    val junit             = Dependencies.junit
+    val scalatest         = Dependencies.scalatest
   }
 
   // -------------------------------------------------------------------------------------------------------------------
