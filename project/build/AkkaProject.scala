@@ -8,7 +8,6 @@ import java.util.jar.Attributes
 import java.util.jar.Attributes.Name._
 import sbt._
 import sbt.CompileOrder._
-import spde._
 
 class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
 
@@ -546,11 +545,6 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
   // -------------------------------------------------------------------------------------------------------------------
   // Examples
   // -------------------------------------------------------------------------------------------------------------------
-
-  class AkkaSampleAntsProject(info: ProjectInfo) extends DefaultSpdeProject(info) {
-    override def disableCrossPaths = true
-    override def spdeSourcePath = mainSourcePath / "spde"
-  }
 
   class AkkaSampleCamelProject(info: ProjectInfo) extends AkkaModulesDefaultProject(info, deployPath) {
     //Must be like this to be able to exclude the geronimo-servlet_2.4_spec which is a too old Servlet spec
