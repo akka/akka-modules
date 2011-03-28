@@ -20,13 +20,13 @@ sealed trait FutureW[A] extends PimpedType[Future[A]] {
 
   def liftValidation: Future[Validation[Throwable, A]] = {
     val f = new DefaultCompletableFuture[Validation[Throwable, A]](value.timeoutInNanos, NANOS)
-    value onComplete (r => f.completeWithResult(Scalaz.validation(r.value.get)))
+    value onComplete (r => f.completeWithResult(validation(r.value.get)))
     f
   }
 
   def liftValidationNel: Future[Validation[NonEmptyList[Throwable], A]] = {
     val f = new DefaultCompletableFuture[Validation[NonEmptyList[Throwable], A]](value.timeoutInNanos, NANOS)
-    value onComplete (r => f.completeWithResult(Scalaz.validation(r.value.get).liftFailNel))
+    value onComplete (r => f.completeWithResult(validation(r.value.get).liftFailNel))
     f
   }
 
@@ -38,9 +38,6 @@ sealed trait FutureW[A] extends PimpedType[Future[A]] {
     value onComplete (f.completeWith(_))
     f
   }
-
-  // Gives Future the same get method as Java Future and Scalaz Promise
-  def get: A = value.await.resultOrException.get
 
   def getOrElse[B >: A](default: => B): B =
     value.awaitValue.flatMap(_.right.toOption) getOrElse default
