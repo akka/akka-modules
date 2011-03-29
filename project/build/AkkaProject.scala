@@ -103,6 +103,7 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
   lazy val args4jModuleConfig      = ModuleConfiguration("args4j", JBossRepo)
   lazy val scannotationModuleConfig= ModuleConfiguration("org.scannotation", JBossRepo)
   lazy val scalazModuleConfig      = ModuleConfiguration("org.scalaz", ScalaToolsSnapshotRepo)
+  lazy val scalacheckModuleConfig  = ModuleConfiguration("org.scala-tools.testing", "scalacheck_2.9.0.RC1", ScalaToolsSnapshotRepo)
   lazy val aspectWerkzModuleConfig = ModuleConfiguration("org.codehaus.aspectwerkz", "aspectwerkz", "2.2.3", AkkaRepo)
   lazy val lzfModuleConfig         = ModuleConfiguration("voldemort.store.compress", "h2-lzf", AkkaRepo)
   lazy val rabbitModuleConfig      = ModuleConfiguration("com.rabbitmq","rabbitmq-client", "0.9.1", AkkaRepo)
@@ -201,6 +202,7 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
     lazy val scalatest      = "org.scalatest"          % "scalatest"           % SCALATEST_VERSION % "test" //ApacheV2
 
     lazy val scalaz_scalacheck = "org.scalaz" % "scalaz-scalacheck-binding_2.9.0.RC1" % "6.0-SNAPSHOT" % "test" //New BSD
+    lazy val scalacheck = "org.scala-tools.testing" % "scalacheck_2.9.0.RC1" % "1.9-SNAPSHOT" % "test" // New BSD
   }
 
   // -------------------------------------------------------------------------------------------------------------------
@@ -519,6 +521,7 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
     val junit             = Dependencies.junit
     val scalatest         = Dependencies.scalatest
     val scalaz_scalacheck = Dependencies.scalaz_scalacheck
+    val scalacheck        = Dependencies.scalacheck
   }
 
   class AkkaDispatcherExtrasProject(info: ProjectInfo) extends AkkaModulesDefaultProject(info, distPath) {
