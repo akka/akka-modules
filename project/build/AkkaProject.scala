@@ -19,10 +19,8 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
   override def compileOptions = super.compileOptions ++
     Seq("-deprecation",
         "-Xmigration",
-        "-Xcheckinit",
         "-Xstrict-warnings",
         "-optimise", //Uncomment this for release compile
-        "-Xwarninit",
         "-encoding", "utf8")
         .map(CompileOption(_))
   override def javaCompileOptions = JavaCompileOption("-Xlint:unchecked") :: super.javaCompileOptions.toList
