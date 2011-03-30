@@ -65,7 +65,6 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
   object Repositories {
     lazy val AkkaRepo               = MavenRepository("Akka Repository", "http://akka.io/repository")
     lazy val ScalaToolsRepo         = MavenRepository("Scala-Tools Repo", "http://scala-tools.org/repo-releases")
-    lazy val ScalaToolsSnapshotRepo = MavenRepository("Scala-Tools Snapshot Repo", "http://scala-tools.org/repo-snapshots")
     lazy val CodehausRepo           = MavenRepository("Codehaus Repo", "http://repository.codehaus.org")
     lazy val LocalMavenRepo         = MavenRepository("Local Maven Repo", (Path.userHome / ".m2" / "repository").asURL.toString)
     lazy val GuiceyFruitRepo        = MavenRepository("GuiceyFruit Repo", "http://guiceyfruit.googlecode.com/svn/repo/releases/")
@@ -74,7 +73,6 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
     lazy val SonatypeSnapshotRepo   = MavenRepository("Sonatype OSS Repo", "http://oss.sonatype.org/content/repositories/releases")
     lazy val SunJDMKRepo            = MavenRepository("Sun JDMK Repo", "http://wp5.e-taxonomy.eu/cdmlib/mavenrepo")
     lazy val ClojarsRepo            = MavenRepository("Clojars Repo", "http://clojars.org/repo")
-    lazy val ScalaToolsRelRepo      = MavenRepository("Scala Tools Releases Repo", "http://scala-tools.org/repo-releases")
   }
 
   // -------------------------------------------------------------------------------------------------------------------
@@ -96,14 +94,14 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
   lazy val jerseyModuleConfig      = ModuleConfiguration("com.sun.jersey", JavaNetRepo)
   lazy val multiverseModuleConfig  = ModuleConfiguration("org.multiverse", CodehausRepo)
   lazy val nettyModuleConfig       = ModuleConfiguration("org.jboss.netty", JBossRepo)
-  lazy val scalaTestModuleConfig   = ModuleConfiguration("org.scalatest", ScalaToolsSnapshotRepo)
-  lazy val sjsonModuleConfig       = ModuleConfiguration("net.debasishg", ScalaToolsRelRepo)
+  lazy val scalaTestModuleConfig   = ModuleConfiguration("org.scalatest", ScalaToolsSnapshots)
+  lazy val sjsonModuleConfig       = ModuleConfiguration("net.debasishg", ScalaToolsRepo)
   lazy val atomikosModuleConfig    = ModuleConfiguration("com.atomikos",sbt.DefaultMavenRepository)
   lazy val timeModuleConfig        = ModuleConfiguration("org.scala-tools", "time", ScalaToolsRepo)
   lazy val args4jModuleConfig      = ModuleConfiguration("args4j", JBossRepo)
   lazy val scannotationModuleConfig= ModuleConfiguration("org.scannotation", JBossRepo)
-  lazy val scalazModuleConfig      = ModuleConfiguration("org.scalaz", ScalaToolsSnapshotRepo)
-  lazy val scalacheckModuleConfig  = ModuleConfiguration("org.scala-tools.testing", "scalacheck_2.9.0.RC1", ScalaToolsSnapshotRepo)
+  lazy val scalazModuleConfig      = ModuleConfiguration("org.scalaz", ScalaToolsSnapshots)
+  lazy val scalacheckModuleConfig  = ModuleConfiguration("org.scala-tools.testing", "scalacheck_2.9.0.RC1", ScalaToolsSnapshots)
   lazy val aspectWerkzModuleConfig = ModuleConfiguration("org.codehaus.aspectwerkz", "aspectwerkz", "2.2.3", AkkaRepo)
   lazy val lzfModuleConfig         = ModuleConfiguration("voldemort.store.compress", "h2-lzf", AkkaRepo)
   lazy val rabbitModuleConfig      = ModuleConfiguration("com.rabbitmq","rabbitmq-client", "0.9.1", AkkaRepo)
@@ -217,6 +215,7 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
   lazy val akka_osgi        = project("akka-osgi", "akka-osgi", new AkkaOSGiParentProject(_))
   lazy val akka_scalaz      = project("akka-scalaz", "akka-scalaz", new AkkaScalazProject(_))
   lazy val akka_disp_extras = project("akka-dispatcher-extras", "akka-dispatcher-extras", new AkkaDispatcherExtrasProject(_))
+  lazy val akka_sbt_plugin  = project("akka-sbt-plugin",  "akka-sbt-plugin",  new AkkaSbtPluginProject(_))
   lazy val akka_samples     = project("akka-samples", "akka-samples", new AkkaSamplesParentProject(_))
 
   // -------------------------------------------------------------------------------------------------------------------
@@ -534,6 +533,35 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
   }
 
   // -------------------------------------------------------------------------------------------------------------------
+  // akka-sbt-plugin subproject
+  // -------------------------------------------------------------------------------------------------------------------
+
+  class AkkaSbtPluginProject(info: ProjectInfo) extends PluginProject(info) {
+    val srcManagedScala = "src_managed" / "main" / "scala"
+
+    lazy val generateAkkaSbtPlugin = {
+      val cleanSrcManaged = cleanTask(srcManagedScala) named ("clean src_managed")
+      task {
+        info.parent match {
+          case Some(project: DefaultProject) =>
+            xsbt.FileUtilities.write((srcManagedScala / "AkkaProject.scala").asFile,
+                                     GenerateAkkaSbtPlugin(project, AKKA_VERSION))
+          case _ =>
+        }
+        None
+      } dependsOn cleanSrcManaged
+    }
+
+    override def mainSourceRoots = super.mainSourceRoots +++ srcManagedScala
+    override def compileAction = super.compileAction dependsOn(generateAkkaSbtPlugin)
+
+    lazy val publishRelease = {
+      val releaseConfiguration = new DefaultPublishConfiguration(localReleaseRepository, "release", false)
+      publishTask(publishIvyModule, releaseConfiguration) dependsOn (deliver, publishLocal, makePom)
+    }
+  }
+
+  // -------------------------------------------------------------------------------------------------------------------
   // Test
   // -------------------------------------------------------------------------------------------------------------------
 
@@ -729,5 +757,40 @@ trait McPom { self: DefaultProject =>
     }
 
     rewrite(rule)(node.theSeq)(0)
+  }
+}
+
+object GenerateAkkaSbtPlugin {
+  def apply(project: DefaultProject, akkaVersion: String): String = {
+    val (repos, configs) = project.moduleConfigurations.foldLeft((Set.empty[String], Set.empty[String])){
+      case ((repos, configs), ModuleConfiguration(org, name, rev, MavenRepository(repoName, repoPath))) =>
+        val repoId = repoName.replaceAll("""[^a-zA-Z]""", "_")
+        val configId = org.replaceAll("""[^a-zA-Z]""", "_")
+        (repos + ("  lazy val "+repoId+" = MavenRepository(\""+repoName+"\", \""+repoPath+"\")"),
+        configs + ("  lazy val "+configId+" = ModuleConfiguration(\""+org+"\", \""+name+"\", \""+rev+"\", "+repoId+")"))
+      case (x, _) => x
+    }
+    """|import sbt._
+       |
+       |object AkkaRepositories {
+       |%s
+       |}
+       |
+       |trait AkkaBaseProject extends BasicScalaProject {
+       |  import AkkaRepositories._
+       |
+       |%s
+       |}
+       |
+       |trait AkkaProject extends AkkaBaseProject {
+       |  val akkaVersion = "%s"
+       |
+       |  def akkaModule(module: String) = "se.scalablesolutions.akka" %% ("akka-" + module) %% akkaVersion
+       |
+       |  val akkaActor = akkaModule("actor")
+       |}
+       |""".stripMargin.format(repos.mkString("\n"),
+                               configs.mkString("\n"),
+                               akkaVersion)
   }
 }
