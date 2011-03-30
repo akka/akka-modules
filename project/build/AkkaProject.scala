@@ -762,6 +762,11 @@ trait McPom { self: DefaultProject =>
 
 object GenerateAkkaSbtPlugin {
   def apply(project: DefaultProject, akkaVersion: String): String = {
+    val akkaModules = project.subProjects.values.map(_.name).flatMap{
+      case "akka-sbt-plugin" => Iterator.empty
+      case s if s.startsWith("akka-") => Iterator.single(s.drop(5))
+      case _ => Iterator.empty
+    }
     val (repos, configs) = project.moduleConfigurations.foldLeft((Set.empty[String], Set.empty[String])){
       case ((repos, configs), ModuleConfiguration(org, name, rev, MavenRepository(repoName, repoPath))) =>
         val repoId = repoName.replaceAll("""[^a-zA-Z]""", "_")
@@ -784,13 +789,21 @@ object GenerateAkkaSbtPlugin {
        |
        |trait AkkaProject extends AkkaBaseProject {
        |  val akkaVersion = "%s"
+       |  val akkaModulesVersion = "%s"
        |
-       |  def akkaModule(module: String) = "se.scalablesolutions.akka" %% ("akka-" + module) %% akkaVersion
+       |  def akkaModule(module: String) = "se.scalablesolutions.akka" %% ("akka-" + module) %% {
+       |    if (Set(%s).contains(module))
+       |      akkaModulesVersion
+       |    else
+       |      akkaVersion
+       |  }
        |
        |  val akkaActor = akkaModule("actor")
        |}
        |""".stripMargin.format(repos.mkString("\n"),
                                configs.mkString("\n"),
-                               akkaVersion)
+                               akkaVersion,
+                               project.version.toString,
+                               akkaModules.map("\"" + _ + "\"").mkString(", "))
   }
 }
