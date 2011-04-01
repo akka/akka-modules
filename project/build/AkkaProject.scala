@@ -76,6 +76,22 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
   }
 
   // -------------------------------------------------------------------------------------------------------------------
+  // Versions
+  // -------------------------------------------------------------------------------------------------------------------
+
+  lazy val AKKA_VERSION          = "1.1-SNAPSHOT"
+  lazy val HAWT_DISPATCH_VERSION = "1.1"
+  lazy val CAMEL_VERSION         = "2.7.0"
+  lazy val JACKSON_VERSION       = "1.7.1"
+  lazy val JERSEY_VERSION        = "1.3"
+  lazy val MULTIVERSE_VERSION    = "0.6.2"
+  lazy val SCALATEST_VERSION     = "1.4-SNAPSHOT"
+  lazy val SLF4J_VERSION         = "1.5.11"
+  lazy val SPRING_VERSION        = "3.0.5.RELEASE"
+  lazy val JETTY_VERSION         = "7.2.2.v20101205"
+  lazy val CODEC_VERSION         = "1.4"
+
+  // -------------------------------------------------------------------------------------------------------------------
   // ModuleConfigurations
   // Every dependency that cannot be resolved from the built-in repositories (Maven Central and Scala Tools Releases)
   // must be resolved from a ModuleConfiguration. This will result in a significant acceleration of the update action.
@@ -94,34 +110,18 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
   lazy val jerseyModuleConfig      = ModuleConfiguration("com.sun.jersey", JavaNetRepo)
   lazy val multiverseModuleConfig  = ModuleConfiguration("org.multiverse", CodehausRepo)
   lazy val nettyModuleConfig       = ModuleConfiguration("org.jboss.netty", JBossRepo)
-  lazy val scalaTestModuleConfig   = ModuleConfiguration("org.scalatest", ScalaToolsSnapshots)
+  lazy val scalaTestModuleConfig   = ModuleConfiguration("org.scalatest", "scalatest", SCALATEST_VERSION, ScalaToolsSnapshots)
   lazy val sjsonModuleConfig       = ModuleConfiguration("net.debasishg", ScalaToolsRepo)
   lazy val atomikosModuleConfig    = ModuleConfiguration("com.atomikos",sbt.DefaultMavenRepository)
   lazy val timeModuleConfig        = ModuleConfiguration("org.scala-tools", "time", ScalaToolsRepo)
   lazy val args4jModuleConfig      = ModuleConfiguration("args4j", JBossRepo)
   lazy val scannotationModuleConfig= ModuleConfiguration("org.scannotation", JBossRepo)
   lazy val scalazModuleConfig      = ModuleConfiguration("org.scalaz", ScalaToolsSnapshots)
-  lazy val scalacheckModuleConfig  = ModuleConfiguration("org.scala-tools.testing", "scalacheck_2.9.0.RC1", ScalaToolsSnapshots)
+  lazy val scalacheckModuleConfig  = ModuleConfiguration("org.scala-tools.testing", "scalacheck_2.9.0.RC1", "1.9-SNAPSHOT", ScalaToolsSnapshots)
   lazy val aspectWerkzModuleConfig = ModuleConfiguration("org.codehaus.aspectwerkz", "aspectwerkz", "2.2.3", AkkaRepo)
   lazy val lzfModuleConfig         = ModuleConfiguration("voldemort.store.compress", "h2-lzf", AkkaRepo)
   lazy val rabbitModuleConfig      = ModuleConfiguration("com.rabbitmq","rabbitmq-client", "0.9.1", AkkaRepo)
   val localMavenRepo               = LocalMavenRepo // Second exception, also fast! ;-)
-
-  // -------------------------------------------------------------------------------------------------------------------
-  // Versions
-  // -------------------------------------------------------------------------------------------------------------------
-
-  lazy val AKKA_VERSION          = "1.1-SNAPSHOT"
-  lazy val HAWT_DISPATCH_VERSION = "1.1"
-  lazy val CAMEL_VERSION         = "2.7.0"
-  lazy val JACKSON_VERSION       = "1.7.1"
-  lazy val JERSEY_VERSION        = "1.3"
-  lazy val MULTIVERSE_VERSION    = "0.6.2"
-  lazy val SCALATEST_VERSION     = "1.4-SNAPSHOT"
-  lazy val SLF4J_VERSION         = "1.5.11"
-  lazy val SPRING_VERSION        = "3.0.5.RELEASE"
-  lazy val JETTY_VERSION         = "7.2.2.v20101205"
-  lazy val CODEC_VERSION         = "1.4"
 
   // -------------------------------------------------------------------------------------------------------------------
   // Dependencies
@@ -768,11 +768,13 @@ object GenerateAkkaSbtPlugin {
       case _ => Iterator.empty
     }
     val (repos, configs) = project.moduleConfigurations.foldLeft((Set.empty[String], Set.empty[String])){
-      case ((repos, configs), ModuleConfiguration(org, name, rev, MavenRepository(repoName, repoPath))) =>
+      case ((repos, configs), ModuleConfiguration(org, name, ver, MavenRepository(repoName, repoPath))) =>
         val repoId = repoName.replaceAll("""[^a-zA-Z]""", "_")
-        val configId = org.replaceAll("""[^a-zA-Z]""", "_")
+        val configId = org.replaceAll("""[^a-zA-Z]""", "_") +
+                         (if (name == "*") "" else ("_" + name.replaceAll("""[^a-zA-Z0-9]""", "_") +
+                           (if (ver == "*") "" else ("_" + ver.replaceAll("""[^a-zA-Z0-9]""", "_")))))
         (repos + ("  lazy val "+repoId+" = MavenRepository(\""+repoName+"\", \""+repoPath+"\")"),
-        configs + ("  lazy val "+configId+" = ModuleConfiguration(\""+org+"\", \""+name+"\", \""+rev+"\", "+repoId+")"))
+        configs + ("  lazy val "+configId+" = ModuleConfiguration(\""+org+"\", \""+name+"\", \""+ver+"\", "+repoId+")"))
       case (x, _) => x
     }
     """|import sbt._
