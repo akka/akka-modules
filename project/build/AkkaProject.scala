@@ -262,6 +262,9 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
   //override def defaultPublishRepository = Some(Resolver.file("maven-local", Path.userHome / ".m2" / "repository" asFile))
   val publishTo = Resolver.file("maven-local", Path.userHome / ".m2" / "repository" asFile)
 
+  override def deliverProjectDependencies =
+    super.deliverProjectDependencies.toList - akka_sbt_plugin.projectID
+
   val sourceArtifact = Artifact(artifactID, "src", "jar", Some("sources"), Nil, None)
   val docsArtifact = Artifact(artifactID, "doc", "jar", Some("docs"), Nil, None)
 
@@ -634,7 +637,8 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
 
   def allArtifacts = {
     Path.fromFile(buildScalaInstance.libraryJar) +++
-    (removeDupEntries(runClasspath filter ClasspathUtilities.isArchive) +++
+    (removeDupEntries(runClasspath filter ClasspathUtilities.isArchive) ---
+    (akka_sbt_plugin.runClasspath filter ClasspathUtilities.isArchive) +++
     ((outputPath ##) / defaultJarName) +++
     mainResources +++
     mainDependencies.scalaJars +++
