@@ -79,7 +79,7 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
   // Versions
   // -------------------------------------------------------------------------------------------------------------------
 
-  lazy val AKKA_VERSION          = "1.1-M1"
+  lazy val AKKA_VERSION          = "1.1-SNAPSHOT"
   lazy val HAWT_DISPATCH_VERSION = "1.1"
   lazy val CAMEL_VERSION         = "2.7.0"
   lazy val JACKSON_VERSION       = "1.7.1"
