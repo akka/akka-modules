@@ -100,6 +100,7 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
 
   import Repositories._
 
+  // release: lazy val akkaModuleConfig = ModuleConfiguration("se.scalablesolutions.akka", AkkaRepo)
   lazy val jettyModuleConfig       = ModuleConfiguration("org.eclipse.jetty", sbt.DefaultMavenRepository)
   lazy val guiceyFruitModuleConfig = ModuleConfiguration("org.guiceyfruit", GuiceyFruitRepo)
   lazy val jbossModuleConfig       = ModuleConfiguration("org.jboss", JBossRepo)
