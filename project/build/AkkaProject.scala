@@ -9,6 +9,23 @@ import java.util.jar.Attributes.Name._
 import sbt._
 import sbt.CompileOrder._
 
+// -------------------------------------------------------------------------------------------------------------------
+// All repositories *must* go here! See ModuleConigurations below.
+// -------------------------------------------------------------------------------------------------------------------
+
+object Repositories {
+  lazy val AkkaRepo               = MavenRepository("Akka Repository", "http://akka.io/repository")
+  lazy val ScalaToolsRepo         = MavenRepository("Scala-Tools Repo", "http://scala-tools.org/repo-releases")
+  lazy val CodehausRepo           = MavenRepository("Codehaus Repo", "http://repository.codehaus.org")
+  lazy val LocalMavenRepo         = MavenRepository("Local Maven Repo", (Path.userHome / ".m2" / "repository").asURL.toString)
+  lazy val GuiceyFruitRepo        = MavenRepository("GuiceyFruit Repo", "http://guiceyfruit.googlecode.com/svn/repo/releases/")
+  lazy val JBossRepo              = MavenRepository("JBoss Repo", "http://repository.jboss.org/nexus/content/groups/public/")
+  lazy val JavaNetRepo            = MavenRepository("java.net Repo", "http://download.java.net/maven/2")
+  lazy val SonatypeSnapshotRepo   = MavenRepository("Sonatype OSS Repo", "http://oss.sonatype.org/content/repositories/releases")
+  lazy val SunJDMKRepo            = MavenRepository("Sun JDMK Repo", "http://wp5.e-taxonomy.eu/cdmlib/mavenrepo")
+  lazy val ClojarsRepo            = MavenRepository("Clojars Repo", "http://clojars.org/repo")
+}
+
 class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
 
   // -------------------------------------------------------------------------------------------------------------------
@@ -59,23 +76,6 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
   } dependsOn (`package`) describedAs("Zips up the distribution.")
 
   // -------------------------------------------------------------------------------------------------------------------
-  // All repositories *must* go here! See ModuleConigurations below.
-  // -------------------------------------------------------------------------------------------------------------------
-
-  object Repositories {
-    lazy val AkkaRepo               = MavenRepository("Akka Repository", "http://akka.io/repository")
-    lazy val ScalaToolsRepo         = MavenRepository("Scala-Tools Repo", "http://scala-tools.org/repo-releases")
-    lazy val CodehausRepo           = MavenRepository("Codehaus Repo", "http://repository.codehaus.org")
-    lazy val LocalMavenRepo         = MavenRepository("Local Maven Repo", (Path.userHome / ".m2" / "repository").asURL.toString)
-    lazy val GuiceyFruitRepo        = MavenRepository("GuiceyFruit Repo", "http://guiceyfruit.googlecode.com/svn/repo/releases/")
-    lazy val JBossRepo              = MavenRepository("JBoss Repo", "http://repository.jboss.org/nexus/content/groups/public/")
-    lazy val JavaNetRepo            = MavenRepository("java.net Repo", "http://download.java.net/maven/2")
-    lazy val SonatypeSnapshotRepo   = MavenRepository("Sonatype OSS Repo", "http://oss.sonatype.org/content/repositories/releases")
-    lazy val SunJDMKRepo            = MavenRepository("Sun JDMK Repo", "http://wp5.e-taxonomy.eu/cdmlib/mavenrepo")
-    lazy val ClojarsRepo            = MavenRepository("Clojars Repo", "http://clojars.org/repo")
-  }
-
-  // -------------------------------------------------------------------------------------------------------------------
   // Versions
   // -------------------------------------------------------------------------------------------------------------------
 
@@ -100,7 +100,6 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
 
   import Repositories._
 
-  // release: lazy val akkaModuleConfig = ModuleConfiguration("se.scalablesolutions.akka", AkkaRepo)
   lazy val jettyModuleConfig       = ModuleConfiguration("org.eclipse.jetty", sbt.DefaultMavenRepository)
   lazy val guiceyFruitModuleConfig = ModuleConfiguration("org.guiceyfruit", GuiceyFruitRepo)
   lazy val jbossModuleConfig       = ModuleConfiguration("org.jboss", JBossRepo)
@@ -536,13 +535,15 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
   class AkkaSbtPluginProject(info: ProjectInfo) extends PluginProject(info) {
     val srcManagedScala = "src_managed" / "main" / "scala"
 
+    lazy val addAkkaConfig = systemOptional[Boolean]("akka.release", false)
+
     lazy val generateAkkaSbtPlugin = {
       val cleanSrcManaged = cleanTask(srcManagedScala) named ("clean src_managed")
       task {
         info.parent match {
           case Some(project: DefaultProject) =>
             xsbt.FileUtilities.write((srcManagedScala / "AkkaProject.scala").asFile,
-                                     GenerateAkkaSbtPlugin(project, AKKA_VERSION))
+                                     GenerateAkkaSbtPlugin(project, AKKA_VERSION, addAkkaConfig.value))
           case _ =>
         }
         None
@@ -759,13 +760,17 @@ trait McPom { self: DefaultProject =>
 }
 
 object GenerateAkkaSbtPlugin {
-  def apply(project: DefaultProject, akkaVersion: String): String = {
+  def apply(project: DefaultProject, akkaVersion: String, addAkkaConfig: Boolean): String = {
+    val extraConfigs = {
+      if (addAkkaConfig) Set(ModuleConfiguration("se.scalablesolutions.akka", Repositories.AkkaRepo))
+      else Set.empty[ModuleConfiguration]
+    }
     val akkaModules = project.subProjects.values.map(_.name).flatMap{
       case "akka-sbt-plugin" => Iterator.empty
       case s if s.startsWith("akka-") => Iterator.single(s.drop(5))
       case _ => Iterator.empty
     }
-    val (repos, configs) = project.moduleConfigurations.foldLeft((Set.empty[String], Set.empty[String])){
+    val (repos, configs) = (project.moduleConfigurations ++ extraConfigs).foldLeft((Set.empty[String], Set.empty[String])){
       case ((repos, configs), ModuleConfiguration(org, name, ver, MavenRepository(repoName, repoPath))) =>
         val repoId = repoName.replaceAll("""[^a-zA-Z]""", "_")
         val configId = org.replaceAll("""[^a-zA-Z]""", "_") +

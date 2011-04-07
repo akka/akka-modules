@@ -1,3 +1,4 @@
+set akka.release true
 clean
 sh rm -rf dist
 sh rm -rf deploy
