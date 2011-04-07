@@ -259,24 +259,24 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
 
   // ------------------------------------------------------------
   // publishing
+  // ------------------------------------------------------------
+
   override def managedStyle = ManagedStyle.Maven
-  //override def defaultPublishRepository = Some(Resolver.file("maven-local", Path.userHome / ".m2" / "repository" asFile))
-  val publishTo = Resolver.file("maven-local", Path.userHome / ".m2" / "repository" asFile)
 
-  override def deliverProjectDependencies =
-    super.deliverProjectDependencies.toList - akka_sbt_plugin.projectID
+  lazy val akkaPublishRepository = systemOptional[String]("akka.publish.repository", "default")
+  lazy val akkaPublishCredentials = systemOptional[String]("akka.publish.credentials", "none")
 
-  val sourceArtifact = Artifact(artifactID, "src", "jar", Some("sources"), Nil, None)
-  val docsArtifact = Artifact(artifactID, "doc", "jar", Some("docs"), Nil, None)
+  if (akkaPublishCredentials.value != "none") Credentials(akkaPublishCredentials.value, log)
 
-  // Credentials(Path.userHome / ".akka_publish_credentials", log)
+  def publishToRepository = {
+    val repoUrl = akkaPublishRepository.value
+    if (repoUrl != "default") Resolver.url("Akka Publish Repository", new java.net.URL(repoUrl))
+    else Resolver.file("Local Maven Repository", Path.userHome / ".m2" / "repository" asFile)
+  }
 
-  //override def documentOptions = encodingUtf8.map(SimpleDocOption(_))
-  override def packageDocsJar = defaultJarPath("-docs.jar")
-  override def packageSrcJar= defaultJarPath("-sources.jar")
-  override def packageToPublishActions = super.packageToPublishActions ++ Seq(packageDocs, packageSrc)
+  val publishTo = publishToRepository
 
-  override def pomExtra =
+  override def pomExtra = {
     <inceptionYear>2009</inceptionYear>
     <url>http://akka.io</url>
     <organization>
@@ -290,27 +290,20 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
         <distribution>repo</distribution>
       </license>
     </licenses>
+  }
 
-  // publish to local mvn
-  import Process._
-  lazy val publishLocalMvn = runMvnInstall
-  def runMvnInstall = task {
-    for (absPath <- akkaArtifacts.getPaths) {
-      val artifactRE = """(.*)/dist/(.*)-(\d.*)\.jar""".r
-      val artifactRE(path, artifactId, artifactVersion) = absPath
-      val command = "mvn install:install-file" +
-                    " -Dfile=" + absPath +
-                    " -DgroupId=se.scalablesolutions.akka" +
-                    " -DartifactId=" + artifactId +
-                    " -Dversion=" + version +
-                    " -Dpackaging=jar -DgeneratePom=true"
-      command ! log
-    }
-    None
-  } dependsOn(dist) describedAs("Run mvn install for artifacts in dist.")
+  override def deliverProjectDependencies = super.deliverProjectDependencies.toList - akka_sbt_plugin.projectID
 
+  val sourceArtifact = Artifact(artifactID, "src", "jar", Some("sources"), Nil, None)
+  val docsArtifact = Artifact(artifactID, "doc", "jar", Some("docs"), Nil, None)
 
+  override def packageDocsJar = defaultJarPath("-docs.jar")
+  override def packageSrcJar= defaultJarPath("-sources.jar")
+  override def packageToPublishActions = super.packageToPublishActions ++ Seq(packageDocs, packageSrc)
+
+  // ------------------------------------------------------------
   // Build release
+  // ------------------------------------------------------------
 
   val localReleasePath = outputPath / "release" / version.toString
   val localReleaseRepository = Resolver.file("Local Release", localReleasePath / "repository" asFile)
