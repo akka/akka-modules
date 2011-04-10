@@ -9,7 +9,6 @@ Contents
    pending/jta
    pending/microkernel
    pending/osgi
-   pending/persistence
    pending/scalaz
    pending/spring-integration
 
