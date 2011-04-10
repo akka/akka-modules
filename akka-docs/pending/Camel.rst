@@ -1273,51 +1273,51 @@ Internally, a CamelService uses the CamelContextManager singleton to manage a Ca
 Applications may even provide their own CamelContext instance as argument to the init method call as shown in the following snippet. Here, a DefaultCamelContext is created using a Spring application context as `registry <http://camel.apache.org/registry.html>`_.
 
 **Scala**
-||
-`<code format="scala">`_
-import org.apache.camel.impl.DefaultCamelContext
-import org.apache.camel.spring.spi.ApplicationContextRegistry
-import org.springframework.context.support.ClassPathXmlApplicationContext
 
-import akka.camel.CamelContextManager
-import akka.camel.CamelServiceManager._
+.. code-block:: scala
 
-// create a custom Camel registry backed up by a Spring application context
-val context = new ClassPathXmlApplicationContext("/context.xml")
-val registry = new ApplicationContextRegistry(context)
+  import org.apache.camel.impl.DefaultCamelContext
+  import org.apache.camel.spring.spi.ApplicationContextRegistry
+  import org.springframework.context.support.ClassPathXmlApplicationContext
 
-// initialize CamelContextManager with a DefaultCamelContext using the custom registry
-CamelContextManager.init(new DefaultCamelContext(registry))
+  import akka.camel.CamelContextManager
+  import akka.camel.CamelServiceManager._
 
-// ...
+  // create a custom Camel registry backed up by a Spring application context
+  val context = new ClassPathXmlApplicationContext("/context.xml")
+  val registry = new ApplicationContextRegistry(context)
 
-startCamelService
+  // initialize CamelContextManager with a DefaultCamelContext using the custom registry
+  CamelContextManager.init(new DefaultCamelContext(registry))
 
-|| **Java** ||
-||
-`<code format="java">`_
-import org.apache.camel.impl.DefaultCamelContext
-import org.apache.camel.spi.Registry;
-import org.apache.camel.spring.spi.ApplicationContextRegistry;
+  // ...
 
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.support.ClassPathXmlApplicationContext;
+  startCamelService
 
-import akka.camel.CamelContextManager;
-import static akka.camel.CamelServiceManager.*;
+**Java**
 
-// create a custom Camel registry backed up by a Spring application context
-ApplicationContext context = new ClassPathXmlApplicationContext("/context.xml");
-Registry registry = new ApplicationContextRegistry(context);
+.. code-block:: java
 
-// initialize CamelContextManager with a DefaultCamelContext using the custom registry
-CamelContextManager.init(new DefaultCamelContext(registry));
+  import org.apache.camel.impl.DefaultCamelContext
+  import org.apache.camel.spi.Registry;
+  import org.apache.camel.spring.spi.ApplicationContextRegistry;
 
-// ...
+  import org.springframework.context.ApplicationContext;
+  import org.springframework.context.support.ClassPathXmlApplicationContext;
 
-startCamelService();
+  import akka.camel.CamelContextManager;
+  import static akka.camel.CamelServiceManager.*;
 
+  // create a custom Camel registry backed up by a Spring application context
+  ApplicationContext context = new ClassPathXmlApplicationContext("/context.xml");
+  Registry registry = new ApplicationContextRegistry(context);
 
+  // initialize CamelContextManager with a DefaultCamelContext using the custom registry
+  CamelContextManager.init(new DefaultCamelContext(registry));
+
+  // ...
+
+  startCamelService();
 
 Standalone Spring applications
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -1355,28 +1355,30 @@ A better approach to configure a Spring application context as registry for the 
 Creating a CamelContext this way automatically adds the defining Spring application context as registry to that CamelContext. The CamelService is started when the application context is started and stopped when the application context is closed. A simple usage example is shown in the following snippet.
 
 **Scala**
-||
-`<code format="scala">`_
-import org.springframework.context.support.ClassPathXmlApplicationContext
-import akka.camel.CamelContextManager
 
-// Create and start application context (start CamelService)
-val appctx = new ClassPathXmlApplicationContext("/context.xml")
+.. code-block:: scala
 
-// Access to CamelContext (SpringCamelContext)
-val ctx = CamelContextManager.mandatoryContext
-// Access to ProducerTemplate of that CamelContext
-val tpl = CamelContextManager.mandatoryTemplate
+  import org.springframework.context.support.ClassPathXmlApplicationContext
+  import akka.camel.CamelContextManager
 
-// use ctx and tpl ...
+  // Create and start application context (start CamelService)
+  val appctx = new ClassPathXmlApplicationContext("/context.xml")
 
-// Close application context (stop CamelService)
-appctx.close
+  // Access to CamelContext (SpringCamelContext)
+  val ctx = CamelContextManager.mandatoryContext
+  // Access to ProducerTemplate of that CamelContext
+  val tpl = CamelContextManager.mandatoryTemplate
 
-|| **Java** ||
-||
-`<code format="java">`_
-// TODO
+  // use ctx and tpl ...
+
+  // Close application context (stop CamelService)
+  appctx.close
+
+**Java**
+
+.. code-block:: java
+
+  // TODO
 
 
 If the CamelService doesn't reference a custom CamelContext then a DefaultCamelContext is created (and accessible via the CamelContextManager).
@@ -1402,7 +1404,7 @@ Kernel mode
 
 For classes that are loaded by the Kernel or the Initializer, starting the CamelService can be omitted, as discussed in the previous section. Since these classes are loaded and instantiated before the CamelService is started (by Akka), applications can make modifications to a CamelContext here as well (and even provide their own CamelContext). Assuming there's a boot class sample.camel.Boot configured in akka.conf.
 
-.. code-block:: ruby
+::
 
   akka {
     ...
@@ -1413,41 +1415,42 @@ For classes that are loaded by the Kernel or the Initializer, starting the Camel
 Modifications to the CamelContext can be done like in the following snippet.
 
 **Scala**
-||
-`<code format="scala">`_
-package sample.camel
 
-import org.apache.camel.builder.RouteBuilder
+.. code-block:: scala
 
-import akka.camel.CamelContextManager
+  package sample.camel
 
-class Boot {
-  CamelContextManager.init
+  import org.apache.camel.builder.RouteBuilder
 
- // Customize CamelContext with application-specific routes
-  CamelContextManager.mandatoryContext.addRoutes(new CustomRouteBuilder)
+  import akka.camel.CamelContextManager
 
-  // No need to start CamelService here. It will be started
-  // when this classes has been loaded and instantiated.
-}
+  class Boot {
+    CamelContextManager.init
 
-class CustomRouteBuilder extends RouteBuilder {
-  def configure {
-    // ...
+    // Customize CamelContext with application-specific routes
+    CamelContextManager.mandatoryContext.addRoutes(new CustomRouteBuilder)
+
+    // No need to start CamelService here. It will be started
+    // when this classes has been loaded and instantiated.
   }
-}
 
-|| **Java** ||
-||
-`<code format="java">`_
-// TODO
+  class CustomRouteBuilder extends RouteBuilder {
+    def configure {
+      // ...
+    }
+  }
 
+**Java**
 
+.. code-block:: java
+
+  // TODO
 
 Custom Camel routes
 -------------------
 
 In all the examples so far, routes to consumer actors have been automatically constructed by akka-camel, when the actor was started. Although the default route construction templates, used by akka-camel internally, are sufficient for most use cases, some applications may require more specialized routes to actors. The akka-camel module provides two mechanisms for customizing routes to actors, which will be explained in this section. These are
+
 * `Usage of Akka-specific Camel components  <Camel#akka-camel-components>`_to access (untyped) actor and actors. Any Camel route can use these components to access Akka actors.
 * `Intercepting the automated construction of routes <Camel#intercepting-route-construction>`_ to (untyped) actor and actors. Default routes to consumer actors are extended using predefined extension points.
 
@@ -1468,9 +1471,13 @@ To access (untyped) actors from custom Camel routes, the `actor <http://github.c
 where <actor-id> and <actor-uuid> refer to actorRef.id and the String-representation of actorRef.uuid, respectively.The <options> are name-value pairs separated by & (i.e. name1=value1&name2=value2&...). The following URI options are supported:
 
 **URI options**
-|| **Name** || **Type** || **Default** || **Description** ||
-|| blocking  || Boolean  || false  || If set to true, in-out message exchanges with the target actor will be made with the !! operator, otherwise with the ! operator. See also section `Consumer timeout <Camel#timeout>`_. ||
-|| autoack || Boolean || true || If set to true, in-only message exchanges are auto-acknowledged when the message is added to the actor's mailbox. If set to false, actors must acknowledge the receipt of the message. See also section `Acknowledgement <Camel#ack>`_. ||
+
+========  ========  ===========  ===============
+**Name**  **Type**  **Default**  **Description**
+========  ========  ===========  ===============
+blocking  Boolean   false        If set to true, in-out message exchanges with the target actor will be made with the !! operator, otherwise with the ! operator. See also section `Consumer timeout <Camel#timeout>`_.
+autoack   Boolean   true         If set to true, in-only message exchanges are auto-acknowledged when the message is added to the actor's mailbox. If set to false, actors must acknowledge the receipt of the message. See also section `Acknowledgement <Camel#ack>`_.
+========  ========  ===========  ===============
 
 Here's an actor endpoint URI example containing an actor uuid.
 
@@ -1481,8 +1488,12 @@ Here's an actor endpoint URI example containing an actor uuid.
 In actor endpoint URIs that contain id: or uuid:, an actor identifier (id or uuid) is optional. In this case, the in-message of an exchange produced to an actor endpoint must contain a message header with name CamelActorIdentifier (which is defined by the ActorComponent.ActorIdentifier field) and a value that is the target actor's identifier. On the other hand, if the URI contains an actor identifier, it can be seen as a default actor identifier that can be overridden by messages containing a CamelActorIdentifier header.
 
 **Message headers**
-|| **Name** || **Type** || **Description** ||
-|| CamelActorIdentifier  || String || Contains the identifier (id or uuid) of the actor to route the message to. The identifier is interpreted as actor id if the URI contains id:, the identifier is interpreted as uuid id the URI contains uuid:. A uuid value may also be of type Uuid (not only String). The header name is defined by the ActorComponent.ActorIdentifier field. ||
+
+====================  ========  ===============
+**Name**              **Type**  **Description**
+====================  ========  ===============
+CamelActorIdentifier  String    Contains the identifier (id or uuid) of the actor to route the message to. The identifier is interpreted as actor id if the URI contains id:, the identifier is interpreted as uuid id the URI contains uuid:. A uuid value may also be of type Uuid (not only String). The header name is defined by the ActorComponent.ActorIdentifier field.
+====================  ========  ===============
 
 Here's another actor endpoint URI example that doesn't define an actor uuid. In this case the target actor uuid must be defined by the CamelActorIdentifier message header.
 
@@ -1493,78 +1504,78 @@ Here's another actor endpoint URI example that doesn't define an actor uuid. In 
 In the following example, a custom route to an actor is created, using the actor's uuid (i.e. actorRef.uuid). The route starts from a `jetty <http://camel.apache.org/jetty.html>`_ endpoint and ends at the target actor.
 
 **Scala**
-||
-`<code format="scala">`_
-import org.apache.camel.builder.RouteBuilder
 
-import akka.actor._
-import akka.actor.Actor
-import akka.actor.Actor._
-import akka.camel.{Message, CamelContextManager, CamelServiceManager}
+.. code-block:: scala
 
-object CustomRouteExample extends Application {
-  val target = actorOf[CustomRouteTarget].start
+  import org.apache.camel.builder.RouteBuilder
 
-  CamelServiceManager.startCamelService
-  CamelContextManager.mandatoryContext.addRoutes(new CustomRouteBuilder(target.uuid))
-}
+  import akka.actor._
+  import akka.actor.Actor
+  import akka.actor.Actor._
+  import akka.camel.{Message, CamelContextManager, CamelServiceManager}
 
-class CustomRouteTarget extends Actor {
-  def receive = {
-    case msg: Message => self.reply("Hello %s" format msg.bodyAs[String])
+  object CustomRouteExample extends Application {
+    val target = actorOf[CustomRouteTarget].start
+
+    CamelServiceManager.startCamelService
+    CamelContextManager.mandatoryContext.addRoutes(new CustomRouteBuilder(target.uuid))
   }
-}
 
-class CustomRouteBuilder(uuid: Uuid) extends RouteBuilder {
-  def configure {
-    val actorUri = "actor:uuid:%s" format uuid
-    from("jetty:http://localhost:8877/camel/custom").to(actorUri)
+  class CustomRouteTarget extends Actor {
+    def receive = {
+      case msg: Message => self.reply("Hello %s" format msg.bodyAs[String])
+    }
   }
-}
 
-|| **Java** ||
-||
-`<code format="java">`_
-import com.eaio.uuid.UUID;
-
-import org.apache.camel.builder.RouteBuilder;
-import static akka.actor.Actors.*;
-import akka.actor.ActorRef;
-import akka.actor.UntypedActor;
-import akka.camel.CamelServiceManager;
-import akka.camel.CamelContextManager;
-import akka.camel.Message;
-
-public class CustomRouteExample {
-    public static void main(String... args) throws Exception {
-        ActorRef target = actorOf(CustomRouteTarget.class).start();
-        CamelServiceManager.startCamelService();
-        CamelContextManager.getMandatoryContext().addRoutes(new CustomRouteBuilder(target.getUuid()));
+  class CustomRouteBuilder(uuid: Uuid) extends RouteBuilder {
+    def configure {
+      val actorUri = "actor:uuid:%s" format uuid
+      from("jetty:http://localhost:8877/camel/custom").to(actorUri)
     }
-}
+  }
 
-public class CustomRouteTarget extends UntypedActor {
-    public void onReceive(Object message) {
-        Message msg = (Message) message;
-        String body = msg.getBodyAs(String.class);
-        getContext().replySafe(String.format("Hello %s", body));
-    }
-}
+**Java**
 
-public class CustomRouteBuilder extends RouteBuilder {
-    private UUID uuid;
+.. code-block:: java
 
-    public CustomRouteBuilder(UUID uuid) {
-        this.uuid = uuid;
-    }
+  import com.eaio.uuid.UUID;
 
-    public void configure() {
-        String actorUri = String.format("actor:uuid:%s", uuid);
-        from("jetty:http://localhost:8877/camel/custom").to(actorUri);
-    }
-}
+  import org.apache.camel.builder.RouteBuilder;
+  import static akka.actor.Actors.*;
+  import akka.actor.ActorRef;
+  import akka.actor.UntypedActor;
+  import akka.camel.CamelServiceManager;
+  import akka.camel.CamelContextManager;
+  import akka.camel.Message;
 
+  public class CustomRouteExample {
+      public static void main(String... args) throws Exception {
+          ActorRef target = actorOf(CustomRouteTarget.class).start();
+          CamelServiceManager.startCamelService();
+          CamelContextManager.getMandatoryContext().addRoutes(new CustomRouteBuilder(target.getUuid()));
+      }
+  }
 
+  public class CustomRouteTarget extends UntypedActor {
+      public void onReceive(Object message) {
+          Message msg = (Message) message;
+          String body = msg.getBodyAs(String.class);
+          getContext().replySafe(String.format("Hello %s", body));
+      }
+  }
+
+  public class CustomRouteBuilder extends RouteBuilder {
+      private UUID uuid;
+
+      public CustomRouteBuilder(UUID uuid) {
+          this.uuid = uuid;
+      }
+
+      public void configure() {
+          String actorUri = String.format("actor:uuid:%s", uuid);
+          from("jetty:http://localhost:8877/camel/custom").to(actorUri);
+      }
+  }
 
 When the example is started, messages POSTed to http://localhost:8877/camel/custom are routed to the target actor.
 
@@ -1614,70 +1625,71 @@ The following example shows how to access typed actors in a Spring application c
 SampleTypedActor is the typed actor interface and SampleTypedActorImpl in the typed actor implementation class.
 
 **Scala**
-||
-`<code format="scala">`_
-package sample
 
-import akka.actor.TypedActor
+.. code-block:: scala
 
-trait SampleTypedActor {
-  def foo(s: String): String
-}
+  package sample
 
-class SampleTypedActorImpl extends TypedActor with SampleTypedActor {
-  def foo(s: String) = "hello %s" format s
-}
+  import akka.actor.TypedActor
 
-|| **Java** ||
-||
-`<code format="java">`_
-package sample;
+  trait SampleTypedActor {
+    def foo(s: String): String
+  }
 
-import akka.actor.TypedActor;
+  class SampleTypedActorImpl extends TypedActor with SampleTypedActor {
+    def foo(s: String) = "hello %s" format s
+  }
 
-public interface SampleTypedActor {
-    public String foo(String s);
-}
+**Java**
 
-public class SampleTypedActorImpl extends TypedActor implements SampleTypedActor {
+.. code-block:: java
 
-    public String foo(String s) {
-        return "hello " + s;
-    }
-}
+  package sample;
 
+  import akka.actor.TypedActor;
+
+  public interface SampleTypedActor {
+      public String foo(String s);
+  }
+
+  public class SampleTypedActorImpl extends TypedActor implements SampleTypedActor {
+
+      public String foo(String s) {
+          return "hello " + s;
+      }
+  }
 
 The SampleRouteBuilder defines a custom route from the direct:test endpoint to the sample typed actor using a typed-actor endpoint URI.
 
 **Scala**
-||
-`<code format="scala">`_
-package sample
 
-import org.apache.camel.builder.RouteBuilder
+.. code-block:: scala
 
-class SampleRouteBuilder extends RouteBuilder {
-  def configure = {
-    // route to typed actor
-    from("direct:test").to("typed-actor:sample?method=foo")
-  }
-}
+  package sample
 
-|| **Java** ||
-||
-`<code format="java">`_
-package sample;
+  import org.apache.camel.builder.RouteBuilder
 
-import org.apache.camel.builder.RouteBuilder;
-
-public class SampleRouteBuilder extends RouteBuilder {
-    public void configure() {
-        // route to typed actor
-        from("direct:test").to("typed-actor:sample?method=foo");
+  class SampleRouteBuilder extends RouteBuilder {
+    def configure = {
+      // route to typed actor
+      from("direct:test").to("typed-actor:sample?method=foo")
     }
-}
+  }
 
+**Java**
 
+.. code-block:: java
+
+  package sample;
+
+  import org.apache.camel.builder.RouteBuilder;
+
+  public class SampleRouteBuilder extends RouteBuilder {
+      public void configure() {
+          // route to typed actor
+          from("direct:test").to("typed-actor:sample?method=foo");
+      }
+  }
 
 The typed-actor endpoint URI syntax is
 
@@ -1688,40 +1700,40 @@ where <bean-id> is the id of the bean in the Spring application context and <met
 Usage of the custom route for sending a message to the typed actor is shown in the following snippet.
 
 **Scala**
-||
-`<code format="scala">`_
-package sample
 
-import org.springframework.context.support.ClassPathXmlApplicationContext
-import akka.camel.CamelContextManager
+.. code-block:: scala
 
-// load Spring application context (starts CamelService)
-val appctx = new ClassPathXmlApplicationContext("/context-standalone.xml")
+  package sample
 
-// access 'sample' typed actor via custom route
-assert("hello akka" == CamelContextManager.mandatoryTemplate.requestBody("direct:test", "akka"))
+  import org.springframework.context.support.ClassPathXmlApplicationContext
+  import akka.camel.CamelContextManager
 
-// close Spring application context (stops CamelService)
-appctx.close
+  // load Spring application context (starts CamelService)
+  val appctx = new ClassPathXmlApplicationContext("/context-standalone.xml")
 
-|| **Java** ||
-||
-`<code format="java">`_
-package sample;
+  // access 'sample' typed actor via custom route
+  assert("hello akka" == CamelContextManager.mandatoryTemplate.requestBody("direct:test", "akka"))
 
-import org.springframework.context.support.ClassPathXmlApplicationContext;
-import akka.camel.CamelContextManager;
+  // close Spring application context (stops CamelService)
+  appctx.close
 
-// load Spring application context
-ClassPathXmlApplicationContext appctx = new ClassPathXmlApplicationContext("/context-standalone.xml");
+**Java**
 
-// access 'externally' registered typed actors with typed-actor component
-assert("hello akka" == CamelContextManager.getMandatoryTemplate().requestBody("direct:test", "akka"));
+.. code-block:: java
 
-// close Spring application context (stops CamelService)
-appctx.close();
+  package sample;
 
+  import org.springframework.context.support.ClassPathXmlApplicationContext;
+  import akka.camel.CamelContextManager;
 
+  // load Spring application context
+  ClassPathXmlApplicationContext appctx = new ClassPathXmlApplicationContext("/context-standalone.xml");
+
+  // access 'externally' registered typed actors with typed-actor component
+  assert("hello akka" == CamelContextManager.getMandatoryTemplate().requestBody("direct:test", "akka"));
+
+  // close Spring application context (stops CamelService)
+  appctx.close();
 
 The application uses a Camel `producer template <http://camel.apache.org/producertemplate.html>`_ to access the typed actor via the direct:test endpoint.
 
@@ -1731,51 +1743,51 @@ Without Spring
 Usage of `akka-spring <spring-integration>`_ for adding typed actors to the Camel registry and starting a CamelService is optional. Setting up a Spring-less application for accessing typed actors is shown in the next example.
 
 **Scala**
-||
-`<code format="scala">`_
-package sample
 
-import org.apache.camel.impl.{DefaultCamelContext, SimpleRegistry}
-import akka.actor.TypedActor
-import akka.camel.CamelContextManager
-import akka.camel.CamelServiceManager._
+.. code-block:: scala
 
-// register typed actor
-val registry = new SimpleRegistry
-registry.put("sample", TypedActor.newInstance(classOf[SampleTypedActor], classOf[SampleTypedActorImpl]))
+  package sample
 
-// customize CamelContext
-CamelContextManager.init(new DefaultCamelContext(registry))
-CamelContextManager.mandatoryContext.addRoutes(new SampleRouteBuilder)
+  import org.apache.camel.impl.{DefaultCamelContext, SimpleRegistry}
+  import akka.actor.TypedActor
+  import akka.camel.CamelContextManager
+  import akka.camel.CamelServiceManager._
 
-startCamelService
+  // register typed actor
+  val registry = new SimpleRegistry
+  registry.put("sample", TypedActor.newInstance(classOf[SampleTypedActor], classOf[SampleTypedActorImpl]))
 
-// access 'sample' typed actor via custom route
-assert("hello akka" == CamelContextManager.mandatoryTemplate.requestBody("direct:test", "akka"))
+  // customize CamelContext
+  CamelContextManager.init(new DefaultCamelContext(registry))
+  CamelContextManager.mandatoryContext.addRoutes(new SampleRouteBuilder)
 
-stopCamelService
+  startCamelService
 
-|| **Java** ||
-||
-`<code format="java">`_
-package sample;
+  // access 'sample' typed actor via custom route
+  assert("hello akka" == CamelContextManager.mandatoryTemplate.requestBody("direct:test", "akka"))
 
-// register typed actor
-SimpleRegistry registry = new SimpleRegistry();
-registry.put("sample", TypedActor.newInstance(SampleTypedActor.class, SampleTypedActorImpl.class));
+  stopCamelService
 
-// customize CamelContext
-CamelContextManager.init(new DefaultCamelContext(registry));
-CamelContextManager.getMandatoryContext().addRoutes(new SampleRouteBuilder());
+**Java**
 
-startCamelService();
+.. code-block:: java
 
-// access 'sample' typed actor via custom route
-assert("hello akka" == CamelContextManager.getMandatoryTemplate().requestBody("direct:test", "akka"));
+  package sample;
 
-stopCamelService();
+  // register typed actor
+  SimpleRegistry registry = new SimpleRegistry();
+  registry.put("sample", TypedActor.newInstance(SampleTypedActor.class, SampleTypedActorImpl.class));
 
+  // customize CamelContext
+  CamelContextManager.init(new DefaultCamelContext(registry));
+  CamelContextManager.getMandatoryContext().addRoutes(new SampleRouteBuilder());
 
+  startCamelService();
+
+  // access 'sample' typed actor via custom route
+  assert("hello akka" == CamelContextManager.getMandatoryTemplate().requestBody("direct:test", "akka"));
+
+  stopCamelService();
 
 Here, `SimpleRegistry <https://svn.apache.org/repos/asf/camel/trunk/camel-core/src/main/java/org/apache/camel/impl/SimpleRegistry.java>`_, a java.util.Map based registry, is used to register typed actors. The CamelService is started and stopped programmatically.
 
