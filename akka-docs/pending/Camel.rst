@@ -4,6 +4,7 @@ Camel
 Module stability: **SOLID**
 
 For an introduction to akka-camel, see also the `Appendix E - Akka and Camel <http://www.manning.com/ibsen/appEsample.pdf>`_ (pdf) of the book `Camel in Action <http://www.manning.com/ibsen/>`_. Other, more advanced external articles are
+
 * `Akka Consumer Actors: New Features and Best Practices <http://krasserm.blogspot.com/2011/02/akka-consumer-actors-new-features-and.html>`_
 * `Akka Producer Actors: New Features and Best Practices <http://krasserm.blogspot.com/2011/02/akka-producer-actor-new-features-and.html>`_
 
@@ -90,130 +91,134 @@ Consume messages
 
 For actors (Scala) to receive messages, they must mixin the `Consumer <http://github.com/jboner/akka-modules/blob/master/akka-camel/src/main/scala/akka/camel/Consumer.scala>`_ trait. For example, the following actor class (Consumer1) implements the endpointUri method, which is declared in the Consumer trait, in order to receive messages from the file:data/input/actor Camel endpoint. Untyped actors (Java) need to extend the abstract UntypedConsumerActor class and implement the getEndpointUri() and onReceive(Object) methods.
 
-|| **Scala** ||
-||
-`<code format="scala">`_
-import akka.actor.Actor
-import akka.camel.{Message, Consumer}
+**Scala**
 
-class Consumer1 extends Actor with Consumer {
-  def endpointUri = "file:data/input/actor"
+.. code-block:: scala
 
-  def receive = {
-    case msg: Message => println("received %s" format msg.bodyAs[String])
+  import akka.actor.Actor
+  import akka.camel.{Message, Consumer}
+
+  class Consumer1 extends Actor with Consumer {
+    def endpointUri = "file:data/input/actor"
+
+    def receive = {
+      case msg: Message => println("received %s" format msg.bodyAs[String])
+    }
   }
-}
-`<code>`_ ||
-|| **Java** ||
-||
-`<code format="java">`_
-import akka.camel.Message;
-import akka.camel.UntypedConsumerActor;
 
-public class Consumer1 extends UntypedConsumerActor {
+**Java**
+
+.. code-block:: java
+
+  import akka.camel.Message;
+  import akka.camel.UntypedConsumerActor;
+
+  public class Consumer1 extends UntypedConsumerActor {
     public String getEndpointUri() {
-        return "file:data/input/actor";
+      return "file:data/input/actor";
     }
 
     public void onReceive(Object message) {
-        Message msg = (Message)message;
-        String body = msg.getBodyAs(String.class);
-        System.out.println(String.format("received %s", body))
-   }
-}
-`<code>`_ ||
+      Message msg = (Message)message;
+      String body = msg.getBodyAs(String.class);
+      System.out.println(String.format("received %s", body))
+    }
+  }
 
 Whenever a file is put into the data/input/actor directory, its content is picked up by the Camel `file <http://camel.apache.org/file2.html>`_ component and sent as message to the actor. Messages consumed by actors from Camel endpoints are of type `Message <http://github.com/jboner/akka-modules/blob/master/akka-camel/src/main/scala/akka/camel/Message.scala>`_. These are immutable representations of Camel messages. For Message usage examples refer to the unit tests:
+
 * Message unit tests - `Scala API <http://github.com/jboner/akka-modules/blob/master/akka-camel/src/test/scala/akka/MessageScalaTest.scala>`_
 * Message unit tests - `Java API <http://github.com/jboner/akka-modules/blob/master/akka-camel/src/test/java/akka/camel/MessageJavaTestBase.java>`_
 
-Here's another example that sets the endpointUri to jetty:http:*localhost:8877/camel/default</span>. It causes Camel's <span style="font-family: 'Courier New',Courier,monospace;">[[http:*camel.apache.org/jetty.html|jetty]] component to start an embedded `Jetty <http://www.eclipse.org/jetty/>`_ server, accepting HTTP connections from localhost on port 8877.
+Here's another example that sets the endpointUri to jetty:http://localhost:8877/camel/default. It causes Camel's `jetty component <http://camel.apache.org/jetty.html>`_ to start an embedded `Jetty <http://www.eclipse.org/jetty/>`_ server, accepting HTTP connections from localhost on port 8877.
 
-|| **Scala** ||
-||
-`<code format="scala">`_
-import akka.actor.Actor
-import akka.camel.{Message, Consumer}
+**Scala**
 
-class Consumer2 extends Actor with Consumer {
-  def endpointUri = "jetty:http://localhost:8877/camel/default"
+.. code-block:: scala
 
-  def receive = {
-    case msg: Message => self.reply("Hello %s" format msg.bodyAs[String])
+  import akka.actor.Actor
+  import akka.camel.{Message, Consumer}
+
+  class Consumer2 extends Actor with Consumer {
+    def endpointUri = "jetty:http://localhost:8877/camel/default"
+
+    def receive = {
+      case msg: Message => self.reply("Hello %s" format msg.bodyAs[String])
+    }
   }
-}
-`<code>`_ ||
-|| **Java** ||
-||
-`<code format="java">`_
-import akka.camel.Message;
-import akka.camel.UntypedConsumerActor;
 
-public class Consumer2 extends UntypedConsumerActor {
+**Java**
+
+.. code-block:: java
+
+  import akka.camel.Message;
+  import akka.camel.UntypedConsumerActor;
+
+  public class Consumer2 extends UntypedConsumerActor {
     public String getEndpointUri() {
-        return "jetty:http://localhost:8877/camel/default";
+      return "jetty:http://localhost:8877/camel/default";
     }
 
     public void onReceive(Object message) {
-        Message msg = (Message)message;
-        String body = msg.getBodyAs(String.class);
-        getContext().replySafe(String.format("Hello %s", body));
-   }
-}
-`<code>`_ ||
+      Message msg = (Message)message;
+      String body = msg.getBodyAs(String.class);
+      getContext().replySafe(String.format("Hello %s", body));
+    }
+  }
 
-After starting the actor, clients can send messages to that actor by POSTing to http:*localhost:8877/camel/default</span>. The actor sends a response by using the <span style="font-family: 'Courier New',Courier,monospace;">self.reply</span> method (Scala). For returning a message body and headers to the HTTP client the response type should be <span style="font-family: 'Courier New',Courier,monospace;">[[http:*github.com/jboner/akka-modules/blob/master/akka-camel/src/main/scala/akka/camel/Message.scala|Message]]. For any other response type, a new Message object is created by akka-camel with the actor response as message body.
+After starting the actor, clients can send messages to that actor by POSTing to http://localhost:8877/camel/default. The actor sends a response by using the self.reply method (Scala). For returning a message body and headers to the HTTP client the response type should be `Message <http://github.com/jboner/akka-modules/blob/master/akka-camel/src/main/scala/akka/camel/Message.scala>`_. For any other response type, a new Message object is created by akka-camel with the actor response as message body.
 
 **Typed actors**
 
 Typed actors can also receive messages from Camel endpoints. In contrast to (untyped) actors, which only implement a single receive or onReceive method, a typed actor may define several (message processing) methods, each of which can receive messages from a different Camel endpoint. For a typed actor method to be exposed as Camel endpoint it must be annotated with the `@consume <http://github.com/jboner/akka-modules/blob/master/akka-camel/src/main/java/akka/camel/consume.java>`_. For example, the following typed consumer actor defines two methods, foo and bar.
 
-|| **Scala** ||
-||
-`<code format="scala">`_
-import org.apache.camel.{Body, Header}
-import akka.actor.TypedActor
-import akka.camel.consume
+**Scala**
 
-trait TypedConsumer1 {
-  @consume("file:data/input/foo")
-  def foo(body: String): Unit
+.. code-block:: scala
 
-  @consume("jetty:http://localhost:8877/camel/bar")
-  def bar(@Body body: String, @Header("X-Whatever") header: String): String
-}
+  import org.apache.camel.{Body, Header}
+  import akka.actor.TypedActor
+  import akka.camel.consume
 
-class TypedConsumer1Impl extends TypedActor with TypedConsumer1 {
-  def foo(body: String) = println("Received message: %s" format body)
-  def bar(body: String, header: String) = "body=%s header=%s" format (body, header)
-}
-`<code>`_ ||
-|| **Java** ||
-||
-`<code format="java">`_
-import org.apache.camel.Body;
-import org.apache.camel.Header;
-import akka.actor.TypedActor;
-import akka.camel.consume;
+  trait TypedConsumer1 {
+    @consume("file:data/input/foo")
+    def foo(body: String): Unit
 
-public interface TypedConsumer1 {
+    @consume("jetty:http://localhost:8877/camel/bar")
+    def bar(@Body body: String, @Header("X-Whatever") header: String): String
+  }
+
+  class TypedConsumer1Impl extends TypedActor with TypedConsumer1 {
+    def foo(body: String) = println("Received message: %s" format body)
+    def bar(body: String, header: String) = "body=%s header=%s" format (body, header)
+  }
+
+**Java**
+
+.. code-block:: java
+
+  import org.apache.camel.Body;
+  import org.apache.camel.Header;
+  import akka.actor.TypedActor;
+  import akka.camel.consume;
+
+  public interface TypedConsumer1 {
     @consume("file:data/input/foo")
     public void foo(String body);
 
     @consume("jetty:http://localhost:8877/camel/bar")
     public String bar(@Body String body, @Header("X-Whatever") String header);
-}
+  }
 
-public class TypedConsumer1Impl extends TypedActor implements TypedConsumer1 {
+  public class TypedConsumer1Impl extends TypedActor implements TypedConsumer1 {
     public void foo(String body) {
-        System.out.println(String.format("Received message: ", body));
+      System.out.println(String.format("Received message: ", body));
     }
 
     public String bar(String body, String header) {
-        return String.format("body=%s header=%s", body, header);
+      return String.format("body=%s header=%s", body, header);
     }
-}
-`<code>`_ ||
+  }
 
 The foo method can be invoked by placing a file in the data/input/foo directory. Camel picks up the file from this directory and akka-camel invokes foo with the file content as argument (converted to a String). Camel automatically tries to convert messages to appropriate types as defined by the method parameter(s). The conversion rules are described in detail on the following pages:
 
@@ -232,154 +237,155 @@ Consumer publishing
 
 Publishing a consumer actor at its Camel endpoint occurs when the actor is started. Publication is done asynchronously; setting up an endpoint (more precisely, the route from that endpoint to the actor) may still be in progress after the ActorRef.start method returned.
 
-|| **Scala** ||
-||
-`<code format="scala">`_
-import akka.actor.Actor._
+**Scala**
 
-val actor = actorOf[Consumer1] // create Consumer actor
-actor.start                    // activate endpoint in background
+.. code-block:: scala
 
-`<code>`_ ||
-|| **Java** ||
-||
-`<code format="java">`_
-import static akka.actor.Actors.*;
-import akka.actor.ActorRef;
+  import akka.actor.Actor._
 
-ActorRef actor = actorOf(Consumer1.class); // create Consumer actor
-actor.start();                             // activate endpoint in background
-`<code>`_ ||
+  val actor = actorOf[Consumer1] // create Consumer actor
+  actor.start                    // activate endpoint in background
+
+**Java**
+
+.. code-block:: java
+
+  import static akka.actor.Actors.*;
+  import akka.actor.ActorRef;
+
+  ActorRef actor = actorOf(Consumer1.class); // create Consumer actor
+  actor.start();                             // activate endpoint in background
 
 **Typed actors**
 
 Publishing of typed actor methods is done when the typed actor is created with one of the TypedActor.newInstance(..) methods. Publication is done in the background here as well i.e. it may still be in progress when TypedActor.newInstance(..) returns.
 
-|| **Scala** ||
-||
-`<code format="scala">`_
-import akka.actor.TypedActor
+**Scala**
 
-// create TypedConsumer1 object and activate endpoint(s) in background
-val consumer = TypedActor.newInstance(classOf[TypedConsumer1], classOf[TypedConumer1Impl])
+.. code-block:: scala
 
-`<code>`_ ||
-|| **Java** ||
-||
-`<code format="java">`_
-import akka.actor.TypedActor;
+  import akka.actor.TypedActor
 
-// create TypedConsumer1 object and activate endpoint(s) in background
-TypedConsumer1 consumer = TypedActor.newInstance(TypedConsumer1.class, TypedConumer1Impl.class);
-`<code>`_ ||
+  // create TypedConsumer1 object and activate endpoint(s) in background
+  val consumer = TypedActor.newInstance(classOf[TypedConsumer1], classOf[TypedConumer1Impl])
+
+**Java**
+
+.. code-block:: java
+
+  import akka.actor.TypedActor;
+
+  // create TypedConsumer1 object and activate endpoint(s) in background
+  TypedConsumer1 consumer = TypedActor.newInstance(TypedConsumer1.class, TypedConumer1Impl.class);
 
 Consumers and the CamelService
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Publishing of consumer actors or typed actor methods requires a running CamelService. The Akka `Kernel <microkernel>`_ can start a CamelService automatically (see section `CamelService configuration <Camel#configuration>`_). When using Akka in other environments, a CamelService must be started manually. Applications can do that by calling the CamelServiceManager.startCamelService method.
 
-|| **Scala** ||
-||
-`<code format="scala">`_
-import akka.camel.CamelServiceManager._
+**Scala**
 
-startCamelService
-`<code>`_ ||
-|| **Java** ||
-||
-`<code format="java">`_
-import static akka.camel.CamelServiceManager.*;
+.. code-block:: scala
 
-startCamelService();
+  import akka.camel.CamelServiceManager._
 
-`<code>`_ ||
+  startCamelService
+
+**Java**
+
+.. code-block:: java
+
+  import static akka.camel.CamelServiceManager.*;
+
+  startCamelService();
 
 If applications need to wait for a certain number of consumer actors or typed actor methods to be published they can do so with the CamelServiceManager.mandatoryService.awaitEndpointActivation method, where CamelServiceManager.mandatoryService is the current CamelService instance (or throws an IllegalStateException there's no current CamelService).
 
-|| **Scala** ||
-||
-`<code format="scala">`_
-import akka.camel.CamelServiceManager._
+**Scala**
 
-startCamelService
+.. code-block:: scala
 
-// Wait for three conumer endpoints to be activated
-mandatoryService.awaitEndpointActivation(3) {
-  // Start three consumer actors (for example)
+  import akka.camel.CamelServiceManager._
+
+  startCamelService
+
+  // Wait for three conumer endpoints to be activated
+  mandatoryService.awaitEndpointActivation(3) {
+    // Start three consumer actors (for example)
+    // ...
+  }
+
+  // Communicate with consumer actors via their activated endpoints
   // ...
-}
 
-// Communicate with consumer actors via their activated endpoints
-// ...
-`<code>`_ ||
-|| **Java** ||
-||
-`<code format="java">`_
-import akka.japi.SideEffect;
-import static akka.camel.CamelServiceManager.*;
+**Java**
 
-startCamelService();
+.. code-block:: java
 
-// Wait for three conumer endpoints to be activated
-getMandatoryService().awaitEndpointActivation(3, new SideEffect() {
+  import akka.japi.SideEffect;
+  import static akka.camel.CamelServiceManager.*;
+
+  startCamelService();
+
+  // Wait for three conumer endpoints to be activated
+  getMandatoryService().awaitEndpointActivation(3, new SideEffect() {
     public void apply() {
-        // Start three consumer actors (for example)
-        // ...
+      // Start three consumer actors (for example)
+      // ...
     }
-});
+  });
 
-// Communicate with consumer actors via their activated endpoints
-// ...
-
-`<code>`_ ||
+  // Communicate with consumer actors via their activated endpoints
+  // ...
 
 Alternatively, one can also use Option[CamelService] returned by CamelServiceManager.service.
 
-|| **Scala** ||
-||
-`<code format="scala">`_
-import akka.camel.CamelServiceManager._
+**Scala**
 
-startCamelService
+.. code-block:: scala
 
-for(s <- service) s.awaitEndpointActivation(3) {
-  // ...
-}
-`<code>`_ ||
-|| **Java** ||
-||
-`<code format="java">`_
-import java.util.concurrent.CountDownLatch;
+  import akka.camel.CamelServiceManager._
 
-import akka.camel.CamelService;
-import static akka.camel.CamelServiceManager.*;
+  startCamelService
 
-startCamelService();
+  for(s <- service) s.awaitEndpointActivation(3) {
+    // ...
+  }
 
-for (CamelService s : getService()) s.awaitEndpointActivation(3, new SideEffect() {
+**Java**
+
+.. code-block:: java
+
+  import java.util.concurrent.CountDownLatch;
+
+  import akka.camel.CamelService;
+  import static akka.camel.CamelServiceManager.*;
+
+  startCamelService();
+
+  for (CamelService s : getService()) s.awaitEndpointActivation(3, new SideEffect() {
     public void apply() {
-        // ...
+      // ...
     }
-});
-`<code>`_ ||
+  });
 
 The section `Application configuration <Camel#configuration>`_ additionally describes how a CamelContext, that is managed by a CamelService, can be cutomized before starting the service. When the CamelService is no longer needed, it should be stopped.
 
-|| **Scala** ||
-||
-`<code format="scala">`_
-import akka.camel.CamelServiceManager._
+**Scala**
 
-stopCamelService
-`<code>`_ ||
-|| **Java** ||
-||
-`<code format="java">`_
-import static akka.camel.CamelServiceManager.*;
+.. code-block:: scala
 
-stopCamelService();
+  import akka.camel.CamelServiceManager._
 
-`<code>`_ ||
+  stopCamelService
+
+**Java**
+
+.. code-block:: java
+
+  import static akka.camel.CamelServiceManager.*;
+
+  stopCamelService();
 
 Consumer un-publishing
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -388,55 +394,56 @@ Consumer un-publishing
 
 When an actor is stopped, the route from the endpoint to that actor is stopped as well. For example, stopping an actor that has been previously published at http://localhost:8877/camel/test will cause a connection failure when trying to access that endpoint. Stopping the route is done asynchronously; it may be still in progress after the ActorRef.stop method returned.
 
-|| **Scala** ||
-||
-`<code format="scala">`_
-import akka.actor.Actor._
+**Scala**
 
-val actor = actorOf[Consumer1] // create Consumer actor
-actor.start                    // activate endpoint in background
-// ...
-actor.stop                     // deactivate endpoint in background
-`<code>`_ ||
-|| **Java** ||
-||
-`<code format="java">`_
-import static akka.actor.Actors.*;
-import akka.actor.ActorRef;
+.. code-block:: scala
 
-ActorRef actor = actorOf(Consumer1.class); // create Consumer actor
-actor.start();                             // activate endpoint in background
-// ...
-actor.stop();                              // deactivate endpoint in background
+  import akka.actor.Actor._
 
-`<code>`_ ||
+  val actor = actorOf[Consumer1] // create Consumer actor
+  actor.start                    // activate endpoint in background
+  // ...
+  actor.stop                     // deactivate endpoint in background
+
+**Java**
+
+.. code-block:: java
+
+  import static akka.actor.Actors.*;
+  import akka.actor.ActorRef;
+
+  ActorRef actor = actorOf(Consumer1.class); // create Consumer actor
+  actor.start();                             // activate endpoint in background
+  // ...
+  actor.stop();                              // deactivate endpoint in background
 
 **Typed actors**
 
 When a typed actor is stopped, routes to @consume annotated methods of this typed actors are stopped as well. Stopping the routes is done asynchronously; it may be still in progress after the TypedActor.stop method returned.
 
-|| **Scala** ||
-||
-`<code format="scala">`_
-import akka.actor.TypedActor
+**Scala**
 
-// create TypedConsumer1 object and activate endpoint(s) in background
-val consumer = TypedActor.newInstance(classOf[TypedConsumer1], classOf[TypedConumer1Impl])
+.. code-block:: scala
 
-// deactivate endpoints in background
-TypedActor.stop(consumer)
-`<code>`_ ||
-|| **Java** ||
-||
-`<code format="java">`_
-import akka.actor.TypedActor;
+  import akka.actor.TypedActor
 
-// Create typed consumer actor and activate endpoints in background
-TypedConsumer1 consumer = TypedActor.newInstance(TypedConsumer1.class, TypedConumer1Impl.class);
+  // create TypedConsumer1 object and activate endpoint(s) in background
+  val consumer = TypedActor.newInstance(classOf[TypedConsumer1], classOf[TypedConumer1Impl])
 
-// Deactivate endpoints in background
-TypedActor.stop(consumer);
-`<code>`_ ||
+  // deactivate endpoints in background
+  TypedActor.stop(consumer)
+
+**Java**
+
+.. code-block:: java
+
+  import akka.actor.TypedActor;
+
+  // Create typed consumer actor and activate endpoints in background
+  TypedConsumer1 consumer = TypedActor.newInstance(TypedConsumer1.class, TypedConumer1Impl.class);
+
+  // Deactivate endpoints in background
+  TypedActor.stop(consumer);
 
 Acknowledgements
 ^^^^^^^^^^^^^^^^
@@ -447,87 +454,89 @@ With in-out message exchanges, clients usually know that a message exchange is d
 
 With in-only message exchanges, by default, an exchange is done when a message is added to the consumer actor's mailbox. Any failure or exception that occurs during processing of that message by the consumer actor cannot be reported back to the endpoint in this case. To allow consumer actors to positively or negatively acknowledge the receipt of a message from an in-only message exchange, they need to override the autoack (Scala) or isAutoack (Java) method to return false. In this case, consumer actors must reply either with a special Ack message (positive acknowledgement) or a Failure (negative acknowledgement).
 
-|| **Scala** ||
-||
-`<code format="scala">`_
-import akka.camel.{Ack, Failure}
-// ... other imports omitted
+**Scala**
 
-class Consumer3 extends Actor with Consumer {
-  override def autoack = false
+.. code-block:: scala
 
-  def endpointUri = "jms:queue:test"
+  import akka.camel.{Ack, Failure}
+  // ... other imports omitted
 
-  def receive = {
-    // ...
-    self.reply(Ack) // on success
-    // ...
-    self.reply(Failure(...)) // on failure
+  class Consumer3 extends Actor with Consumer {
+    override def autoack = false
+
+    def endpointUri = "jms:queue:test"
+
+    def receive = {
+      // ...
+      self.reply(Ack) // on success
+      // ...
+      self.reply(Failure(...)) // on failure
+    }
   }
-}
-`<code>`_ ||
-|| **Java** ||
-||
-`<code format="java">`_
-import akka.camel.Failure
-import static akka.camel.Ack.ack;
-// ... other imports omitted
 
-public class Consumer3 extends UntypedConsumerActor {
+**Java**
+
+.. code-block:: java
+
+  import akka.camel.Failure
+  import static akka.camel.Ack.ack;
+  // ... other imports omitted
+
+  public class Consumer3 extends UntypedConsumerActor {
 
     public String getEndpointUri() {
-        return "jms:queue:test";
+      return "jms:queue:test";
     }
 
     public boolean isAutoack() {
-        return false;
+      return false;
     }
 
     public void onReceive(Object message) {
-        // ...
-        getContext().replyUnsafe(ack()) // on success
-        // ...
-        val e: Exception = ...
-        getContext().replyUnsafe(new Failure(e)) // on failure
+      // ...
+      getContext().replyUnsafe(ack()) // on success
+      // ...
+      val e: Exception = ...
+      getContext().replyUnsafe(new Failure(e)) // on failure
     }
-}
-`<code>`_ ||
+  }
 
 Blocking exchanges
 ^^^^^^^^^^^^^^^^^^
 
 By default, message exchanges between a Camel endpoint and a consumer actor are non-blocking because, internally, the ! (bang) operator is used to commicate with the actor. The route to the actor does not block waiting for a reply. The reply is sent asynchronously (see also `asynchronous routing <Camel#async-routing>`_). Consumer actors however can be configured to make this interaction blocking.
 
-|| **Scala** ||
-||
-`<code format="scala">`_
-class ExampleConsumer extends Actor with Consumer {
-  override def blocking = true
+**Scala**
 
-  def endpointUri = ...
-  def receive = {
-    // ...
+.. code-block:: scala
+
+  class ExampleConsumer extends Actor with Consumer {
+    override def blocking = true
+
+    def endpointUri = ...
+    def receive = {
+      // ...
+    }
   }
-}
-`<code>`_ ||
-|| **Java** ||
-||
-`<code format="java">`_
-public class ExampleConsumer extends UntypedConsumerActor {
+
+**Java**
+
+.. code-block:: java
+
+  public class ExampleConsumer extends UntypedConsumerActor {
 
     public boolean isBlocking() {
-        return true;
+      return true;
     }
 
     public String getEndpointUri() {
-        // ...
+      // ...
     }
 
     public void onReceive(Object message) {
-        // ...
+      // ...
     }
-}
-`<code>`_ ||
+  }
 
 In this case, the !! (bangbang) operator is used internally to communicate with the actor which blocks a thread until the consumer sends a response or throws an exception within receive. Although it may decrease scalability, this setting can simplify error handling (see `this article <http://krasserm.blogspot.com/2011/02/akka-consumer-actors-new-features-and.html>`_) or allows timeout configurations on actor-level (see `next section <Camel#timeout>`_).
 
@@ -540,62 +549,64 @@ Endpoints that support two-way communications need to wait for a response from a
 
 For typed actors, timeout values for method calls that return a result can be set when the typed actor is created. In the following example, the timeout is set to 20 seconds (default is 5 seconds).
 
-|| **Scala** ||
-||
-`<code format="scala">`_
-import akka.actor.TypedActor
+**Scala**
 
-val consumer = TypedActor.newInstance(classOf[TypedConsumer1], classOf[TypedConumer1Impl], 20000 /* 20 seconds */)
-`<code>`_ ||
-|| **Java** ||
-||
-`<code format="java">`_
-import akka.actor.TypedActor;
+.. code-block:: scala
 
-TypedConsumer1 consumer = TypedActor.newInstance(TypedConsumer1.class, TypedConumer1Impl.class, 20000 /* 20 seconds */);
-`<code>`_ ||
+  import akka.actor.TypedActor
+
+  val consumer = TypedActor.newInstance(classOf[TypedConsumer1], classOf[TypedConumer1Impl], 20000 /* 20 seconds */)
+
+**Java**
+
+.. code-block:: java
+
+  import akka.actor.TypedActor;
+
+  TypedConsumer1 consumer = TypedActor.newInstance(TypedConsumer1.class, TypedConumer1Impl.class, 20000 /* 20 seconds */);
 
 **(Untyped) actors**
 
 Two-way communications between a Camel endpoint and an (untyped) actor are initiated by sending the request message to the actor with the ! (bang) operator and the actor replies to the endpoint when the response is ready. In order to support timeouts on actor-level, endpoints need to send the request message with the !! (bangbang) operator for which a timeout value is applicable. This can be achieved by overriding the Consumer.blocking method to return true.
 
-|| **Scala** ||
-||
-`<code format="scala">`_
-class Consumer2 extends Actor with Consumer {
-  self.timeout = 20000 // timeout set to 20 seconds
+**Scala**
 
-  override def blocking = true
+.. code-block:: scala
 
-  def endpointUri = "direct:example"
+  class Consumer2 extends Actor with Consumer {
+    self.timeout = 20000 // timeout set to 20 seconds
 
-  def receive = {
-    // ...
+    override def blocking = true
+
+    def endpointUri = "direct:example"
+
+    def receive = {
+      // ...
+    }
   }
-}
-`<code>`_ ||
-|| **Java** ||
-||
-`<code format="java">`_
-public class Consumer2 extends UntypedConsumerActor {
+
+**Java**
+
+.. code-block:: java
+
+  public class Consumer2 extends UntypedConsumerActor {
 
     public Consumer2() {
-        getContext().setTimeout(20000); // timeout set to 20 seconds
+      getContext().setTimeout(20000); // timeout set to 20 seconds
     }
 
     public String getEndpointUri() {
-        return "direct:example";
+      return "direct:example";
     }
 
     public boolean isBlocking() {
-        return true;
+      return true;
     }
 
     public void onReceive(Object message) {
-        // ...
+      // ...
     }
-}
-`<code>`_ ||
+  }
 
 This is a valid approach for all endpoint types that do not "natively" support asynchronous two-way message exchanges. For all other endpoint types (like `jetty <http://camel.apache.org/jetty.html>`_ endpoints) is it not recommended to switch to blocking mode but rather to configure timeouts in an endpoint-specific way (see also `asynchronous routing <Camel#async-routing>`_).
 
@@ -606,71 +617,72 @@ Remote consumers
 
 Publishing of remote consumer actors is always done on the server side, local proxies are never published. Hence the CamelService must be started on the remote node. For example, to publish an (untyped) actor on a remote node at endpoint URI jetty:http://localhost:6644/remote-actor-1, define the following consumer actor class.
 
-|| **Scala** ||
-||
-`<code format="scala">`_
-import akka.actor.Actor
-import akka.annotation.consume
-import akka.camel.Consumer
+**Scala**
 
-class RemoteActor1 extends Actor with Consumer {
-  def endpointUri = "jetty:http://localhost:6644/remote-actor-1"
+.. code-block:: scala
 
-  protected def receive = {
-    case msg => self.reply("response from remote actor 1")
+  import akka.actor.Actor
+  import akka.annotation.consume
+  import akka.camel.Consumer
+
+  class RemoteActor1 extends Actor with Consumer {
+    def endpointUri = "jetty:http://localhost:6644/remote-actor-1"
+
+    protected def receive = {
+      case msg => self.reply("response from remote actor 1")
+    }
   }
-}
-`<code>`_ ||
-|| **Java** ||
-||
-`<code format="java">`_
-import akka.camel.UntypedConsumerActor;
 
-public class RemoteActor1 extends UntypedConsumerActor {
+**Java**
+
+.. code-block:: java
+
+  import akka.camel.UntypedConsumerActor;
+
+  public class RemoteActor1 extends UntypedConsumerActor {
     public String getEndpointUri() {
-        return "jetty:http://localhost:6644/remote-actor-1";
+      return "jetty:http://localhost:6644/remote-actor-1";
     }
 
     public void onReceive(Object message) {
-        getContext().replySafe("response from remote actor 1");
-   }
-}
-`<code>`_ ||
+      getContext().replySafe("response from remote actor 1");
+    }
+  }
 
 On the remote node, start a `CamelService <http://github.com/jboner/akka-modules/blob/master/akka-camel/src/main/scala/akka/camel/CamelService.scala>`_, start a remote server, create the actor and register it at the remote server.
 
-|| **Scala** ||
-||
-`<code format="scala">`_
-import akka.camel.CamelServiceManager._
-import akka.actor.Actor._
-import akka.actor.ActorRef
+**Scala**
 
-// ...
-startCamelService
+.. code-block:: scala
 
-val consumer = val consumer = actorOf[RemoteActor1]
+  import akka.camel.CamelServiceManager._
+  import akka.actor.Actor._
+  import akka.actor.ActorRef
 
-remote.start("localhost", 7777)
-remote.register(consumer) // register and start remote consumer
-// ...
-`<code>`_ ||
-|| **Java** ||
-||
-`<code format="java">`_
-import akka.camel.CamelServiceManager;
-import static akka.actor.Actors.*;
+  // ...
+  startCamelService
 
-// ...
-CamelServiceManager.startCamelService();
+  val consumer = val consumer = actorOf[RemoteActor1]
 
-ActorRef actor = actorOf(RemoteActor1.class);
+  remote.start("localhost", 7777)
+  remote.register(consumer) // register and start remote consumer
+  // ...
 
-remote().start("localhost", 7777);
-remote().register(actor); // register and start remote consumer
-// ...
+**Java**
 
-`<code>`_ ||
+.. code-block:: java
+
+  import akka.camel.CamelServiceManager;
+  import static akka.actor.Actors.*;
+
+  // ...
+  CamelServiceManager.startCamelService();
+
+  ActorRef actor = actorOf(RemoteActor1.class);
+
+  remote().start("localhost", 7777);
+  remote().register(actor); // register and start remote consumer
+  // ...
 
 Explicitly starting a CamelService can be omitted when Akka is running in Kernel mode, for example (see also section `CamelService configuration <Camel#configuration>`_).
 
@@ -678,55 +690,55 @@ Explicitly starting a CamelService can be omitted when Akka is running in Kernel
 
 Remote typed consumer actors can be registered with one of the registerTyped* methods on the remote server. The following example registers the actor with the custom id "123".
 
-|| **Scala** ||
-||
-`<code format="scala">`_
-import akka.actor.TypedActor
+**Scala**
 
-// ...
-val obj = TypedActor.newRemoteInstance(
-  classOf[SampleRemoteTypedConsumer],
-  classOf[SampleRemoteTypedConsumerImpl])
+.. code-block:: scala
 
-remote.registerTypedActor("123", obj)
-// ...
-`<code>`_ ||
-|| **Java** ||
-||
-`<code format="java">`_
-import akka.actor.TypedActor;
+  import akka.actor.TypedActor
 
-SampleRemoteTypedConsumer obj = (SampleRemoteTypedConsumer)TypedActor.newInstance(
+  // ...
+  val obj = TypedActor.newRemoteInstance(
+    classOf[SampleRemoteTypedConsumer],
+    classOf[SampleRemoteTypedConsumerImpl])
+
+  remote.registerTypedActor("123", obj)
+  // ...
+
+**Java**
+
+.. code-block:: java
+
+  import akka.actor.TypedActor;
+
+  SampleRemoteTypedConsumer obj = (SampleRemoteTypedConsumer)TypedActor.newInstance(
     SampleRemoteTypedConsumer.class,
     SampleRemoteTypedConsumerImpl.class);
 
-remote.registerTypedActor("123", obj)
-// ...
-`<code>`_ ||
+  remote.registerTypedActor("123", obj)
+  // ...
 
 Produce messages
 ----------------
 
 A minimum pre-requisite for producing messages to Camel endpoints with producer actors (see below) is an initialized and started CamelContextManager.
 
-|| **Scala** ||
-||
-`<code format="scala">`_
-import akka.camel.CamelContextManager
+**Scala**
 
-CamelContextManager.init  // optionally takes a CamelContext as argument
-CamelContextManager.start // starts the managed CamelContext
+.. code-block:: scala
 
-`<code>`_ ||
-|| **Java** ||
-||
-`<code format="java">`_
-import akka.camel.CamelContextManager;
+  import akka.camel.CamelContextManager
 
-CamelContextManager.init();  // optionally takes a CamelContext as argument
-CamelContextManager.start(); // starts the managed CamelContext
+  CamelContextManager.init  // optionally takes a CamelContext as argument
+  CamelContextManager.start // starts the managed CamelContext
 
-`<code>`_ ||
+**Java**
+
+.. code-block:: java
+
+  import akka.camel.CamelContextManager;
+
+  CamelContextManager.init();  // optionally takes a CamelContext as argument
+  CamelContextManager.start(); // starts the managed CamelContext
 
 For using producer actors, application may also start a CamelService. This will not only setup a CamelContextManager behind the scenes but also register listeners at the actor registry (needed to publish consumer actors). If your application uses producer actors only and you don't want to have the (very small) overhead generated by the registry listeners then setting up a CamelContextManager without starting CamelService is recommended. Otherwise, just start a CamelService `as described for consumer actors <Camel#consumers-and-camel-service>`_.
 
@@ -736,100 +748,104 @@ Producer trait
 **(Untyped) actors**
 
 For sending messages to Camel endpoints, actors
+
 * written in Scala need to mixin the `Producer <http://github.com/jboner/akka-modules/blob/master/akka-camel/src/main/scala/akka/camel/Producer.scala>`_ trait and implement the endpointUri method.
 * written in Java need to extend the abstract UntypedProducerActor class and implement the getEndpointUri() method. By extending the UntypedProducerActor class, untyped actors (Java) inherit the behaviour of the Producer trait.
 
-|| **Scala** ||
-||
-`<code format="scala">`_
-import akka.actor.Actor
-import akka.camel.Producer
+**Scala**
 
-class Producer1 extends Actor with Producer {
-  def endpointUri = "http://localhost:8080/news"
-}
-`<code>`_ ||
-|| **Java** ||
-||
-`<code format="java">`_
-import akka.camel.UntypedProducerActor;
+.. code-block:: scala
 
-public class Producer1 extends UntypedProducerActor {
+  import akka.actor.Actor
+  import akka.camel.Producer
+
+  class Producer1 extends Actor with Producer {
+    def endpointUri = "http://localhost:8080/news"
+  }
+
+**Java**
+
+.. code-block:: java
+
+  import akka.camel.UntypedProducerActor;
+
+  public class Producer1 extends UntypedProducerActor {
     public String getEndpointUri() {
-        return "http://localhost:8080/news";
+      return "http://localhost:8080/news";
     }
-}
-`<code>`_ ||
+  }
 
 Producer1 inherits a default implementation of the receive method from the Producer trait. To customize a producer actor's default behavior it is recommended to override the Producer.receiveBeforeProduce and Producer.receiveAfterProduce methods. This is explained later in more detail. Actors should not override the default Producer.receive method.
 
 Any message sent to a Producer actor (or UntypedProducerActor) will be sent to the associated Camel endpoint, in the above example to http://localhost:8080/news. Response messages (if supported by the configured endpoint) will, by default, be returned to the original sender. The following example uses the !! operator (Scala) to send a message to a Producer actor and waits for a response. In Java, the sendRequestReply method is used.
 
-|| **Scala** ||
-||
-`<code format="scala">`_
-import akka.actor.Actor._
-import akka.actor.ActorRef
+**Scala**
 
-val producer = actorOf[Producer1].start
-val response = producer !! "akka rocks"
-val body = response.bodyAs[String]
-`<code>`_ ||
-|| **Java** ||
-||
-`<code format="java">`_
-import akka.actor.ActorRef;
-import static akka.actor.Actors.*;
-import akka.camel.Message;
+.. code-block:: scala
 
-ActorRef producer = actorOf(Producer1.class).start();
-Message response = (Message)producer.sendRequestReply("akka rocks");
-String body = response.getBodyAs(String.class)
-`<code>`_ ||
+  import akka.actor.Actor._
+  import akka.actor.ActorRef
+
+  val producer = actorOf[Producer1].start
+  val response = producer !! "akka rocks"
+  val body = response.bodyAs[String]
+
+**Java**
+
+.. code-block:: java
+
+  import akka.actor.ActorRef;
+  import static akka.actor.Actors.*;
+  import akka.camel.Message;
+
+  ActorRef producer = actorOf(Producer1.class).start();
+  Message response = (Message)producer.sendRequestReply("akka rocks");
+  String body = response.getBodyAs(String.class)
 
 If the message is sent using the ! operator (or the sendOneWay method in Java) then the response message is sent back asynchronously to the original sender. In the following example, a Sender actor sends a message (a String) to a producer actor using the ! operator and asynchronously receives a response (of type Message).
 
-|| **Scala** ||
-||
-`<code format="scala">`_
-import akka.actor.{Actor, ActorRef}
-import akka.camel.Message
+**Scala**
 
-class Sender(producer: ActorRef) extends Actor {
-  def receive = {
-    case request: String   => producer ! request
-    case response: Message => {
-      /* process response ... */
+.. code-block:: scala
+
+  import akka.actor.{Actor, ActorRef}
+  import akka.camel.Message
+
+  class Sender(producer: ActorRef) extends Actor {
+    def receive = {
+      case request: String   => producer ! request
+      case response: Message => {
+        /* process response ... */
+      }
+      // ...
     }
-    // ...
   }
-}
-`<code>`_ ||
-|| **Java** ||
-||
-`<code format="java">`_
-// TODO
-`<code>`_ ||
+
+**Java**
+
+.. code-block:: java
+
+  // TODO
 
 Instead of replying to the initial sender, producer actors can implement custom reponse processing by overriding the receiveAfterProduce method (Scala) or onReceiveAfterProduce method (Java). In the following example, the reponse message is forwarded to a target actor instead of being replied to the original sender.
 
-|| **Scala** ||
-||
-`<code format="scala">`_
-import akka.actor.{Actor, ActorRef}
-import akka.camel.Producer
+**Scala**
 
-class Producer1(target: ActorRef) extends Actor with Producer {
-  def endpointUri = "http://localhost:8080/news"
+.. code-block:: scala
 
-  override protected def receiveAfterProduce = {
-    // do not reply but forward result to target
-    case msg => target forward msg
+  import akka.actor.{Actor, ActorRef}
+  import akka.camel.Producer
+
+  class Producer1(target: ActorRef) extends Actor with Producer {
+    def endpointUri = "http://localhost:8080/news"
+
+    override protected def receiveAfterProduce = {
+      // do not reply but forward result to target
+      case msg => target forward msg
+    }
   }
-}
-`<code>`_ ||
-|| **Java** ||
-||
+
+**Java**
 
 .. code-block:: java
 
@@ -876,67 +892,68 @@ be doable without a factory in upcoming Akka versions).
   }
 
 The instanitation is done with the Actors.actorOf method and the factory as argument.
-`<code format="java">`_
-import static akka.actor.Actors.*;
-import akka.actor.ActorRef;
 
-ActorRef target = ...
-ActorRef producer = actorOf(new Producer1Factory(target));
-producer.start();
-`<code>`_ ||
+.. code-block:: java
+
+  import static akka.actor.Actors.*;
+  import akka.actor.ActorRef;
+
+  ActorRef target = ...
+  ActorRef producer = actorOf(new Producer1Factory(target));
+  producer.start();
 
 Before producing messages to endpoints, producer actors can pre-process them by overriding the receiveBeforeProduce method (Scala) or onReceiveBeforeProduce method (Java).
 
-|| **Scala** ||
-||
-`<code format="scala">`_
-import akka.actor.{Actor, ActorRef}
-import akka.camel.{Message, Producer}
+**Scala**
 
-class Producer1(target: ActorRef) extends Actor with Producer {
-  def endpointUri = "http://localhost:8080/news"
+.. code-block:: scala
 
-  override protected def receiveBeforeProduce = {
-    case msg: Message => {
-      // do some pre-processing (e.g. add endpoint-specific message headers)
-      // ...
+  import akka.actor.{Actor, ActorRef}
+  import akka.camel.{Message, Producer}
 
-      // and return the modified message
-      msg
+  class Producer1(target: ActorRef) extends Actor with Producer {
+    def endpointUri = "http://localhost:8080/news"
+
+    override protected def receiveBeforeProduce = {
+      case msg: Message => {
+        // do some pre-processing (e.g. add endpoint-specific message headers)
+        // ...
+
+        // and return the modified message
+        msg
+      }
     }
   }
-}
-`<code>`_ ||
-|| **Java** ||
-||
-`<code format="java">`_
-import akka.actor.ActorRef;
-import akka.camel.Message
-import akka.camel.UntypedProducerActor;
 
-public class Producer1 extends UntypedProducerActor {
-    private ActorRef target;
+**Java**
 
-    public Producer1(ActorRef target) {
-        this.target = target;
-    }
+.. code-block:: java
 
-    public String getEndpointUri() {
-        return "http://localhost:8080/news";
-    }
+  import akka.actor.ActorRef;
+  import akka.camel.Message
+  import akka.camel.UntypedProducerActor;
 
-    @Override
-    public Object onReceiveBeforeProduce(Object message) {
-      Message msg = (Message)message;
-      // do some pre-processing (e.g. add endpoint-specific message headers)
-      // ...
+  public class Producer1 extends UntypedProducerActor {
+      private ActorRef target;
 
-      // and return the modified message
-      return msg
-    }
-}
+      public Producer1(ActorRef target) {
+          this.target = target;
+      }
 
-`<code>`_ ||
+      public String getEndpointUri() {
+          return "http://localhost:8080/news";
+      }
+
+      @Override
+      public Object onReceiveBeforeProduce(Object message) {
+          Message msg = (Message)message;
+          // do some pre-processing (e.g. add endpoint-specific message headers)
+          // ...
+
+          // and return the modified message
+          return msg
+      }
+  }
 
 Producer configuration options
 ******************************
@@ -946,51 +963,52 @@ The interaction of producer actors with Camel endpoints can be configured to be 
 * written in Scala either have to override the oneway method to return true
 * written in Java have to override the isOneway method to return true.
 
-|| **Scala** ||
-||
-`<code format="scala">`_
-import akka.camel.Producer
+**Scala**
 
-class Producer2 extends Actor with Producer {
-  def endpointUri = "jms:queue:test"
-  override def oneway = true
-}
-`<code>`_ ||
-|| **Java** ||
-||
-`<code format="java">`_
-import akka.camel.UntypedProducerActor;
+.. code-block:: scala
 
-public class SampleUntypedReplyingProducer extends UntypedProducerActor {
-    public String getEndpointUri() {
-        return "jms:queue:test";
-    }
+  import akka.camel.Producer
 
-    @Override
-    public boolean isOneway() {
-        return true;
-    }
-}
-`<code>`_ ||
+  class Producer2 extends Actor with Producer {
+    def endpointUri = "jms:queue:test"
+    override def oneway = true
+  }
+
+**Java**
+
+.. code-block:: java
+
+  import akka.camel.UntypedProducerActor;
+
+  public class SampleUntypedReplyingProducer extends UntypedProducerActor {
+      public String getEndpointUri() {
+          return "jms:queue:test";
+      }
+
+      @Override
+      public boolean isOneway() {
+          return true;
+      }
+  }
 
 Message correlation
 *******************
 
 To correlate request with response messages, applications can set the Message.MessageExchangeId message header.
 
-|| **Scala** ||
-||
-`<code format="scala">`_
-import akka.camel.Message
+**Scala**
 
-producer ! Message("bar", Map(Message.MessageExchangeId -> "123"))
-`<code>`_ ||
-|| **Java** ||
-||
-`<code format="java">`_
-// TODO
+.. code-block:: scala
 
-`<code>`_ ||
+  import akka.camel.Message
+
+  producer ! Message("bar", Map(Message.MessageExchangeId -> "123"))
+
+**Java**
+
+.. code-block:: java
+
+  // TODO
 
 Responses of type Message or Failure will contain that header as well. When receiving messages from Camel endpoints this message header is already set (see `Consume messages <Camel#consume>`_).
 
@@ -999,23 +1017,23 @@ Responses of type Message or Failure will contain that header as well. When rece
 
 The following code snippet shows how to best match responses when sending messages with the !! operator (Scala) or with the sendRequestReply method (Java).
 
-|| **Scala** ||
-||
-`<code format="scala">`_
-val response = producer !! message
+**Scala**
 
-response match {
-  case Some(Message(body, headers)) => ...
-  case Some(Failure(exception, headers)) => ...
-  case _ => ...
-}
-`<code>`_ ||
-|| **Java** ||
-||
-`<code format="java">`_
-// TODO
+.. code-block:: scala
 
-`<code>`_ ||
+  val response = producer !! message
+
+  response match {
+    case Some(Message(body, headers)) => ...
+    case Some(Failure(exception, headers)) => ...
+    case _ => ...
+  }
+
+**Java**
+
+.. code-block:: java
+
+  // TODO
 
 ProducerTemplate
 ^^^^^^^^^^^^^^^^
@@ -1028,117 +1046,118 @@ At the moment, only the Producer trait fully supports asynchronous in-out messag
 
 A managed ProducerTemplate instance can be obtained via CamelContextManager.mandatoryTemplate. In the following example, an actor uses a ProducerTemplate to send a one-way message to a direct:news endpoint.
 
-|| **Scala** ||
-||
-`<code format="scala">`_
-import akka.actor.Actor
-import akka.camel.CamelContextManager
+**Scala**
 
-class ProducerActor extends Actor {
-  protected def receive = {
-    // one-way message exchange with direct:news endpoint
-    case msg => CamelContextManager.mandatoryTemplate.sendBody("direct:news", msg)
-  }
-}
-`<code>`_ ||
-|| **Java** ||
-||
-`<code format="java">`_
-import akka.actor.UntypedActor;
-import akka.camel.CamelContextManager;
+.. code-block:: scala
 
-public class SampleUntypedActor extends UntypedActor {
-    public void onReceive(Object msg) {
-        CamelContextManager.getMandatoryTemplate().sendBody("direct:news", msg);
+  import akka.actor.Actor
+  import akka.camel.CamelContextManager
+
+  class ProducerActor extends Actor {
+    protected def receive = {
+      // one-way message exchange with direct:news endpoint
+      case msg => CamelContextManager.mandatoryTemplate.sendBody("direct:news", msg)
     }
-}
+  }
 
-`<code>`_ ||
+**Java**
+
+.. code-block:: java
+
+  import akka.actor.UntypedActor;
+  import akka.camel.CamelContextManager;
+
+  public class SampleUntypedActor extends UntypedActor {
+      public void onReceive(Object msg) {
+          CamelContextManager.getMandatoryTemplate().sendBody("direct:news", msg);
+      }
+  }
 
 Alternatively, one can also use Option[ProducerTemplate] returned by CamelContextManager.template.
 
-|| **Scala** ||
-||
-`<code format="scala">`_
-import akka.actor.Actor
-import akka.camel.CamelContextManager
+**Scala**
 
-class ProducerActor extends Actor {
-  protected def receive = {
-    // one-way message exchange with direct:news endpoint
-    case msg => for(t <- CamelContextManager.template) t.sendBody("direct:news", msg)
-  }
-}
-`<code>`_ ||
-|| **Java** ||
-||
-`<code format="java">`_
-import org.apache.camel.ProducerTemplate
+.. code-block:: scala
 
-import akka.actor.UntypedActor;
-import akka.camel.CamelContextManager;
+  import akka.actor.Actor
+  import akka.camel.CamelContextManager
 
-public class SampleUntypedActor extends UntypedActor {
-    public void onReceive(Object msg) {
-        for (ProducerTemplate t : CamelContextManager.getTemplate()) {
-            t.sendBody("direct:news", msg);
-        }
+  class ProducerActor extends Actor {
+    protected def receive = {
+      // one-way message exchange with direct:news endpoint
+      case msg => for(t <- CamelContextManager.template) t.sendBody("direct:news", msg)
     }
-}
+  }
 
-`<code>`_ ||
+**Java**
+
+.. code-block:: java
+
+  import org.apache.camel.ProducerTemplate
+
+  import akka.actor.UntypedActor;
+  import akka.camel.CamelContextManager;
+
+  public class SampleUntypedActor extends UntypedActor {
+      public void onReceive(Object msg) {
+          for (ProducerTemplate t : CamelContextManager.getTemplate()) {
+              t.sendBody("direct:news", msg);
+          }
+      }
+  }
 
 For initiating a a two-way message exchange, one of the ProducerTemplate.request* methods must be used.
 
-|| **Scala** ||
-||
-`<code format="scala">`_
-import akka.actor.Actor
-import akka.camel.CamelContextManager
+**Scala**
 
-class ProducerActor extends Actor {
-  protected def receive = {
-    // two-way message exchange with direct:news endpoint
-    case msg => self.reply(CamelContextManager.mandatoryTemplate.requestBody("direct:news", msg))
-  }
-}
-`<code>`_ ||
-|| **Java** ||
-||
-`<code format="java">`_
-import akka.actor.UntypedActor;
-import akka.camel.CamelContextManager;
+.. code-block:: scala
 
-public class SampleUntypedActor extends UntypedActor {
-    public void onReceive(Object msg) {
-        getContext().replySafe(CamelContextManager.getMandatoryTemplate().requestBody("direct:news", msg));
+  import akka.actor.Actor
+  import akka.camel.CamelContextManager
+
+  class ProducerActor extends Actor {
+    protected def receive = {
+      // two-way message exchange with direct:news endpoint
+      case msg => self.reply(CamelContextManager.mandatoryTemplate.requestBody("direct:news", msg))
     }
-}
+  }
 
-`<code>`_ ||
+**Java**
+
+.. code-block:: java
+
+  import akka.actor.UntypedActor;
+  import akka.camel.CamelContextManager;
+
+  public class SampleUntypedActor extends UntypedActor {
+      public void onReceive(Object msg) {
+          getContext().replySafe(CamelContextManager.getMandatoryTemplate().requestBody("direct:news", msg));
+      }
+  }
 
 **Typed actors**
 
 Typed Actors get access to a managed ProducerTemplate in the same way, as shown in the next example.
 
-|| **Scala** ||
-||
-`<code format="scala">`_
-// TODO
-`<code>`_ ||
-|| **Java** ||
-||
-`<code format="java">`_
-import akka.actor.TypedActor;
-import akka.camel.CamelContextManager;
+**Scala**
 
-public class SampleProducerImpl extends TypedActor implements SampleProducer {
-    public void foo(String msg) {
-        ProducerTemplate template = CamelContextManager.getMandatoryTemplate();
-        template.sendBody("direct:news", msg);
-    }
-}
-`<code>`_ ||
+.. code-block:: scala
+
+  // TODO
+
+**Java**
+
+.. code-block:: java
+
+  import akka.actor.TypedActor;
+  import akka.camel.CamelContextManager;
+
+  public class SampleProducerImpl extends TypedActor implements SampleProducer {
+      public void foo(String msg) {
+          ProducerTemplate template = CamelContextManager.getMandatoryTemplate();
+          template.sendBody("direct:news", msg);
+      }
+  }
 
 Asynchronous routing
 --------------------
@@ -1154,12 +1173,14 @@ Fault tolerance
 ---------------
 
 Consumer actors and typed actors can be also managed by supervisors. If a consumer is configured to be restarted upon failure the associated Camel endpoint is not restarted. It's behaviour during restart is as follows.
+
 * A one-way (in-only) message exchange will be queued by the consumer and processed once restart completes.
 * A two-way (in-out) message exchange will wait and either succeed after restart completes or time-out when the restart duration exceeds the `configured timeout <Camel#timeout>`_.
 
 If a consumer is configured to be shut down upon failure, the associated endpoint is shut down as well. For details refer to the `consumer un-publishing <Camel#unpublishing>`_ section.
 
 For examples, tips and trick how to implement fault-tolerant consumer and producer actors, take a look at these two articles.
+
 * `Akka Consumer Actors: New Features and Best Practices <http://krasserm.blogspot.com/2011/02/akka-consumer-actors-new-features-and.html>`_
 * `Akka Producer Actors: New Features and Best Practices <http://krasserm.blogspot.com/2011/02/akka-producer-actor-new-features-and.html>`_
 
@@ -1183,73 +1204,75 @@ Standalone applications
 
 Standalone application should create and start a CamelService in the following way.
 
-|| **Scala** ||
-||
-`<code format="scala">`_
-import akka.camel.CamelServiceManager._
+**Scala**
 
-startCamelService
-`<code>`_ ||
-|| **Java** ||
-||
-`<code format="java">`_
-import static akka.camel.CamelServiceManager.*;
+.. code-block:: scala
 
-startCamelService();
+  import akka.camel.CamelServiceManager._
 
-`<code>`_ ||
+  startCamelService
+
+**Java**
+
+.. code-block:: java
+
+  import static akka.camel.CamelServiceManager.*;
+
+  startCamelService();
 
 Internally, a CamelService uses the CamelContextManager singleton to manage a CamelContext. A CamelContext manages the routes from endpoints to consumer actors and typed actors. These routes are added and removed at runtime (when (untyped) consumer actors and typed consumer actors are started and stopped). Applications may additionally want to add their own custom routes or modify the CamelContext in some other way. This can be done by initializing the CamelContextManager manually and making modifications to CamelContext **before** the CamelService is started.
 
-|| Scala ||
-||
-`<code format="scala">`_
-import org.apache.camel.builder.RouteBuilder
+**Scala**
 
-import akka.camel.CamelContextManager
-import akka.camel.CamelServiceManager._
+.. code-block:: scala
 
-CamelContextManager.init
+  import org.apache.camel.builder.RouteBuilder
 
-// add a custom route to the managed CamelContext
-CamelContextManager.mandatoryContext.addRoutes(new CustomRouteBuilder)
+  import akka.camel.CamelContextManager
+  import akka.camel.CamelServiceManager._
 
-startCamelService
+  CamelContextManager.init
 
-// an application-specific route builder
-class CustomRouteBuilder extends RouteBuilder {
-  def configure {
-    // ...
-  }
-}
-`<code>`_ ||
-|| Java ||
-||
-`<code format="java">`_
-import org.apache.camel.builder.RouteBuilder;
+  // add a custom route to the managed CamelContext
+  CamelContextManager.mandatoryContext.addRoutes(new CustomRouteBuilder)
 
-import akka.camel.CamelContextManager;
-import static akka.camel.CamelServiceManager.*;
+  startCamelService
 
-CamelContextManager.init();
-
-// add a custom route to the managed CamelContext
-CamelContextManager.getMandatoryContext().addRoutes(new CustomRouteBuilder());
-
-startCamelService();
-
-// an application-specific route builder
-private static class CustomRouteBuilder extends RouteBuilder {
-    public void configure() {
-        // ...
+  // an application-specific route builder
+  class CustomRouteBuilder extends RouteBuilder {
+    def configure {
+      // ...
     }
-}
+  }
 
-`<code>`_ ||
+**Java**
+
+.. code-block:: java
+
+  import org.apache.camel.builder.RouteBuilder;
+
+  import akka.camel.CamelContextManager;
+  import static akka.camel.CamelServiceManager.*;
+
+  CamelContextManager.init();
+
+  // add a custom route to the managed CamelContext
+  CamelContextManager.getMandatoryContext().addRoutes(new CustomRouteBuilder());
+
+  startCamelService();
+
+  // an application-specific route builder
+  private static class CustomRouteBuilder extends RouteBuilder {
+      public void configure() {
+          // ...
+      }
+  }
+
+
 
 Applications may even provide their own CamelContext instance as argument to the init method call as shown in the following snippet. Here, a DefaultCamelContext is created using a Spring application context as `registry <http://camel.apache.org/registry.html>`_.
 
-|| **Scala** ||
+**Scala**
 ||
 `<code format="scala">`_
 import org.apache.camel.impl.DefaultCamelContext
@@ -1269,7 +1292,7 @@ CamelContextManager.init(new DefaultCamelContext(registry))
 // ...
 
 startCamelService
-`<code>`_ ||
+
 || **Java** ||
 ||
 `<code format="java">`_
@@ -1294,7 +1317,7 @@ CamelContextManager.init(new DefaultCamelContext(registry));
 
 startCamelService();
 
-`<code>`_ ||
+
 
 Standalone Spring applications
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -1331,7 +1354,7 @@ A better approach to configure a Spring application context as registry for the 
 
 Creating a CamelContext this way automatically adds the defining Spring application context as registry to that CamelContext. The CamelService is started when the application context is started and stopped when the application context is closed. A simple usage example is shown in the following snippet.
 
-|| **Scala** ||
+**Scala**
 ||
 `<code format="scala">`_
 import org.springframework.context.support.ClassPathXmlApplicationContext
@@ -1349,12 +1372,12 @@ val tpl = CamelContextManager.mandatoryTemplate
 
 // Close application context (stop CamelService)
 appctx.close
-`<code>`_ ||
+
 || **Java** ||
 ||
 `<code format="java">`_
 // TODO
-`<code>`_ ||
+
 
 If the CamelService doesn't reference a custom CamelContext then a DefaultCamelContext is created (and accessible via the CamelContextManager).
 
@@ -1389,7 +1412,7 @@ For classes that are loaded by the Kernel or the Initializer, starting the Camel
 
 Modifications to the CamelContext can be done like in the following snippet.
 
-|| **Scala** ||
+**Scala**
 ||
 `<code format="scala">`_
 package sample.camel
@@ -1413,13 +1436,13 @@ class CustomRouteBuilder extends RouteBuilder {
     // ...
   }
 }
-`<code>`_ ||
+
 || **Java** ||
 ||
 `<code format="java">`_
 // TODO
 
-`<code>`_ ||
+
 
 Custom Camel routes
 -------------------
@@ -1469,7 +1492,7 @@ Here's another actor endpoint URI example that doesn't define an actor uuid. In 
 
 In the following example, a custom route to an actor is created, using the actor's uuid (i.e. actorRef.uuid). The route starts from a `jetty <http://camel.apache.org/jetty.html>`_ endpoint and ends at the target actor.
 
-|| **Scala** ||
+**Scala**
 ||
 `<code format="scala">`_
 import org.apache.camel.builder.RouteBuilder
@@ -1498,7 +1521,7 @@ class CustomRouteBuilder(uuid: Uuid) extends RouteBuilder {
     from("jetty:http://localhost:8877/camel/custom").to(actorUri)
   }
 }
-`<code>`_ ||
+
 || **Java** ||
 ||
 `<code format="java">`_
@@ -1541,7 +1564,7 @@ public class CustomRouteBuilder extends RouteBuilder {
     }
 }
 
-`<code>`_ ||
+
 
 When the example is started, messages POSTed to http://localhost:8877/camel/custom are routed to the target actor.
 
@@ -1590,7 +1613,7 @@ The following example shows how to access typed actors in a Spring application c
 
 SampleTypedActor is the typed actor interface and SampleTypedActorImpl in the typed actor implementation class.
 
-|| **Scala** ||
+**Scala**
 ||
 `<code format="scala">`_
 package sample
@@ -1604,7 +1627,7 @@ trait SampleTypedActor {
 class SampleTypedActorImpl extends TypedActor with SampleTypedActor {
   def foo(s: String) = "hello %s" format s
 }
-`<code>`_ ||
+
 || **Java** ||
 ||
 `<code format="java">`_
@@ -1622,11 +1645,11 @@ public class SampleTypedActorImpl extends TypedActor implements SampleTypedActor
         return "hello " + s;
     }
 }
-`<code>`_ ||
+
 
 The SampleRouteBuilder defines a custom route from the direct:test endpoint to the sample typed actor using a typed-actor endpoint URI.
 
-|| **Scala** ||
+**Scala**
 ||
 `<code format="scala">`_
 package sample
@@ -1639,7 +1662,7 @@ class SampleRouteBuilder extends RouteBuilder {
     from("direct:test").to("typed-actor:sample?method=foo")
   }
 }
-`<code>`_ ||
+
 || **Java** ||
 ||
 `<code format="java">`_
@@ -1654,7 +1677,7 @@ public class SampleRouteBuilder extends RouteBuilder {
     }
 }
 
-`<code>`_ ||
+
 
 The typed-actor endpoint URI syntax is
 
@@ -1664,7 +1687,7 @@ where <bean-id> is the id of the bean in the Spring application context and <met
 
 Usage of the custom route for sending a message to the typed actor is shown in the following snippet.
 
-|| **Scala** ||
+**Scala**
 ||
 `<code format="scala">`_
 package sample
@@ -1680,7 +1703,7 @@ assert("hello akka" == CamelContextManager.mandatoryTemplate.requestBody("direct
 
 // close Spring application context (stops CamelService)
 appctx.close
-`<code>`_ ||
+
 || **Java** ||
 ||
 `<code format="java">`_
@@ -1698,7 +1721,7 @@ assert("hello akka" == CamelContextManager.getMandatoryTemplate().requestBody("d
 // close Spring application context (stops CamelService)
 appctx.close();
 
-`<code>`_ ||
+
 
 The application uses a Camel `producer template <http://camel.apache.org/producertemplate.html>`_ to access the typed actor via the direct:test endpoint.
 
@@ -1707,7 +1730,7 @@ Without Spring
 
 Usage of `akka-spring <spring-integration>`_ for adding typed actors to the Camel registry and starting a CamelService is optional. Setting up a Spring-less application for accessing typed actors is shown in the next example.
 
-|| **Scala** ||
+**Scala**
 ||
 `<code format="scala">`_
 package sample
@@ -1731,7 +1754,7 @@ startCamelService
 assert("hello akka" == CamelContextManager.mandatoryTemplate.requestBody("direct:test", "akka"))
 
 stopCamelService
-`<code>`_ ||
+
 || **Java** ||
 ||
 `<code format="java">`_
@@ -1752,7 +1775,7 @@ assert("hello akka" == CamelContextManager.getMandatoryTemplate().requestBody("d
 
 stopCamelService();
 
-`<code>`_ ||
+
 
 Here, `SimpleRegistry <https://svn.apache.org/repos/asf/camel/trunk/camel-core/src/main/java/org/apache/camel/impl/SimpleRegistry.java>`_, a java.util.Map based registry, is used to register typed actors. The CamelService is started and stopped programmatically.
 
@@ -1765,70 +1788,71 @@ The following examples demonstrate how to extend a route to a consumer actor for
 
 **(Untyped) actors**
 
-|| **Scala** ||
-||
-`<code format="scala">`_
-import akka.actor.Actor
-import akka.camel.Consumer
+**Scala**
 
-import org.apache.camel.builder.Builder
-import org.apache.camel.model.RouteDefinition
+.. code-block:: scala
 
-class ErrorHandlingConsumer extends Actor with Consumer {
-  def endpointUri = "direct:error-handler-test"
+  import akka.actor.Actor
+  import akka.camel.Consumer
 
-  // Needed to propagate exception back to caller
-  override def blocking = true
+  import org.apache.camel.builder.Builder
+  import org.apache.camel.model.RouteDefinition
 
-  onRouteDefinition {rd: RouteDefinition =>
-    // Catch any exception and handle it by returning the exception message as response
-    rd.onException(classOf[Exception]).handled(true).transform(Builder.exceptionMessage).end
-  }
-
-  protected def receive = {
-    case msg: Message => throw new Exception("error: %s" format msg.body)
-  }
-}
-
-`<code>`_ ||
-|| **Java** ||
-||
-`<code format="java">`_
-import akka.camel.UntypedConsumerActor;
-
-import org.apache.camel.builder.Builder;
-import org.apache.camel.model.ProcessorDefinition;
-import org.apache.camel.model.RouteDefinition;
-
-public class SampleErrorHandlingConsumer extends UntypedConsumerActor {
-
-    public String getEndpointUri() {
-        return "direct:error-handler-test";
-    }
+  class ErrorHandlingConsumer extends Actor with Consumer {
+    def endpointUri = "direct:error-handler-test"
 
     // Needed to propagate exception back to caller
-    public boolean isBlocking() {
-        return true;
+    override def blocking = true
+
+    onRouteDefinition {rd: RouteDefinition =>
+      // Catch any exception and handle it by returning the exception message as response
+      rd.onException(classOf[Exception]).handled(true).transform(Builder.exceptionMessage).end
     }
 
-    public void preStart() {
-        onRouteDefinition(new RouteDefinitionHandler() {
-            public ProcessorDefinition<?> onRouteDefinition(RouteDefinition rd) {
-                // Catch any exception and handle it by returning the exception message as response
-                return rd.onException(Exception.class).handled(true).transform(Builder.exceptionMessage()).end();
-            }
-        });
+    protected def receive = {
+      case msg: Message => throw new Exception("error: %s" format msg.body)
     }
+  }
 
-    public void onReceive(Object message) throws Exception {
-        Message msg = (Message)message;
-        String body = msg.getBodyAs(String.class);
-        throw new Exception(String.format("error: %s", body));
-   }
+**Java**
 
-}
+.. code-block:: java
 
-`<code>`_ ||
+  import akka.camel.UntypedConsumerActor;
+
+  import org.apache.camel.builder.Builder;
+  import org.apache.camel.model.ProcessorDefinition;
+  import org.apache.camel.model.RouteDefinition;
+
+  public class SampleErrorHandlingConsumer extends UntypedConsumerActor {
+
+      public String getEndpointUri() {
+          return "direct:error-handler-test";
+      }
+
+      // Needed to propagate exception back to caller
+      public boolean isBlocking() {
+          return true;
+      }
+
+      public void preStart() {
+          onRouteDefinition(new RouteDefinitionHandler() {
+              public ProcessorDefinition<?> onRouteDefinition(RouteDefinition rd) {
+                  // Catch any exception and handle it by returning the exception message as response
+                  return rd.onException(Exception.class).handled(true).transform(Builder.exceptionMessage()).end();
+              }
+          });
+      }
+
+      public void onReceive(Object message) throws Exception {
+          Message msg = (Message)message;
+          String body = msg.getBodyAs(String.class);
+          throw new Exception(String.format("error: %s", body));
+     }
+
+  }
+
+
 
 For (untyped) actors, consumer route extensions are defined by calling the onRouteDefinition method with a route definition handler. In Scala, this is a function of type RouteDefinition => ProcessorDefinition[_], in Java it is an instance of RouteDefinitionHandler which is defined as follows.
 
@@ -1865,36 +1889,36 @@ For typed consumer actors to define a route definition handler, they must provid
 
 It can be used as follows.
 
-|| **Scala** ||
-||
-`<code format="scala">`_
-trait TestTypedConsumer {
-  @consume(value="direct:error-handler-test", routeDefinitionHandler=classOf[SampleRouteDefinitionHandler])
-  def foo(s: String): String
-}
+**Scala**
 
-// implementation class omitted
+.. code-block:: scala
 
-`<code>`_ ||
-|| **Java** ||
-||
-`<code format="java">`_
-public interface SampleErrorHandlingTypedConsumer {
+  trait TestTypedConsumer {
+    @consume(value="direct:error-handler-test", routeDefinitionHandler=classOf[SampleRouteDefinitionHandler])
+    def foo(s: String): String
+  }
 
-    @consume(value="direct:error-handler-test", routeDefinitionHandler=SampleRouteDefinitionHandler.class)
-    String foo(String s);
+  // implementation class omitted
 
-}
+**Java**
 
-// implementation class omitted
-`<code>`_ ||
+.. code-block:: java
+
+  public interface SampleErrorHandlingTypedConsumer {
+
+      @consume(value="direct:error-handler-test", routeDefinitionHandler=SampleRouteDefinitionHandler.class)
+      String foo(String s);
+
+  }
+
+  // implementation class omitted
 
 Examples
 --------
 
 For all features described so far, there's running sample code in `akka-sample-camel <http://github.com/jboner/akka-modules/tree/master/akka-samples/akka-sample-camel/>`_. The examples in `sample.camel.Boot <http://github.com/jboner/akka-modules/blob/master/akka-samples/akka-sample-camel/src/main/scala/sample/camel/Boot.scala>`_ are started during Kernel startup because this class has been added to the boot configuration in akka-reference.conf.
 
-.. code-block:: ruby
+::
 
   akka {
     ...
