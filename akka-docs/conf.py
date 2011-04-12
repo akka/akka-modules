@@ -12,14 +12,14 @@ extensions = ['sphinx.ext.todo']
 templates_path = ['_templates']
 source_suffix = '.rst'
 master_doc = 'index'
-exclude_patterns = ['_build']
+exclude_patterns = ['_build', 'pending']
 
-project = u'Akka'
+project = u'Akka Modules'
 copyright = u'2009-2011, Scalable Solutions AB'
-version = '1.0'
-release = '1.0'
+version = '1.1'
+release = '1.1'
 
-#pygments_style = 'akka'
+pygments_style = 'akka'
 highlight_language = 'scala'
 
 # -- Options for HTML output ---------------------------------------------------
@@ -52,7 +52,7 @@ latex_paper_size = 'a4'
 latex_font_size = '10pt'
 
 latex_documents = [
-  ('index', 'Akka.tex', u' Akka Documentation',
+  ('index', 'AkkaModules.tex', u' Akka Modules Documentation',
    u'Scalable Solutions AB', 'manual'),
 ]
 
