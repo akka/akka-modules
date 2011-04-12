@@ -215,7 +215,7 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
   lazy val akka_scalaz      = project("akka-scalaz", "akka-scalaz", new AkkaScalazProject(_))
   lazy val akka_disp_extras = project("akka-dispatcher-extras", "akka-dispatcher-extras", new AkkaDispatcherExtrasProject(_))
   lazy val akka_sbt_plugin  = project("akka-sbt-plugin",  "akka-sbt-plugin",  new AkkaSbtPluginProject(_))
-  lazy val akka_samples     = project("akka-samples", "akka-samples", new AkkaSamplesParentProject(_))
+  lazy val akka_samples     = project("akka-modules-samples", "akka-modules-samples", new AkkaModulesSamplesParentProject(_))
 
   // -------------------------------------------------------------------------------------------------------------------
   // Miscellaneous
@@ -608,7 +608,7 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
     override lazy val bndExportPackage = Nil // Necessary because of mixing-in AkkaModulesDefaultProject which exports all ...akka.* packages!
   }
 
-  class AkkaSamplesParentProject(info: ProjectInfo) extends ParentProject(info) {
+  class AkkaModulesSamplesParentProject(info: ProjectInfo) extends ParentProject(info) {
     override def disableCrossPaths = true
 
     lazy val akka_sample_camel = project("akka-sample-camel", "akka-sample-camel",
@@ -617,6 +617,11 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
       new AkkaSampleSecurityProject(_), akka_kernel)
     lazy val akka_sample_osgi = project("akka-sample-osgi", "akka-sample-osgi",
       new AkkaSampleOSGiProject(_))
+
+    lazy val publishRelease = {
+      val releaseConfiguration = new DefaultPublishConfiguration(localReleaseRepository, "release", false)
+      publishTask(publishIvyModule, releaseConfiguration) dependsOn (deliver, publishLocal, makePom)
+    }
   }
 
   // -------------------------------------------------------------------------------------------------------------------
