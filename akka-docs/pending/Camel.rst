@@ -1928,7 +1928,7 @@ It can be used as follows.
 Examples
 --------
 
-For all features described so far, there's running sample code in `akka-sample-camel <http://github.com/jboner/akka-modules/tree/master/akka-samples/akka-sample-camel/>`_. The examples in `sample.camel.Boot <http://github.com/jboner/akka-modules/blob/master/akka-samples/akka-sample-camel/src/main/scala/sample/camel/Boot.scala>`_ are started during Kernel startup because this class has been added to the boot configuration in akka-reference.conf.
+For all features described so far, there's running sample code in `akka-sample-camel <http://github.com/jboner/akka-modules/tree/master/akka-modules-samples/akka-sample-camel/>`_. The examples in `sample.camel.Boot <http://github.com/jboner/akka-modules/blob/master/akka-modules-samples/akka-sample-camel/src/main/scala/sample/camel/Boot.scala>`_ are started during Kernel startup because this class has been added to the boot configuration in akka-reference.conf.
 
 ::
 
@@ -1956,18 +1956,18 @@ If you don't want to have these examples started during Kernel startup, delete i
    [3] sample.camel.StandaloneApplication
    [4] sample.camel.StandaloneSpringApplication
 
-Some of the examples in `akka-sample-camel <http://github.com/jboner/akka-modules/tree/master/akka-samples/akka-sample-camel/>`_ are described in more detail in the following subsections.
+Some of the examples in `akka-sample-camel <http://github.com/jboner/akka-modules/tree/master/akka-modules-samples/akka-sample-camel/>`_ are described in more detail in the following subsections.
 
 Asynchronous routing and transformation example
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 This example demonstrates how to implement consumer and producer actors that support `asynchronous in-out message exchanges <Camel#async-routing>`_ with their Camel endpoints. The sample application transforms the content of the `Akka homepage <http://akka.io>`_ by replacing every occurrence of *Akka* with *AKKA*. After `starting the Akka Kernel <getting-started>`_, direct the browser to http://localhost:8875 and the transformed Akka homepage should be displayed. Please note that this example will probably not work if you're behind an HTTP proxy.
 
-The following figure gives an overview how the example actors interact with external systems and with each other. A browser sends a GET request to http:*localhost:8875 which is the published endpoint of the <span style="font-family: 'Courier New',Courier,monospace;">HttpConsumer</span> actor. The <span style="font-family: 'Courier New',Courier,monospace;">HttpConsumer</span> actor forwards the requests to the <span style="font-family: 'Courier New',Courier,monospace;">HttpProducer</span> actor which retrieves the Akka homepage from http:*akka.io. The retrieved HTML is then forwarded to the HttpTransformer actor which replaces all occurences of of *Akka* with *AKKA*. The transformation result is sent back the HttpConsumer which finally returns it to the browser.
+The following figure gives an overview how the example actors interact with external systems and with each other. A browser sends a GET request to http://localhost:8875 which is the published endpoint of the ``HttpConsumer`` actor. The ``HttpConsumer`` actor forwards the requests to the ``HttpProducer`` actor which retrieves the Akka homepage from http://akka.io. The retrieved HTML is then forwarded to the ``HttpTransformer`` actor which replaces all occurences of *Akka* with *AKKA*. The transformation result is sent back the HttpConsumer which finally returns it to the browser.
 
 `<image:async-interact-3.png width="800" height="358">`_
 
-Implementing the example actor classes and wiring them together is rather easy as shown in the following snippet (see also `sample.camel.Boot <http://github.com/jboner/akka-modules/blob/master/akka-samples/akka-sample-camel/src/main/scala/sample/camel/Boot.scala>`_).
+Implementing the example actor classes and wiring them together is rather easy as shown in the following snippet (see also `sample.camel.Boot <http://github.com/jboner/akka-modules/blob/master/akka-modules-samples/akka-sample-camel/src/main/scala/sample/camel/Boot.scala>`_).
 
 .. code-block:: scala
 
@@ -2028,7 +2028,7 @@ This section also demonstrates the combined usage of a Producer and a Consumer a
 * A processor (transformer) in the custom Camel route prepends "Welcome" to the original message and creates a result message
 * The producer actor sends the result back to the consumer actor which returns it to the HTTP client.
 
-The example is part of `sample.camel.Boot <http://github.com/jboner/akka-modules/blob/master/akka-samples/akka-sample-camel/src/main/scala/sample/camel/Boot.scala>`_. The consumer, transformer and producer actor implementations are as follows.
+The example is part of `sample.camel.Boot <http://github.com/jboner/akka-modules/blob/master/akka-modules-samples/akka-sample-camel/src/main/scala/sample/camel/Boot.scala>`_. The consumer, transformer and producer actor implementations are as follows.
 
 .. code-block:: scala
 
