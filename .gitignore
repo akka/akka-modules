@@ -45,3 +45,4 @@ run-codefellow
 multiverse.log
 .eprj
 akka-docs/_build/
+*.pyc

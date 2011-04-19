@@ -7,19 +7,20 @@ import sys, os
 
 # -- General configuration -----------------------------------------------------
 
-extensions = ['sphinx.ext.todo']
+sys.path.append(os.path.abspath('exts'))
+extensions = ['sphinx.ext.todo', 'includecode']
 
 templates_path = ['_templates']
 source_suffix = '.rst'
 master_doc = 'index'
-exclude_patterns = ['_build', 'pending']
+exclude_patterns = ['_build']
 
 project = u'Akka Modules'
 copyright = u'2009-2011, Scalable Solutions AB'
 version = '1.1'
 release = '1.1'
 
-pygments_style = 'akka'
+pygments_style = 'simple'
 highlight_language = 'scala'
 
 # -- Options for HTML output ---------------------------------------------------
