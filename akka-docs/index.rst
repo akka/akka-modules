@@ -6,7 +6,6 @@ Contents
 
    manual/amqp
    manual/camel
-   manual/jta
    manual/microkernel
    manual/osgi
    manual/scalaz

@@ -13,7 +13,7 @@ Introduction
 
 The `akka-camel <http://github.com/jboner/akka-modules/tree/master/akka-camel/>`_ module allows `actors <actors-scala>`_, `untyped actors <untyped-actors-java>`_ and `typed actors <typed-actors-java>`_ to receive and send messages over a great variety of protocols and APIs. This section gives a brief overview of the general ideas behind the akka-camel module, the remaining sections go into the details. In addition to the native Scala and Java actor API, actors can now exchange messages with other systems over large number of protcols and APIs such as HTTP, SOAP, TCP, FTP, SMTP or JMS, to mention a few. At the moment, approximately 80 protocols and APIs are supported.
 
-The akka-camel module is based on `Apache Camel <http://camel.apache.org/>`_, a powerful and leight-weight integration framework for the JVM. For an introduction to Apache Camel you may want to read `this article <http://architects.dzone.com/articles/apache-camel-integration>`_. Camel comes with a large number of `components <http://camel.apache.org/components.html>`_ that provide bindings to different protocols and APIs. The `camel-extra <http://code.google.com/p/camel-extra/>`_ project provides further components. Usage of Camel's integration components in Akka is essentially a one-liner.
+The akka-camel module is based on `Apache Camel <http://camel.apache.org/>`_, a powerful and leight-weight integration framework for the JVM. For an introduction to Apache Camel you may want to read `this article <http://architects.dzone.com/articles/apache-camel-integration>`__. Camel comes with a large number of `components <http://camel.apache.org/components.html>`_ that provide bindings to different protocols and APIs. The `camel-extra <http://code.google.com/p/camel-extra/>`_ project provides further components. Usage of Camel's integration components in Akka is essentially a one-liner.
 
 Here's an example.
 
@@ -130,7 +130,7 @@ Whenever a file is put into the data/input/actor directory, its content is picke
 * Message unit tests - `Scala API <http://github.com/jboner/akka-modules/blob/master/akka-camel/src/test/scala/akka/MessageScalaTest.scala>`_
 * Message unit tests - `Java API <http://github.com/jboner/akka-modules/blob/master/akka-camel/src/test/java/akka/camel/MessageJavaTestBase.java>`_
 
-Here's another example that sets the endpointUri to jetty:http://localhost:8877/camel/default. It causes Camel's `jetty component <http://camel.apache.org/jetty.html>`_ to start an embedded `Jetty <http://www.eclipse.org/jetty/>`_ server, accepting HTTP connections from localhost on port 8877.
+Here's another example that sets the endpointUri to jetty:http://localhost:8877/camel/default. It causes Camel's `jetty component <http://camel.apache.org/jetty.html>`_ to start an embedded `Jetty <http://www.eclipse.org/jetty/>`__ server, accepting HTTP connections from localhost on port 8877.
 
 **Scala**
 
@@ -538,7 +538,7 @@ By default, message exchanges between a Camel endpoint and a consumer actor are 
     }
   }
 
-In this case, the !! (bangbang) operator is used internally to communicate with the actor which blocks a thread until the consumer sends a response or throws an exception within receive. Although it may decrease scalability, this setting can simplify error handling (see `this article <http://krasserm.blogspot.com/2011/02/akka-consumer-actors-new-features-and.html>`_) or allows timeout configurations on actor-level (see `next section <Camel#timeout>`_).
+In this case, the !! (bangbang) operator is used internally to communicate with the actor which blocks a thread until the consumer sends a response or throws an exception within receive. Although it may decrease scalability, this setting can simplify error handling (see `this article <http://krasserm.blogspot.com/2011/02/akka-consumer-actors-new-features-and.html>`__) or allows timeout configurations on actor-level (see `next section <Camel#timeout>`_).
 
 Consumer timeout
 ^^^^^^^^^^^^^^^^
@@ -608,7 +608,7 @@ Two-way communications between a Camel endpoint and an (untyped) actor are initi
     }
   }
 
-This is a valid approach for all endpoint types that do not "natively" support asynchronous two-way message exchanges. For all other endpoint types (like `jetty <http://camel.apache.org/jetty.html>`_ endpoints) is it not recommended to switch to blocking mode but rather to configure timeouts in an endpoint-specific way (see also `asynchronous routing <Camel#async-routing>`_).
+This is a valid approach for all endpoint types that do not "natively" support asynchronous two-way message exchanges. For all other endpoint types (like `jetty <http://camel.apache.org/jetty.html>`__ endpoints) is it not recommended to switch to blocking mode but rather to configure timeouts in an endpoint-specific way (see also `asynchronous routing <Camel#async-routing>`_).
 
 Remote consumers
 ^^^^^^^^^^^^^^^^
@@ -1012,7 +1012,7 @@ To correlate request with response messages, applications can set the Message.Me
 
 Responses of type Message or Failure will contain that header as well. When receiving messages from Camel endpoints this message header is already set (see `Consume messages <Camel#consume>`_).
 
- Matching responses
+Matching responses
 *******************
 
 The following code snippet shows how to best match responses when sending messages with the !! operator (Scala) or with the sendRequestReply method (Java).
@@ -1040,7 +1040,7 @@ ProducerTemplate
 
 The `Producer <http://github.com/jboner/akka-modules/blob/master/akka-camel/src/main/scala/akka/camel/Producer.scala>`_ trait (and the abstract UntypedProducerActor class) is a very convenient way for actors to produce messages to Camel endpoints. (Untyped) actors and typed actors may also use a Camel `ProducerTemplate <http://camel.apache.org/maven/camel-2.2.0/camel-core/apidocs/index.html>`_ for producing messages to endpoints. For typed actors it's the only way to produce messages to Camel endpoints.
 
-At the moment, only the Producer trait fully supports asynchronous in-out message exchanges with Camel endpoints without allocating a thread for the full duration of the exchange. For example, when using endpoints that support asynchronous message exchanges (such as `jetty <http://camel.apache.org/jetty.html>`_ endpoints that internally use `Jetty's asynchronous HTTP client <http://wiki.eclipse.org/Jetty/Tutorial/HttpClient>`_) then usage of the Producer trait is highly recommended (see also `asynchronous routing <Camel#async-routing>`_).
+At the moment, only the Producer trait fully supports asynchronous in-out message exchanges with Camel endpoints without allocating a thread for the full duration of the exchange. For example, when using endpoints that support asynchronous message exchanges (such as `jetty <http://camel.apache.org/jetty.html>`__ endpoints that internally use `Jetty's asynchronous HTTP client <http://wiki.eclipse.org/Jetty/Tutorial/HttpClient>`_) then usage of the Producer trait is highly recommended (see also `asynchronous routing <Camel#async-routing>`_).
 
 **(Untyped) actors**
 
@@ -1167,7 +1167,7 @@ Since Akka 0.10, in-out message exchanges between endpoints and actors are desig
 * A consumer endpoint sends request messages to its consumer actor using the ! (bang) operator and the actor returns responses with self.reply once they are ready. The sender reference used for reply is an adapter to Camel's asynchronous routing engine that implements the ActorRef trait.
 * A producer actor sends request messages to its endpoint using Camel's asynchronous routing engine. Asynchronous responses are wrapped and added to the producer actor's mailbox for later processing. By default, response messages are returned to the initial sender but this can be overridden by Producer implementations (see also description of the `receiveAfterProcessing <Camel#pre-post-processing>`_ method).
 
-However, asynchronous two-way message exchanges, without allocating a thread for the full duration of exchange, cannot be generically supported by Camel's asynchronous routing engine alone. This must be supported by the individual `Camel components <http://camel.apache.org/components.html>`_ (from which endpoints are created) as well. They must be able to suspend any work started for request processing (thereby freeing threads to do other work) and resume processing when the response is ready. This is currently the case for a `subset of components <http://camel.apache.org/asynchronous-routing-engine.html>`_ such as the `jetty <http://camel.apache.org/jetty.html>`_ component. All other Camel components can still be used, of course, but they will cause allocation of a thread for the duration of an in-out message exchange. There's also a `running example <Camel#non-blocking-example>`_ that implements both, an asynchronous consumer and an asynchronous producer, with the jetty component.
+However, asynchronous two-way message exchanges, without allocating a thread for the full duration of exchange, cannot be generically supported by Camel's asynchronous routing engine alone. This must be supported by the individual `Camel components <http://camel.apache.org/components.html>`_ (from which endpoints are created) as well. They must be able to suspend any work started for request processing (thereby freeing threads to do other work) and resume processing when the response is ready. This is currently the case for a `subset of components <http://camel.apache.org/asynchronous-routing-engine.html>`_ such as the `jetty <http://camel.apache.org/jetty.html>`__ component. All other Camel components can still be used, of course, but they will cause allocation of a thread for the duration of an in-out message exchange. There's also a `running example <Camel#non-blocking-example>`_ that implements both, an asynchronous consumer and an asynchronous producer, with the jetty component.
 
 Fault tolerance
 ---------------
@@ -1451,7 +1451,7 @@ Custom Camel routes
 
 In all the examples so far, routes to consumer actors have been automatically constructed by akka-camel, when the actor was started. Although the default route construction templates, used by akka-camel internally, are sufficient for most use cases, some applications may require more specialized routes to actors. The akka-camel module provides two mechanisms for customizing routes to actors, which will be explained in this section. These are
 
-* `Usage of Akka-specific Camel components  <Camel#akka-camel-components>`_to access (untyped) actor and actors. Any Camel route can use these components to access Akka actors.
+* `Usage of Akka-specific Camel components <Camel#akka-camel-components>`_ to access (untyped) actor and actors. Any Camel route can use these components to access Akka actors.
 * `Intercepting the automated construction of routes <Camel#intercepting-route-construction>`_ to (untyped) actor and actors. Default routes to consumer actors are extended using predefined extension points.
 
 Akka Camel components
@@ -1501,7 +1501,7 @@ Here's another actor endpoint URI example that doesn't define an actor uuid. In 
 
   actor:uuid:
 
-In the following example, a custom route to an actor is created, using the actor's uuid (i.e. actorRef.uuid). The route starts from a `jetty <http://camel.apache.org/jetty.html>`_ endpoint and ends at the target actor.
+In the following example, a custom route to an actor is created, using the actor's uuid (i.e. actorRef.uuid). The route starts from a `jetty <http://camel.apache.org/jetty.html>`__ endpoint and ends at the target actor.
 
 **Scala**
 
@@ -1796,7 +1796,7 @@ Intercepting route construction
 
 The `previous section <Camel#akka-camel-components>`_ explained how to setup a route to an (untyped) actor or typed actor manually. It was the application's responsibility to define the route and add it to the current CamelContext. This section explains a more conventient way to define custom routes: akka-camel is still setting up the routes to consumer actors (and adds these routes to the current CamelContext) but applications can define extensions to these routes. Extensions can be defined with Camel's `Java DSL <http://camel.apache.org/dsl.html>`_ or `Scala DSL <http://camel.apache.org/scala-dsl.html>`_. For example, an extension could be a custom error handler that redelivers messages from an endpoint to an actor's bounded mailbox when the mailbox was full.
 
-The following examples demonstrate how to extend a route to a consumer actor for handling exceptions thrown by that actor. To simplify the example, we configure `blocking exchanges <Camel#blocking>`_ which reports any exception, that is thrown by receive, directly back to the Camel route. One could also report exceptions asynchronously using a Failure reply (see also `this article <http://krasserm.blogspot.com/2011/02/akka-consumer-actors-new-features-and.html>`_) but we'll do it differently here.
+The following examples demonstrate how to extend a route to a consumer actor for handling exceptions thrown by that actor. To simplify the example, we configure `blocking exchanges <Camel#blocking>`_ which reports any exception, that is thrown by receive, directly back to the Camel route. One could also report exceptions asynchronously using a Failure reply (see also `this article <http://krasserm.blogspot.com/2011/02/akka-consumer-actors-new-features-and.html>`__) but we'll do it differently here.
 
 **(Untyped) actors**
 
@@ -1879,9 +1879,9 @@ For (untyped) actors, consumer route extensions are defined by calling the onRou
     def onRouteDefinition(rd: RouteDefinition): ProcessorDefinition[_]
   }
 
-The akka-camel module creates a RouteDefinition instance by calling from(endpointUri) on a Camel RouteBuilder (where endpointUri is the endpoint URI of the consumer actor) and passes that instance as argument to the route definition handler *). The route definition handler then extends the route and returns a ProcessorDefinition (in the above example, the ProcessorDefinition returned by the end method. See the `org.apache.camel.model <https://svn.apache.org/repos/asf/camel/trunk/camel-core/src/main/java/org/apache/camel/model/>`_ package for details). After executing the route definition handler, akka-camel finally calls a to(actor:uuid:actorUuid) on the returned ProcessorDefinition to complete the route to the comsumer actor (where actorUuid is the uuid of the consumer actor).
+The akka-camel module creates a RouteDefinition instance by calling from(endpointUri) on a Camel RouteBuilder (where endpointUri is the endpoint URI of the consumer actor) and passes that instance as argument to the route definition handler \*). The route definition handler then extends the route and returns a ProcessorDefinition (in the above example, the ProcessorDefinition returned by the end method. See the `org.apache.camel.model <https://svn.apache.org/repos/asf/camel/trunk/camel-core/src/main/java/org/apache/camel/model/>`_ package for details). After executing the route definition handler, akka-camel finally calls a to(actor:uuid:actorUuid) on the returned ProcessorDefinition to complete the route to the comsumer actor (where actorUuid is the uuid of the consumer actor).
 
-*) Before passing the RouteDefinition instance to the route definition handler, akka-camel may make some further modifications to it.
+\*) Before passing the RouteDefinition instance to the route definition handler, akka-camel may make some further modifications to it.
 
 **Typed actors**
 
@@ -2010,7 +2010,7 @@ Implementing the example actor classes and wiring them together is rather easy a
   val httpProducer = actorOf(new HttpProducer(httpTransformer)).start
   val httpConsumer = actorOf(new HttpConsumer(httpProducer)).start
 
-The `jetty <http://camel.apache.org/jetty.html>`_ endpoints of HttpConsumer and HttpProducer support asynchronous in-out message exchanges and do not allocate threads for the full duration of the exchange. This is achieved by using `Jetty continuations <http://wiki.eclipse.org/Jetty/Feature/Continuations>`_ on the consumer-side and by using `Jetty's asynchronous HTTP client <http://wiki.eclipse.org/Jetty/Tutorial/HttpClient>`_ on the producer side. The following high-level sequence diagram illustrates that.
+The `jetty <http://camel.apache.org/jetty.html>`__ endpoints of HttpConsumer and HttpProducer support asynchronous in-out message exchanges and do not allocate threads for the full duration of the exchange. This is achieved by using `Jetty continuations <http://wiki.eclipse.org/Jetty/Feature/Continuations>`_ on the consumer-side and by using `Jetty's asynchronous HTTP client <http://wiki.eclipse.org/Jetty/Tutorial/HttpClient>`_ on the producer side. The following high-level sequence diagram illustrates that.
 
 `<image:async-sequence-2.png>`_
 
@@ -2235,7 +2235,7 @@ On the console, where you started the Akka Kernel, you should see something like
 **Cometd**
 **********
 
-Publish/subscribe with `CometD <http://cometd.org/>`_ is equally easy using Camel's `cometd <http://camel.apache.org/cometd.html>`_ component.
+Publish/subscribe with `CometD <http://cometd.org/>`__ is equally easy using Camel's `cometd <http://camel.apache.org/cometd.html>`__ component.
 
 `<image:pubsub2.png>`_
 
