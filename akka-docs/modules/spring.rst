@@ -1,5 +1,9 @@
-Spring Integration
-==================
+
+.. _spring-module:
+
+####################
+ Spring Integration
+####################
 
 Module stability: **STABLE**
 

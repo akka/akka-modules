@@ -4,6 +4,7 @@ Contents
 .. toctree::
    :maxdepth: 2
 
+   intro/index
    modules/index
 
 Links
