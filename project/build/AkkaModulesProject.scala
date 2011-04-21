@@ -2,7 +2,6 @@
  * Copyright (C) 2009-2011 Scalable Solutions AB <http://scalablesolutions.se>
  */
 
-import com.weiglewilczek.bnd4sbt.BNDPlugin
 import java.io.File
 import java.util.jar.Attributes
 import java.util.jar.Attributes.Name._
@@ -211,7 +210,6 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
   lazy val akka_camel_typed = project("akka-camel-typed", "akka-camel-typed", new AkkaCamelTypedProject(_), akka_camel)
   lazy val akka_spring      = project("akka-spring", "akka-spring", new AkkaSpringProject(_), akka_camel, akka_camel_typed)
   lazy val akka_kernel      = project("akka-kernel", "akka-kernel", new AkkaKernelProject(_), akka_spring, akka_amqp)
-  lazy val akka_osgi        = project("akka-osgi", "akka-osgi", new AkkaOSGiParentProject(_))
   lazy val akka_scalaz      = project("akka-scalaz", "akka-scalaz", new AkkaScalazProject(_))
   lazy val akka_disp_extras = project("akka-dispatcher-extras", "akka-dispatcher-extras", new AkkaDispatcherExtrasProject(_))
   lazy val akka_sbt_plugin  = project("akka-sbt-plugin",  "akka-sbt-plugin",  new AkkaSbtPluginProject(_))
@@ -408,7 +406,7 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
   // -------------------------------------------------------------------------------------------------------------------
   // OSGi stuff
   // -------------------------------------------------------------------------------------------------------------------
-
+/*
   class AkkaOSGiParentProject(info: ProjectInfo) extends ParentProject(info) {
     override def disableCrossPaths = true
 
@@ -502,6 +500,7 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
 
     override def artifacts = Set.empty
   }
+*/
 
   // -------------------------------------------------------------------------------------------------------------------
   // akka-scalaz subproject
@@ -600,14 +599,6 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
     val jsr311        = Dependencies.jsr311
   }
 
-  class AkkaSampleOSGiProject(info: ProjectInfo) extends AkkaModulesDefaultProject(info, distPath) with BNDPlugin {
-    val akka_remote = Dependencies.akka_remote
-    val osgi_core   = Dependencies.osgi_core
-
-    override lazy val bndBundleActivator = Some("akka.sample.osgi.Activator")
-    override lazy val bndExportPackage = Nil // Necessary because of mixing-in AkkaModulesDefaultProject which exports all ...akka.* packages!
-  }
-
   class AkkaModulesSamplesParentProject(info: ProjectInfo) extends ParentProject(info) {
     override def disableCrossPaths = true
 
@@ -615,8 +606,6 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
       new AkkaSampleCamelProject(_), akka_kernel)
     lazy val akka_sample_security = project("akka-sample-security", "akka-sample-security",
       new AkkaSampleSecurityProject(_), akka_kernel)
-    lazy val akka_sample_osgi = project("akka-sample-osgi", "akka-sample-osgi",
-      new AkkaSampleOSGiProject(_))
 
     lazy val publishRelease = {
       val releaseConfiguration = new DefaultPublishConfiguration(localReleaseRepository, "release", false)
@@ -658,7 +647,7 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
   lazy val stressTestsEnabled = systemOptional[Boolean]("stress.tests",false)
 
   // ------------------------------------------------------------
-  class AkkaModulesDefaultProject(info: ProjectInfo, val deployPath: Path) extends DefaultProject(info) with DeployProject with OSGiProject with McPom {
+  class AkkaModulesDefaultProject(info: ProjectInfo, val deployPath: Path) extends DefaultProject(info) with DeployProject with McPom {
     override def disableCrossPaths = true
     lazy val sourceArtifact = Artifact(artifactID, "src", "jar", Some("sources"), Nil, None)
     lazy val docsArtifact = Artifact(this.artifactID, "doc", "jar", Some("docs"), Nil, None)
@@ -711,11 +700,6 @@ trait DeployProject { self: BasicScalaProject =>
     gen(src, toDir, genSource, "Deploying sources")
   }
 }
-
-trait OSGiProject extends BNDPlugin { self: DefaultProject =>
-  override def bndExportPackage = Seq("akka.*;version=%s".format(projectVersion.value))
-}
-
 
 trait McPom { self: DefaultProject =>
   import scala.xml._
