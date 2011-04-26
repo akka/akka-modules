@@ -233,7 +233,6 @@ The following dispatcher types are available in spring configuration:
 * executor-based-event-driven
 * executor-based-event-driven-work-stealing
 * thread-based
-* hawt
 
 The following queue types are configurable for dispatchers using thread pools:
 * bounded-linked-blocking-queue
