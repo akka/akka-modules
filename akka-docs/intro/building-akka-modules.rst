@@ -1,4 +1,6 @@
 
+.. highlightlang:: none
+
 .. _building-akka-modules:
 
 #######################
@@ -163,28 +165,31 @@ test, or publish-local as needed. For example::
 Microkernel distribution
 ------------------------
 
-To build the Akka Modules microkernel (the same as the Akka Modules distribution
+To build the Akka microkernel (the same as the Akka Modules distribution
 download) use the ``dist`` command::
 
    sbt dist
 
-The distribution zip can be found in the dist directory and is called
-``akka-modules-{version}.zip``.
+The distribution zip can be found in the ``target/dist`` directory and is called
+``akka-microkernel-{version}.zip``.
 
 To run the mircokernel, unzip the zip file, change into the unzipped directory,
-set the ``AKKA_HOME`` environment variable, and run the main jar file. For
-example:
+set the ``AKKA_HOME`` environment variable, and run the ``start.jar`` file. For
+example::
 
-.. code-block:: none
-
-   unzip dist/akka-modules-1.1-SNAPSHOT.zip
-   cd akka-modules-1.1-SNAPSHOT
+   unzip target/dist/akka-microkernel-1.1-SNAPSHOT.zip
+   cd akka-microkernel-1.1-SNAPSHOT
    export AKKA_HOME=`pwd`
-   java -jar akka-modules-1.1-SNAPSHOT.jar
+   java -jar start.jar
 
-The microkernel will boot up and install the sample applications that reside in
+The microkernel will boot up and install any applications that reside in
 the distribution's ``deploy`` directory. You can deploy your own applications
-into the ``deploy`` directory as well.
+into the ``deploy`` directory.
+
+There are also start scripts, ``start.sh`` and ``start.bat`` that can be used to
+start up the microkernel.
+
+Configuration files are in the ``config`` directory. Modify these as needed.
 
 
 Scripts
@@ -203,10 +208,7 @@ Copy and modify as needed.
 Simple startup shell script
 ---------------------------
 
-This little script might help a bit. Just make sure you have the Akka
-distribution in the '$AKKA_HOME/dist' directory and then invoke this script to
-start up the kernel. The distribution is created in the './dist' dir for you if
-you invoke 'sbt dist'.
+This little script might help a bit:
 
 http://github.com/jboner/akka/blob/master/scripts/run_akka.sh
 
@@ -216,129 +218,17 @@ Copy and modify as needed.
 Dependencies
 ============
 
-If you are managing dependencies by hand you can find out what all the compile
-dependencies are for each module by looking in the ``lib_managed/compile``
-directories. For example, you can run this to create a listing of dependencies
-(providing you have the source code and have run ``sbt update``)::
+If you are managing dependencies by hand you can find the dependencies for each
+module by looking in the ``lib_managed`` directories. For example, this will
+list all compile dependencies (providing you have the source code and have run
+``sbt update``)::
 
    cd akka
    ls -1 */lib_managed/compile
 
-
-Dependencies used by the Akka core modules
-==========================================
-
-akka-actor
-----------
-
-* No dependencies
-
-akka-stm
---------
-
-* Depends on akka-actor
-* multiverse-alpha-0.6.2.jar
-
-akka-typed-actor
-----------------
-
-* Depends on akka-stm
-* aopalliance-1.0.jar
-* aspectwerkz-2.2.3.jar
-* guice-all-2.0.jar
-
-akka-remote
------------
-
-* Depends on akka-typed-actor
-* commons-codec-1.4.jar
-* commons-io-2.0.1.jar
-* dispatch-json_2.8.1-0.7.8.jar
-* guice-all-2.0.jar
-* h2-lzf-1.0.jar
-* jackson-core-asl-1.7.1.jar
-* jackson-mapper-asl-1.7.1.jar
-* junit-4.8.1.jar
-* netty-3.2.3.Final.jar
-* objenesis-1.2.jar
-* protobuf-java-2.3.0.jar
-* sjson_2.8.1-0.9.1.jar
-
-akka-http
----------
-
-* Depends on akka-remote
-* jsr250-api-1.0.jar
-* jsr311-api-1.1.jar
-
-
-Dependencies used by the Akka modules
-=====================================
-
-akka-amqp
----------
-
-* Depends on akka-remote
-* commons-cli-1.1.jar
-* amqp-client-1.8.1.jar
-
-akka-camel
-----------
-
-* Depends on akka-actor
-* camel-core-2.5.0.jar
-* commons-logging-api-1.1.jar
-* commons-management-1.0.jar
-
-akka-camel-typed
-----------------
-
-* Depends on akka-typed-actor
-* camel-core-2.5.0.jar
-* commons-logging-api-1.1.jar
-* commons-management-1.0.jar
-
-akka-spring
------------
-
-* Depends on akka-camel
-* akka-camel-typed
-* commons-logging-1.1.1.jar
-* spring-aop-3.0.4.RELEASE.jar
-* spring-asm-3.0.4.RELEASE.jar
-* spring-beans-3.0.4.RELEASE.jar
-* spring-context-3.0.4.RELEASE.jar
-* spring-core-3.0.4.RELEASE.jar
-* spring-expression-3.0.4.RELEASE.jar
-
-akka-scalaz
------------
-
-* Depends on akka-actor
-* hawtdispatch-1.1.jar
-* hawtdispatch-scala-1.1.jar
-* scalaz-core_2.8.1-6.0-SNAPSHOT.jar
-
-akka-kernel
------------
-
-* Depends on akka-http, akka-amqp, and akka-spring
-* activation-1.1.jar
-* asm-3.1.jar
-* jaxb-api-2.1.jar
-* jaxb-impl-2.1.12.jar
-* jersey-core-1.3.jar
-* jersey-json-1.3.jar
-* jersey-scala-1.3.jar
-* jersey-server-1.3.jar
-* jettison-1.1.jar
-* jetty-continuation-7.1.6.v20100715.jar
-* jetty-http-7.1.6.v20100715.jar
-* jetty-io-7.1.6.v20100715.jar
-* jetty-security-7.1.6.v20100715.jar
-* jetty-server-7.1.6.v20100715.jar
-* jetty-servlet-7.1.6.v20100715.jar
-* jetty-util-7.1.6.v20100715.jar
-* jetty-xml-7.1.6.v20100715.jar
-* servlet-api-2.5.jar
-* stax-api-1.0.1.jar
+You can also look at the Ivy dependency resolution information that is created
+on ``sbt update`` and found in ``~/.ivy2/cache``. For example, the
+``.ivy2/cache/se.scalablesolutions.akka-akka-kernel-compile.xml`` file contains
+the resolution information for the akka-kernel module compile dependencies. If
+you open this file in a web browser you will get an easy to navigate view of
+dependencies.

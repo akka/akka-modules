@@ -21,25 +21,20 @@ To build the latest version see :ref:`building-akka-modules`.
 Run the microkernel
 ===================
 
-To start the kernel invoke::
+To start the kernel use the scripts ``start.sh`` or ``start.bat``.
 
-   java -jar $AKKA_HOME/akka-modules-<version>.jar
+All services are configured in the ``config/akka.conf`` configuration file. See
+the Akka documentation on Configuration for more details. Services you want to
+be started up automatically should be listed in the list of ``boot`` classes in
+the configuration.
 
+Put your application in the ``deploy`` directory.
 
-All services are configured in the ``$AKKA_HOME/config/akka.conf`` configuration
-file. See the Akka documentation on Configuration for more details.
-
-Services you want to be started up automatically should be listed in the list of
-"boot" classes.
-
-The kernel needs to find the ``akka.conf`` file. You can specify the config by
-either:
+Note that the kernel needs to know where the Akka home is (the base directory of
+the microkernel). The above scripts do this for you. Otherwise, you can set Akka
+home by:
 
 * Specifying ``AKKA_HOME``. Then the config will be taken from
   ``AKKA_HOME/config/akka.conf``
 
-* Specifying the ``-Dakka.config.file=./config/akka.conf`` option
-
 * Specifying the ``-Dakka.home`` option
-
-* Putting it on the classpath
