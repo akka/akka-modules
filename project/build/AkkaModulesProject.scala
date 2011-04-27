@@ -483,7 +483,7 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
       } dependsOn cleanSrcManaged
     }
 
-    override def mainSourceRoots = super.mainSourceRoots +++ srcManagedScala
+    override def mainSourceRoots = super.mainSourceRoots +++ (srcManagedScala ##)
     override def compileAction = super.compileAction dependsOn(generateAkkaSbtPlugin)
 
     lazy val publishRelease = {
@@ -652,7 +652,7 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
 
   override def packageOptions = Seq(
     ManifestAttributes(
-      (Attributes.Name.CLASS_PATH, distManifestClasspath),
+      (CLASS_PATH, distManifestClasspath),
       (IMPLEMENTATION_TITLE, "Akka Microkernel"),
       (IMPLEMENTATION_URL, "http://akka.io"),
       (IMPLEMENTATION_VENDOR, "Scalable Solutions AB")),
