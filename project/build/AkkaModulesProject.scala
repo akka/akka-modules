@@ -534,13 +534,19 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
     val jsr311        = Dependencies.jsr311
   }
 
+  class AkkaSampleHelloProject(info: ProjectInfo) extends AkkaModulesDefaultProject(info)
+
   class AkkaModulesSamplesParentProject(info: ProjectInfo) extends ParentProject(info) {
     override def disableCrossPaths = true
 
     lazy val akka_sample_camel = project("akka-sample-camel", "akka-sample-camel",
       new AkkaSampleCamelProject(_), akka_kernel)
+
     lazy val akka_sample_security = project("akka-sample-security", "akka-sample-security",
       new AkkaSampleSecurityProject(_), akka_kernel)
+
+    lazy val akka_sample_hello = project("akka-sample-hello", "akka-sample-hello",
+      new AkkaSampleHelloProject(_), akka_kernel)
 
     lazy val publishRelease = {
       val releaseConfiguration = new DefaultPublishConfiguration(localReleaseRepository, "release", false)
@@ -628,11 +634,13 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
     val confs = "config".descendentsExcept("*.*", "*-test.*").get
     val scripts = ("scripts" / "microkernel" ** "*.*").get
 
+    val demos = akka_samples.akka_sample_hello.jarPath.get
+
     FileUtilities.copyFlat(distLibs, distLibPath, log).left.toOption orElse
     FileUtilities.copyFile(jarPath, distStartJarPath, log) orElse
     FileUtilities.copyFlat(confs, distConfigPath, log).left.toOption orElse
     FileUtilities.copyFlat(scripts, distOutputPath, log).left.toOption orElse
-    FileUtilities.createDirectory(distDeployPath, log) orElse
+    FileUtilities.copyFlat(demos, distDeployPath, log).left.toOption orElse
     FileUtilities.zip(List(distOutputPath), distArchive, true, log) orElse {
       log.info("Distribution created.")
       log.info("Zip file: " + distArchive.absolutePath)

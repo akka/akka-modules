@@ -69,7 +69,7 @@
       <New id="Handlers" class="org.eclipse.jetty.server.handler.HandlerCollection">
         <Set name="handlers">
          <Array type="org.eclipse.jetty.server.Handler">
-           <Item>
+           <!--Item>
              <New id="AkkaRestHandler" class="org.eclipse.jetty.servlet.ServletContextHandler">
                <Set name="contextPath">/</Set>
                <Call name="addServlet">
@@ -77,8 +77,8 @@
 	             <Arg>/*</Arg>
 	           </Call>
 	         </New>
-           </Item>
-           <!--Item>
+           </Item-->
+           <Item>
              <New id="AkkaMistHandler" class="org.eclipse.jetty.servlet.ServletContextHandler">
                <Set name="contextPath">/</Set>
                <Call name="addServlet">
@@ -86,7 +86,7 @@
 	             <Arg>/*</Arg>
 	           </Call>
 	         </New>
-           </Item-->
+           </Item>
            <Item>
              <New id="DefaultHandler" class="org.eclipse.jetty.server.handler.DefaultHandler"/>
            </Item>

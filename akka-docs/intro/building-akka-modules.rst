@@ -170,24 +170,15 @@ download) use the ``dist`` command::
 
    sbt dist
 
-The distribution zip can be found in the ``target/dist`` directory and is called
-``akka-microkernel-{version}.zip``.
+The distribution can be found in the ``target/dist`` directory.
 
-To run the mircokernel, unzip the zip file, change into the unzipped directory,
-set the ``AKKA_HOME`` environment variable, and run the ``start.jar`` file. For
-example::
-
-   unzip target/dist/akka-microkernel-1.1-SNAPSHOT.zip
-   cd akka-microkernel-1.1-SNAPSHOT
-   export AKKA_HOME=`pwd`
-   java -jar start.jar
-
-The microkernel will boot up and install any applications that reside in
-the distribution's ``deploy`` directory. You can deploy your own applications
-into the ``deploy`` directory.
-
-There are also start scripts, ``start.sh`` and ``start.bat`` that can be used to
+There are start scripts, ``start.sh`` and ``start.bat``, that can be used to
 start up the microkernel.
+
+The microkernel will boot up and install any applications that reside in the
+distribution's ``deploy`` directory. You can deploy your own applications into
+the ``deploy`` directory. There is a simple sample application included, see
+:ref:`hello-microkernel`.
 
 Configuration files are in the ``config`` directory. Modify these as needed.
 
