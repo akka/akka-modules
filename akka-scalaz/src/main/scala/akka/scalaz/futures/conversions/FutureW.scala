@@ -39,8 +39,11 @@ sealed trait FutureW[A] extends PimpedType[Future[A]] {
     f
   }
 
-  def getOrElse[B >: A](default: => B): B =
-    value.awaitValue.flatMap(_.right.toOption) getOrElse default
+  def getOrElse[B >: A](default: => B): B = try {
+    value.await.value.flatMap(_.right.toOption) getOrElse default
+  } catch {
+    case f: FutureTimeoutException => default
+  }
 
   def orElse[B >: A](b: => Future[B]): Future[B] = {
     val f = new DefaultCompletableFuture[B](value.timeoutInNanos, NANOS)
