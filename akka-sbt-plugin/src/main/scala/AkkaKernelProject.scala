@@ -32,6 +32,13 @@ trait AkkaKernelProject extends AkkaProject {
 
   def distConfigSources = "config" ** "*.*"
 
+  def dependencyJars = dependencies.flatMap( _ match {
+    case pp: PackagePaths => Some(pp.jarPath)
+    case _ => None
+  })
+
+  def distDeployJars = Seq(jarPath) ++ dependencyJars
+
   lazy val dist = (distAction dependsOn (`package`, distStartJar)
                    describedAs "Create an Akka microkernel distribution.")
 
@@ -40,7 +47,7 @@ trait AkkaKernelProject extends AkkaProject {
     FileUtilities.copyFlat(distLibs.get, distLibPath, log).left.toOption orElse
     FileUtilities.copyFlat(distConfigSources.get, distConfigPath, log).left.toOption orElse
     writeFiles(distOutputPath, distScripts) orElse
-    FileUtilities.copyFlat(jarPath.get, distDeployPath, log).left.toOption orElse {
+    FileUtilities.copyFlat(distDeployJars, distDeployPath, log).left.toOption orElse {
       log.info("Distribution created.")
       None
     }
