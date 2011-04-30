@@ -94,6 +94,9 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
   object Dependencies {
 
     // Compile
+
+    lazy val activemq = "org.apache.activemq" % "activemq-core" % "5.4.2" % "compile" // ApacheV2
+
     lazy val akka_actor       = "se.scalablesolutions.akka" % "akka-actor"       % AKKA_VERSION % "compile" //ApacheV2
     lazy val akka_stm         = "se.scalablesolutions.akka" % "akka-stm"         % AKKA_VERSION % "compile" //ApacheV2
     lazy val akka_remote      = "se.scalablesolutions.akka" % "akka-remote"      % AKKA_VERSION % "compile" //ApacheV2
@@ -102,7 +105,9 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
 
     lazy val aopalliance = "aopalliance" % "aopalliance" % "1.0" % "compile" //Public domain
 
-    lazy val camel_core = "org.apache.camel" % "camel-core" % CAMEL_VERSION % "compile" //ApacheV2
+    lazy val camel_core  = "org.apache.camel" % "camel-core"  % CAMEL_VERSION % "compile" //ApacheV2
+    lazy val camel_jetty = "org.apache.camel" % "camel-jetty" % CAMEL_VERSION % "compile" //ApacheV2
+    lazy val camel_jms   = "org.apache.camel" % "camel-jms"   % CAMEL_VERSION % "compile" //ApacheV2
 
     lazy val commons_codec = "commons-codec" % "commons-codec" % CODEC_VERSION % "compile" //ApacheV2
 
@@ -148,6 +153,7 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
 
     lazy val spring_beans   = "org.springframework" % "spring-beans"   % SPRING_VERSION % "compile" //ApacheV2
     lazy val spring_context = "org.springframework" % "spring-context" % SPRING_VERSION % "compile" //ApacheV2
+    lazy val spring_jms     = "org.springframework" % "spring-jms"     % SPRING_VERSION % "compile" //ApacheV2
 
     lazy val slf4j          = "org.slf4j"              % "slf4j-simple"        % SLF4J_VERSION     % "compile" // MIT
 
@@ -503,33 +509,19 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
   }
 
   // -------------------------------------------------------------------------------------------------------------------
-  // Examples
+  // Samples
   // -------------------------------------------------------------------------------------------------------------------
 
   class AkkaSampleCamelProject(info: ProjectInfo) extends AkkaModulesDefaultProject(info) {
-    //Must be like this to be able to exclude the geronimo-servlet_2.4_spec which is a too old Servlet spec
-    override def ivyXML =
-      <dependencies>
-        <dependency org="org.springframework" name="spring-jms" rev={SPRING_VERSION}>
-        </dependency>
-        <dependency org="org.apache.geronimo.specs" name="geronimo-servlet_2.5_spec" rev="1.1.1">
-        </dependency>
-        <dependency org="org.apache.camel" name="camel-jetty" rev={CAMEL_VERSION}>
-          <exclude module="geronimo-servlet_2.4_spec"/>
-        </dependency>
-        <dependency org="org.apache.camel" name="camel-jms" rev={CAMEL_VERSION}>
-        </dependency>
-        <dependency org="org.apache.activemq" name="activemq-core" rev="5.4.2">
-        </dependency>
-      </dependencies>
-
-    val commons_codec = Dependencies.commons_codec
+    val activemq    = Dependencies.activemq
+    val camel_jetty = Dependencies.camel_jetty
+    val camel_jms   = Dependencies.camel_jms
+    val spring_jms  = Dependencies.spring_jms
 
     override def testOptions = createTestFilter( _.endsWith("Test"))
   }
 
   class AkkaSampleSecurityProject(info: ProjectInfo) extends AkkaModulesDefaultProject(info) {
-    val commons_codec = Dependencies.commons_codec
     val jsr250        = Dependencies.jsr250
     val jsr311        = Dependencies.jsr311
   }
@@ -608,6 +600,7 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
   val distStartJarPath = distOutputPath / "start.jar"
   val distConfigPath = distOutputPath / "config"
   val distDeployPath = distOutputPath / "deploy"
+  val distSamplesPath = distOutputPath / "samples"
   val distArchiveName = distName + ".zip"
   val distArchive = (distOutputBasePath ##) / distArchiveName
 
@@ -634,21 +627,41 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
     val confs = "config".descendentsExcept("*.*", "*-test.*").get
     val scripts = ("scripts" / "microkernel" ** "*.*").get
 
-    val demos = akka_samples.akka_sample_hello.jarPath.get
+    val demo = akka_samples.akka_sample_hello.jarPath.get
+
+    val samples = akka_samples.dependencies
 
     FileUtilities.copyFlat(distLibs, distLibPath, log).left.toOption orElse
     FileUtilities.copyFile(jarPath, distStartJarPath, log) orElse
     FileUtilities.copyFlat(confs, distConfigPath, log).left.toOption orElse
     FileUtilities.copyFlat(scripts, distOutputPath, log).left.toOption orElse
-    FileUtilities.copyFlat(demos, distDeployPath, log).left.toOption orElse
+    FileUtilities.copyFlat(demo, distDeployPath, log).left.toOption orElse
+    distCopySamples(samples) orElse
     FileUtilities.zip(List(distOutputPath), distArchive, true, log) orElse {
       log.info("Distribution created.")
       log.info("Zip file: " + distArchive.absolutePath)
       None
     }
-   }
+  }
 
-  def distManifestClasspath = distLibs.map("lib/" + _.name).mkString(" ") + " config/"
+  def distCopySamples(samples: Iterable[Project]) = {
+    samples.map { sample =>
+      val sampleOutputPath = distSamplesPath / sample.name
+      val configPath = sampleOutputPath / "config"
+      val deployPath = sampleOutputPath / "deploy"
+      val confs = (sample.info.projectPath / "config" ** "*.*").get
+      val scripts = ("scripts" / "samples" ** "*.*").get
+      val libs = sample match {
+        case p: BasicScalaProject => Seq(p.jarPath) ++ p.managedClasspath(Configurations.Runtime).get
+        case _ => Seq.empty
+      }
+      FileUtilities.copyFlat(confs, configPath, log).left.toOption orElse
+      FileUtilities.copyFlat(scripts, sampleOutputPath, log).left.toOption orElse
+      FileUtilities.copyFlat(libs, deployPath, log).left.toOption
+    }.foldLeft(None: Option[String])(_ orElse _)
+  }
+
+  def distManifestClasspath = distLibs.map("lib/" + _.name).mkString(" ")
 
   override def packageOptions = Seq(
     ManifestAttributes(
