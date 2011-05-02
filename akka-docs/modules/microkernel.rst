@@ -21,7 +21,7 @@ To build the latest version see :ref:`building-akka-modules`.
 Run the microkernel
 ===================
 
-To start the kernel use the scripts ``start.sh`` or ``start.bat``.
+To start the kernel use the scripts in the ``bin`` directory.
 
 All services are configured in the ``config/akka.conf`` configuration file. See
 the Akka documentation on Configuration for more details. Services you want to

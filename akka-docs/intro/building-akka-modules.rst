@@ -170,10 +170,10 @@ download) use the ``dist`` command::
 
    sbt dist
 
-The distribution can be found in the ``target/dist`` directory.
+The distribution can be found in the ``dist/microkernel/target/dist`` directory.
 
-There are start scripts, ``start.sh`` and ``start.bat``, that can be used to
-start up the microkernel.
+There is a start script in the ``bin`` directory that can be used to start up
+the microkernel.
 
 The microkernel will boot up and install any applications that reside in the
 distribution's ``deploy`` directory. You can deploy your own applications into
