@@ -524,10 +524,7 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
     override def testOptions = createTestFilter( _.endsWith("Test"))
   }
 
-  class AkkaSampleSecurityProject(info: ProjectInfo) extends AkkaModulesDefaultProject(info) {
-    val jsr250        = Dependencies.jsr250
-    val jsr311        = Dependencies.jsr311
-  }
+  class AkkaSampleSecurityProject(info: ProjectInfo) extends AkkaModulesDefaultProject(info)
 
   class AkkaSampleHelloProject(info: ProjectInfo) extends AkkaModulesDefaultProject(info)
 
