@@ -3,90 +3,89 @@
  */
 
 import sbt._
-import java.util.jar.Attributes.Name._
 
-trait AkkaKernelProject extends AkkaProject {
+trait AkkaKernelProject extends AkkaProject with AkkaMicrokernelProject {
   // automatic akka kernel dependency
   val akkaKernel = akkaModule("kernel")
+}
 
+trait AkkaMicrokernelProject extends BasicScalaProject {
   def distOutputPath = outputPath / "dist"
 
-  def distLibName = "lib"
-  def distStartJarName = "start.jar"
+  def distBinName = "bin"
   def distConfigName = "config"
   def distDeployName = "deploy"
+  def distLibName = "lib"
 
-  def distLibPath = distOutputPath / distLibName
-  def distStartJarPath = distOutputPath / distStartJarName
+  def distBinPath = distOutputPath / distBinName
   def distConfigPath = distOutputPath / distConfigName
   def distDeployPath = distOutputPath / distDeployName
+  def distLibPath = distOutputPath / distLibName
 
-  def runtimeJars = {
+  def distJvmOptions = "-Xmx512M"
+  def distMainClass = "akka.kernel.Main"
+
+  def distConfigSources = "config" ** "*.*"
+
+  def distDeployJars = jarPath
+
+  def distRuntimeJars = {
     runClasspath
     .filter(ClasspathUtilities.isArchive)
     .filter(jar => !jar.name.contains("-sources"))
     .filter(jar => !jar.name.contains("-docs"))
   }
 
-  def distLibs = runtimeJars +++ buildLibraryJar
+  def distProjectJars = jarsOfProjectDependencies
 
-  def distConfigSources = "config" ** "*.*"
+  def distLibs = distRuntimeJars +++ distProjectJars +++ buildLibraryJar
 
-  def dependencyJars = dependencies.flatMap( _ match {
-    case pp: PackagePaths => Some(pp.jarPath)
-    case _ => None
-  })
-
-  def distDeployJars = Seq(jarPath) ++ dependencyJars
-
-  lazy val dist = (distAction dependsOn (`package`, distStartJar)
+  lazy val dist = (distAction dependsOn (`package`, distClean)
                    describedAs "Create an Akka microkernel distribution.")
 
   def distAction = task {
     log.info("Creating distribution %s ..." format distOutputPath)
-    FileUtilities.copyFlat(distLibs.get, distLibPath, log).left.toOption orElse
-    FileUtilities.copyFlat(distConfigSources.get, distConfigPath, log).left.toOption orElse
-    writeFiles(distOutputPath, distScripts) orElse
-    FileUtilities.copyFlat(distDeployJars, distDeployPath, log).left.toOption orElse {
+    writeScripts(distScripts, distBinPath) orElse
+    copyFiles(distConfigSources, distConfigPath) orElse
+    copyFiles(distDeployJars, distDeployPath) orElse
+    copyFiles(distLibs, distLibPath) orElse {
       log.info("Distribution created.")
       None
     }
   }
 
-  lazy val distStartJar = (packageTask(Path.emptyPathFinder, distStartJarPath, distPackageOptions)
-                           dependsOn distClean
-                           describedAs "Create a dist start jar with manifest classpath.")
-
-  def distExtraClasspath = Seq(distConfigName + "/")
-
-  def distLib(jar: Path) = distLibName + "/" + jar.name
-
-  def distManifestClasspath = (distLibs.get.map(distLib) ++ distExtraClasspath).mkString(" ")
-
-  def distPackageOptions = Seq(
-    ManifestAttributes(
-      (CLASS_PATH, distManifestClasspath),
-      (IMPLEMENTATION_TITLE, "Akka Microkernel"),
-      (IMPLEMENTATION_URL, "http://akka.io"),
-      (IMPLEMENTATION_VENDOR, "Scalable Solutions AB")),
-    MainClass("akka.kernel.Main"))
+  def copyFiles(from: PathFinder, to: Path) = {
+    FileUtilities.copyFlat(from.get, to, log).left.toOption
+  }
 
   lazy val distClean = distCleanAction describedAs "Clean the dist target dir."
 
   def distCleanAction = task { FileUtilities.clean(distOutputPath, log) }
 
-  def writeFiles(path: Path, files: Seq[(String, String)]) = {
-    files.map(s => FileUtilities.write((path / s._1).asFile, s._2, log))
-    .foldLeft(None: Option[String])(_ orElse _)
+  case class DistScript(name: String, contents: String, executable: Boolean)
+
+  def distScripts = Set(DistScript("start", distShScript, true))
+
+  def distShScript = """|#!/bin/sh
+                        |
+                        |SOURCE=`dirname $0`
+                        |AKKA_HOME=`cd "$SOURCE"/..; pwd -P`
+                        |AKKA_CLASSPATH="$AKKA_HOME/lib/*"
+                        |JAVA_OPTS="%s"
+                        |
+                        |java $JAVA_OPTS -cp "$AKKA_CLASSPATH" -Dakka.home="$AKKA_HOME" %s
+                        |""".stripMargin.format(distJvmOptions, distMainClass)
+
+  def writeScripts(scripts: Set[DistScript], to: Path) = {
+    scripts.map { script =>
+      val target = to / script.name
+      FileUtilities.write(target.asFile, script.contents, log) orElse
+      setExecutable(target, script.executable)
+    }.foldLeft(None: Option[String])(_ orElse _)
   }
 
-  def distScripts = Seq(("start.sh", distShScript), ("start.bat", distBatScript))
-
-  def distShScript = """|microkernel=`dirname $0`
-                        |java -Xmx512M -Dakka.home=$microkernel -jar $microkernel/%s
-                        |""".stripMargin.format(distStartJarName)
-
-  def distBatScript = """|set MICROKERNEL=%%~dp0
-                         |java -Xmx512M -Dakka.home=%%MICROKERNEL%% -jar "%%MICROKERNEL%%%s"
-                         |""".stripMargin.format(distStartJarName)
+  def setExecutable(target: Path, executable: Boolean): Option[String] = {
+    val success = target.asFile.setExecutable(executable, false)
+    if (success) None else Some("Couldn't set permissions of " + target)
+  }
 }
