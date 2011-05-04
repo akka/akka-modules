@@ -78,8 +78,7 @@ trait AkkaMicrokernelProject extends AkkaConfigProject {
 
   def distShScript = """|#!/bin/sh
                         |
-                        |SOURCE=`dirname $0`
-                        |AKKA_HOME=`cd "$SOURCE"/..; pwd -P`
+                        |AKKA_HOME="$(cd "$(cd "$(dirname "$0")"; pwd -P)"/..; pwd)"
                         |AKKA_CLASSPATH="$AKKA_HOME/lib/*"
                         |JAVA_OPTS="%s"
                         |
