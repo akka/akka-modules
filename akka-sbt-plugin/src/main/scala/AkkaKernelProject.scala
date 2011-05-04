@@ -9,7 +9,7 @@ trait AkkaKernelProject extends AkkaProject with AkkaMicrokernelProject {
   val akkaKernel = akkaModule("kernel")
 }
 
-trait AkkaMicrokernelProject extends BasicScalaProject {
+trait AkkaMicrokernelProject extends AkkaConfigProject {
   def distOutputPath = outputPath / "dist"
 
   def distBinName = "bin"
@@ -25,7 +25,16 @@ trait AkkaMicrokernelProject extends BasicScalaProject {
   def distJvmOptions = "-Xmx512M"
   def distMainClass = "akka.kernel.Main"
 
-  def distConfigSources = "config" ** "*.*"
+  def distProjectDependencies = topologicalSort.dropRight(1)
+
+  def distProjectDependenciesConfig = {
+    distProjectDependencies.flatMap( p => p match {
+      case acp: AkkaConfigProject => Some(acp.configSources)
+      case _ => None
+    }).foldLeft(Path.emptyPathFinder)(_ +++ _)
+  }
+
+  def distConfigSources = configSources +++ distProjectDependenciesConfig
 
   def distDeployJars = jarPath
 
@@ -36,9 +45,9 @@ trait AkkaMicrokernelProject extends BasicScalaProject {
     .filter(jar => !jar.name.contains("-docs"))
   }
 
-  def distProjectJars = jarsOfProjectDependencies
+  def distProjectDependencyJars = jarsOfProjectDependencies
 
-  def distLibs = distRuntimeJars +++ distProjectJars +++ buildLibraryJar
+  def distLibs = distRuntimeJars +++ distProjectDependencyJars +++ buildLibraryJar
 
   lazy val dist = (distAction dependsOn (`package`, distClean)
                    describedAs "Create an Akka microkernel distribution.")
@@ -64,7 +73,8 @@ trait AkkaMicrokernelProject extends BasicScalaProject {
 
   case class DistScript(name: String, contents: String, executable: Boolean)
 
-  def distScripts = Set(DistScript("start", distShScript, true))
+  def distScripts = Set(DistScript("start", distShScript, true),
+                        DistScript("start.cmd", distCmdScript, true))
 
   def distShScript = """|#!/bin/sh
                         |
@@ -75,6 +85,13 @@ trait AkkaMicrokernelProject extends BasicScalaProject {
                         |
                         |java $JAVA_OPTS -cp "$AKKA_CLASSPATH" -Dakka.home="$AKKA_HOME" %s
                         |""".stripMargin.format(distJvmOptions, distMainClass)
+
+  def distCmdScript = """|set AKKA_HOME=%%~dp0..
+                         |set AKKA_CLASSPATH=%%AKKA_HOME%%\\lib\\*
+                         |set JAVA_OPTS="%s"
+                         |
+                         |java %%JAVA_OPTS%% -cp "%%AKKA_CLASSPATH%%" -Dakka.home=%%AKKA_HOME%% %s
+                         |""".stripMargin.format(distJvmOptions, distMainClass)
 
   def writeScripts(scripts: Set[DistScript], to: Path) = {
     scripts.map { script =>
@@ -88,4 +105,12 @@ trait AkkaMicrokernelProject extends BasicScalaProject {
     val success = target.asFile.setExecutable(executable, false)
     if (success) None else Some("Couldn't set permissions of " + target)
   }
+}
+
+trait AkkaConfigProject extends BasicScalaProject with MavenStyleScalaPaths {
+  def mainConfigPath = mainSourcePath / "config"
+
+  def configSources = mainConfigPath ** "*.*"
+
+  override def mainUnmanagedClasspath = super.mainUnmanagedClasspath +++ mainConfigPath
 }
