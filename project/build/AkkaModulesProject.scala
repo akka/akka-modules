@@ -53,6 +53,7 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
   lazy val SPRING_VERSION        = "3.0.5.RELEASE"
   lazy val JETTY_VERSION         = "7.4.0.v20110414"
   lazy val CODEC_VERSION         = "1.4"
+  lazy val LOGBACK_VERSION       = "0.9.28"
 
   // -------------------------------------------------------------------------------------------------------------------
   // ModuleConfigurations
@@ -158,6 +159,8 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
     lazy val spring_jms     = "org.springframework" % "spring-jms"     % SPRING_VERSION % "compile" //ApacheV2
 
     // Test
+
+    lazy val testLogback    = "ch.qos.logback"         % "logback-classic"     % LOGBACK_VERSION   % "test" // EPL 1.0 / LGPL 2.1
 
     lazy val camel_spring   = "org.apache.camel"       % "camel-spring"        % CAMEL_VERSION     % "test" //ApacheV2
     lazy val commons_coll   = "commons-collections"    % "commons-collections" % "3.2.1"           % "test" //ApacheV2
@@ -292,6 +295,7 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
     // testing
     val junit     = Dependencies.junit
     val scalatest = Dependencies.scalatest
+    val logback   = Dependencies.testLogback
 
     override def testOptions = createTestFilter( _.endsWith("Test"))
   }
@@ -308,6 +312,7 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
     // testing
     val junit     = Dependencies.junit
     val scalatest = Dependencies.scalatest
+    val logback   = Dependencies.testLogback
 
     override def testOptions = createTestFilter( _.endsWith("Test"))
   }
