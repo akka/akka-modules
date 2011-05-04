@@ -1,21 +1,13 @@
 #!/bin/bash
 
-SOURCE=`dirname $0`
-SAMPLE=`cd "$SOURCE"/..; pwd -P`
-BASE=`cd "$SAMPLE"/../../..; pwd -P`
-AKKA_HOME="$BASE/akka"
+SAMPLE="$(cd "$(cd "$(dirname "$0")"; pwd -P)"/..; pwd)"
+
+AKKA_HOME="$(cd "$SAMPLE"/../..; pwd)"
 
 [ -n "$JAVA_OPTS" ] || JAVA_OPTS="-Xmx512M"
 
-# create the classpath
-if [ -z "$SAMPLE_CLASSPATH" ] ; then
-    SAMPLE_CLASSPATH="$BASE/scala/lib/scala-library.jar"
-    for jar in "$AKKA_HOME"/lib/* ; do
-        SAMPLE_CLASSPATH="$SAMPLE_CLASSPATH:$jar"
-    done
-    for jar in "$SAMPLE"/lib/* ; do
-        SAMPLE_CLASSPATH="$SAMPLE_CLASSPATH:$jar"
-    done
-fi
+[ -n "$AKKA_CLASSPATH" ] || AKKA_CLASSPATH="$AKKA_HOME/lib/*"
+
+SAMPLE_CLASSPATH="$AKKA_CLASSPATH:$SAMPLE/lib/*"
 
 java $JAVA_OPTS -cp "$SAMPLE_CLASSPATH" -Dakka.home="$SAMPLE" akka.kernel.Main

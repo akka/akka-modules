@@ -102,6 +102,9 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
     lazy val akka_remote      = "se.scalablesolutions.akka" % "akka-remote"      % AKKA_VERSION % "compile" //ApacheV2
     lazy val akka_http        = "se.scalablesolutions.akka" % "akka-http"        % AKKA_VERSION % "compile" //ApacheV2
     lazy val akka_typed_actor = "se.scalablesolutions.akka" % "akka-typed-actor" % AKKA_VERSION % "compile" //ApacheV2
+    lazy val akka_slf4j       = "se.scalablesolutions.akka" % "akka-slf4j"       % AKKA_VERSION % "compile" //ApacheV2
+    lazy val akka_testkit     = "se.scalablesolutions.akka" % "akka-testkit"     % AKKA_VERSION % "compile" //ApacheV2
+    lazy val akka_actor_tests = "se.scalablesolutions.akka" % "akka-actor-tests" % AKKA_VERSION % "compile" //ApacheV2
 
     lazy val aopalliance = "aopalliance" % "aopalliance" % "1.0" % "compile" //Public domain
 
@@ -319,6 +322,7 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
     val akka_stm         = Dependencies.akka_stm
     val akka_remote      = Dependencies.akka_remote
     val akka_http        = Dependencies.akka_http
+    val akka_slf4j       = Dependencies.akka_slf4j
     val jetty            = Dependencies.jetty
     val jetty_util       = Dependencies.jetty_util
     val jetty_xml        = Dependencies.jetty_xml
@@ -598,7 +602,7 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
   lazy val akkaDist = project("dist", "akka-dist", new AkkaDistParentProject(_))
 
   class AkkaDistParentProject(info: ProjectInfo) extends ParentProject(info) {
-    lazy val akkaActorDist = project("actor", "akka-dist-actor", new AkkaActorDistProject(_))
+    lazy val akkaActorsDist = project("actors", "akka-dist-actors", new AkkaActorsDistProject(_))
 
     lazy val akkaCoreDist = project("core", "akka-dist-core", new AkkaCoreDistProject(_))
 
@@ -611,15 +615,18 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
     override def publishAction = doNothing
     override def deliverAction = doNothing
 
-    class AkkaActorDistProject(info: ProjectInfo) extends AkkaDistProject("akka-actor", info) {
+    class AkkaActorsDistProject(info: ProjectInfo) extends AkkaDistProject("akka-actors", info) {
       val akkaActor = Dependencies.akka_actor
     }
 
     class AkkaCoreDistProject(info: ProjectInfo) extends AkkaDistProject("akka-core", info) {
       val akkaRemote = Dependencies.akka_remote
+      val akkaSlf4j = Dependencies.akka_slf4j
+      val akkaTestkit = Dependencies.akka_testkit
+      val akkaActorTests = Dependencies.akka_actor_tests
 
       override def dependencyClasspath =
-        if (distExclusive.value) runClasspath.filter(p => !akkaActorDist.runClasspath.get.exists(_.name == p.name))
+        if (distExclusive.value) runClasspath.filter(p => !akkaActorsDist.runClasspath.get.exists(_.name == p.name))
         else runClasspath
     }
 
@@ -674,8 +681,8 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
       val distFullName = distName + "-" + version
       val distOutputBasePath = outputPath / "dist"
       val distOutputPath = (distOutputBasePath ##) / distFullName
-      val distScalaLibPath = distOutputPath / "scala" / "lib"
-      val distAkkaPath = distOutputPath / "akka"
+      val distScalaLibPath = distOutputPath / "lib"
+      val distAkkaPath = distOutputPath
       val distBinPath = distAkkaPath / "bin"
       val distConfigPath = distAkkaPath / "config"
       val distDeployPath = distAkkaPath / "deploy"
