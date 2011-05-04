@@ -79,14 +79,14 @@ trait AkkaMicrokernelProject extends AkkaConfigProject {
   def distShScript = """|#!/bin/sh
                         |
                         |AKKA_HOME="$(cd "$(cd "$(dirname "$0")"; pwd -P)"/..; pwd)"
-                        |AKKA_CLASSPATH="$AKKA_HOME/lib/*"
+                        |AKKA_CLASSPATH="$AKKA_HOME/lib/*:$AKKA_HOME/config"
                         |JAVA_OPTS="%s"
                         |
                         |java $JAVA_OPTS -cp "$AKKA_CLASSPATH" -Dakka.home="$AKKA_HOME" %s
                         |""".stripMargin.format(distJvmOptions, distMainClass)
 
   def distCmdScript = """|set AKKA_HOME=%%~dp0..
-                         |set AKKA_CLASSPATH=%%AKKA_HOME%%\\lib\\*
+                         |set AKKA_CLASSPATH="%%AKKA_HOME%%\\lib\\*;%%AKKA_HOME%%\\config"
                          |set JAVA_OPTS="%s"
                          |
                          |java %%JAVA_OPTS%% -cp "%%AKKA_CLASSPATH%%" -Dakka.home=%%AKKA_HOME%% %s
