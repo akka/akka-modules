@@ -50,7 +50,6 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
   lazy val JERSEY_VERSION        = "1.3"
   lazy val MULTIVERSE_VERSION    = "0.6.2"
   lazy val SCALATEST_VERSION     = "1.4-SNAPSHOT"
-  lazy val SLF4J_VERSION         = "1.5.11"
   lazy val SPRING_VERSION        = "3.0.5.RELEASE"
   lazy val JETTY_VERSION         = "7.4.0.v20110414"
   lazy val CODEC_VERSION         = "1.4"
@@ -157,8 +156,6 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
     lazy val spring_beans   = "org.springframework" % "spring-beans"   % SPRING_VERSION % "compile" //ApacheV2
     lazy val spring_context = "org.springframework" % "spring-context" % SPRING_VERSION % "compile" //ApacheV2
     lazy val spring_jms     = "org.springframework" % "spring-jms"     % SPRING_VERSION % "compile" //ApacheV2
-
-    lazy val slf4j          = "org.slf4j"              % "slf4j-simple"        % SLF4J_VERSION     % "compile" // MIT
 
     // Test
 
@@ -289,8 +286,8 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
 
   class AkkaCamelProject(info: ProjectInfo) extends AkkaModulesDefaultProject(info) {
     val akka_actor = Dependencies.akka_actor
+    val akka_slf4j = Dependencies.akka_slf4j
     val camel_core = Dependencies.camel_core
-    val slf4j      = Dependencies.slf4j
 
     // testing
     val junit     = Dependencies.junit
@@ -305,6 +302,7 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
 
   class AkkaCamelTypedProject(info: ProjectInfo) extends AkkaModulesDefaultProject(info) {
     val akka_typed_actor = Dependencies.akka_typed_actor
+    val akka_slf4j = Dependencies.akka_slf4j
     val camel_core       = Dependencies.camel_core
 
     // testing
