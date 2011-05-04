@@ -1,7 +1,6 @@
+sh git checkout -b release-{{release.arg1}}
 set akka.release true
 clean
-sh rm -rf dist
-sh rm -rf deploy
 script find-replace.sh {{project.version}} {{release.arg1}}
 script find-replace.sh //[[:space:]]*release:[[:space:]]*
 reload
@@ -9,6 +8,3 @@ build-release
 sh git add .
 sh git commit -am 'Update version for release {{project.version}}'
 sh git tag -m 'Version {{project.version}}' v{{project.version}}
-sh git revert -n HEAD
-sh git commit -am 'Restoring SNAPSHOT version'
-reload
