@@ -649,29 +649,28 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
 
       def distSamplesAction = task {
         val demo = akka_samples.akka_sample_hello.jarPath
-        val samples = akka_samples.dependencies
+        val samples = Set(akka_samples.akka_sample_camel,
+                          akka_samples.akka_sample_hello,
+                          akka_samples.akka_sample_security)
 
-        def distCopySamples(samples: Iterable[Project]) = {
+        def distCopySamples[P <: DefaultProject](samples: Set[P]) = {
           samples.map { sample =>
             val sampleOutputPath = distSamplesPath / sample.name
             val binPath = sampleOutputPath / "bin"
             val configPath = sampleOutputPath / "config"
-            val libPath = sampleOutputPath / "lib"
             val deployPath = sampleOutputPath / "deploy"
+            val libPath = sampleOutputPath / "lib"
+            val srcPath = sampleOutputPath / "src"
             val confs = sample.info.projectPath / "config" ** "*.*"
             val scripts = akkaModulesParent.info.projectPath / "scripts" / "samples" * "*"
-            val libs = sample match {
-              case p: BasicScalaProject => p.managedClasspath(Configurations.Runtime)
-              case _ => Path.emptyPathFinder
-            }
-            val deployed = sample match {
-              case p: BasicScalaProject => p.jarPath
-              case _ => Path.emptyPathFinder
-            }
+            val libs = sample.managedClasspath(Configurations.Runtime)
+            val deployed = sample.jarPath
+            val sources = sample.packageSourcePaths
             copyFiles(confs, configPath) orElse
             copyScripts(scripts, binPath) orElse
             copyFiles(libs, libPath) orElse
-            copyFiles(deployed, deployPath)
+            copyFiles(deployed, deployPath) orElse
+            copyPaths(sources, srcPath)
           }.foldLeft(None: Option[String])(_ orElse _)
         }
 
@@ -734,6 +733,11 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
       def copyFiles(from: PathFinder, to: Path): Option[String] = {
         if (from.get.isEmpty) None
         else FileUtilities.copyFlat(from.get, to, log).left.toOption
+      }
+
+      def copyPaths(from: PathFinder, to: Path): Option[String] = {
+        if (from.get.isEmpty) None
+        else FileUtilities.copy(from.get, to, log).left.toOption
       }
 
       def copyScripts(from: PathFinder, to: Path): Option[String] = {
