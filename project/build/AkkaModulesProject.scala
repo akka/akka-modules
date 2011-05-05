@@ -25,7 +25,7 @@ object Repositories {
   lazy val ClojarsRepo            = MavenRepository("Clojars Repo", "http://clojars.org/repo")
 }
 
-class AkkaModulesParentProject(info: ProjectInfo) extends ParentProject(info) { akkaModulesParent =>
+class AkkaModulesParentProject(info: ProjectInfo) extends ParentProject(info) with DocParentProject { akkaModulesParent =>
 
   // -------------------------------------------------------------------------------------------------------------------
   // Compile settings
@@ -195,6 +195,12 @@ class AkkaModulesParentProject(info: ProjectInfo) extends ParentProject(info) { 
   // -------------------------------------------------------------------------------------------------------------------
 
   override def disableCrossPaths = true
+
+  // -------------------------------------------------------------------------------------------------------------------
+  // Scaladocs
+  // -------------------------------------------------------------------------------------------------------------------
+
+  override def docProjectDependencies = dependencies.toList - akka_samples - akka_sbt_plugin
 
   // -------------------------------------------------------------------------------------------------------------------
   // Publishing
