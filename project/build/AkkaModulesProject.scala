@@ -528,6 +528,12 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
     val camel_jms   = Dependencies.camel_jms
     val spring_jms  = Dependencies.spring_jms
 
+    override def ivyXML = {
+      <dependencies>
+        <exclude module="slf4j-api" />
+      </dependencies>
+    }
+
     override def testOptions = createTestFilter( _.endsWith("Test"))
   }
 
