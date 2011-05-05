@@ -25,19 +25,19 @@ object Repositories {
   lazy val ClojarsRepo            = MavenRepository("Clojars Repo", "http://clojars.org/repo")
 }
 
-class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) { akkaModulesParent =>
+class AkkaModulesParentProject(info: ProjectInfo) extends ParentProject(info) { akkaModulesParent =>
 
   // -------------------------------------------------------------------------------------------------------------------
   // Compile settings
   // -------------------------------------------------------------------------------------------------------------------
 
-  override def compileOptions = super.compileOptions ++
+  val scalaCompileSettings =
     Seq("-deprecation",
         "-Xmigration",
-        "-optimise", //Uncomment this for release compile
+        "-optimise",
         "-encoding", "utf8")
-        .map(CompileOption(_))
-  override def javaCompileOptions = JavaCompileOption("-Xlint:unchecked") :: super.javaCompileOptions.toList
+
+  val javaCompileSettings = Seq("-Xlint:unchecked")
 
   // -------------------------------------------------------------------------------------------------------------------
   // Versions
@@ -193,13 +193,12 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
   // -------------------------------------------------------------------------------------------------------------------
   // Miscellaneous
   // -------------------------------------------------------------------------------------------------------------------
+
   override def disableCrossPaths = true
 
-  override def runClasspath = super.runClasspath +++ "config"
-
-  // ------------------------------------------------------------
-  // publishing
-  // ------------------------------------------------------------
+  // -------------------------------------------------------------------------------------------------------------------
+  // Publishing
+  // -------------------------------------------------------------------------------------------------------------------
 
   override def managedStyle = ManagedStyle.Maven
 
@@ -235,16 +234,9 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
   override def deliverProjectDependencies =
     super.deliverProjectDependencies.toList - akka_sbt_plugin.projectID - akkaDist.projectID
 
-  val sourceArtifact = Artifact(artifactID, "src", "jar", Some("sources"), Nil, None)
-  val docsArtifact = Artifact(artifactID, "doc", "jar", Some("docs"), Nil, None)
-
-  override def packageDocsJar = defaultJarPath("-docs.jar")
-  override def packageSrcJar= defaultJarPath("-sources.jar")
-  override def packageToPublishActions = super.packageToPublishActions ++ Seq(packageDocs, packageSrc)
-
-  // ------------------------------------------------------------
+  // -------------------------------------------------------------------------------------------------------------------
   // Build release
-  // ------------------------------------------------------------
+  // -------------------------------------------------------------------------------------------------------------------
 
   val localReleasePath = outputPath / "release" / version.toString
   val localReleaseRepository = Resolver.file("Local Release", localReleasePath / "repository" asFile)
@@ -490,7 +482,7 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
       val cleanSrcManaged = cleanTask(srcManagedScala) named ("clean src_managed")
       task {
         info.parent match {
-          case Some(project: DefaultProject) =>
+          case Some(project: ParentProject) =>
             xsbt.FileUtilities.write((srcManagedScala / "AkkaProject.scala").asFile,
                                      GenerateAkkaSbtPlugin(project, AKKA_VERSION, addAkkaConfig.value))
           case _ =>
@@ -572,14 +564,22 @@ class AkkaModulesParentProject(info: ProjectInfo) extends DefaultProject(info) {
 
   class AkkaModulesDefaultProject(info: ProjectInfo) extends DefaultProject(info) with McPom {
     override def disableCrossPaths = true
-    lazy val sourceArtifact = Artifact(artifactID, "src", "jar", Some("sources"), Nil, None)
-    lazy val docsArtifact = Artifact(this.artifactID, "doc", "jar", Some("docs"), Nil, None)
+
+    override def compileOptions = super.compileOptions ++ scalaCompileSettings.map(CompileOption)
+    override def javaCompileOptions = super.javaCompileOptions ++ javaCompileSettings.map(JavaCompileOption)
+
     override def runClasspath = super.runClasspath +++ (AkkaModulesParentProject.this.info.projectPath / "config")
     override def testClasspath = super.testClasspath +++ (AkkaModulesParentProject.this.info.projectPath / "config")
+
+    lazy val sourceArtifact = Artifact(artifactID, "src", "jar", Some("sources"), Nil, None)
+    lazy val docsArtifact = Artifact(this.artifactID, "doc", "jar", Some("docs"), Nil, None)
+
     override def packageDocsJar = this.defaultJarPath("-docs.jar")
     override def packageSrcJar  = this.defaultJarPath("-sources.jar")
     override def packageToPublishActions = super.packageToPublishActions ++ Seq(this.packageDocs, this.packageSrc)
-    override def pomPostProcess(node: scala.xml.Node): scala.xml.Node = mcPom(AkkaModulesParentProject.this.moduleConfigurations)(super.pomPostProcess(node))
+
+    override def pomPostProcess(node: scala.xml.Node): scala.xml.Node =
+      mcPom(AkkaModulesParentProject.this.moduleConfigurations)(super.pomPostProcess(node))
 
     /**
      * Used for testOptions, possibility to enable the running of integration and or stresstests
@@ -821,7 +821,7 @@ trait McPom { self: DefaultProject =>
 }
 
 object GenerateAkkaSbtPlugin {
-  def apply(project: DefaultProject, akkaVersion: String, addAkkaConfig: Boolean): String = {
+  def apply(project: ParentProject, akkaVersion: String, addAkkaConfig: Boolean): String = {
     val extraConfigs = {
       if (addAkkaConfig) Set(ModuleConfiguration("se.scalablesolutions.akka", Repositories.AkkaRepo))
       else Set.empty[ModuleConfiguration]
