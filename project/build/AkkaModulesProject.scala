@@ -77,6 +77,7 @@ class AkkaModulesParentProject(info: ProjectInfo) extends ParentProject(info) wi
   lazy val sjsonModuleConfig       = ModuleConfiguration("net.debasishg", ScalaToolsRepo)
   lazy val scalaTestModuleConfig   = ModuleConfiguration("org.scalatest", "scalatest", SCALATEST_VERSION, ScalaToolsRepo)
   lazy val atomikosModuleConfig    = ModuleConfiguration("com.atomikos",sbt.DefaultMavenRepository)
+  lazy val commonsCodecModuleConfig= ModuleConfiguration("commons-codec", sbt.DefaultMavenRepository)
   lazy val timeModuleConfig        = ModuleConfiguration("org.scala-tools", "time", ScalaToolsRepo)
   lazy val args4jModuleConfig      = ModuleConfiguration("args4j", JBossRepo)
   lazy val scannotationModuleConfig= ModuleConfiguration("org.scannotation", JBossRepo)
@@ -521,10 +522,11 @@ class AkkaModulesParentProject(info: ProjectInfo) extends ParentProject(info) wi
   // -------------------------------------------------------------------------------------------------------------------
 
   class AkkaSampleCamelProject(info: ProjectInfo) extends AkkaModulesDefaultProject(info) {
-    val activemq    = Dependencies.activemq
-    val camel_jetty = Dependencies.camel_jetty
-    val camel_jms   = Dependencies.camel_jms
-    val spring_jms  = Dependencies.spring_jms
+    val activemq      = Dependencies.activemq
+    val camel_jetty   = Dependencies.camel_jetty
+    val camel_jms     = Dependencies.camel_jms
+    val spring_jms    = Dependencies.spring_jms
+    val commons_codec = Dependencies.commons_codec
 
     override def ivyXML = {
       <dependencies>
