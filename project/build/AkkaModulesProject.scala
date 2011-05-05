@@ -25,7 +25,7 @@ object Repositories {
   lazy val ClojarsRepo            = MavenRepository("Clojars Repo", "http://clojars.org/repo")
 }
 
-class AkkaModulesParentProject(info: ProjectInfo) extends ParentProject(info) with DocParentProject { akkaModulesParent =>
+class AkkaModulesParentProject(info: ProjectInfo) extends ParentProject(info) with ExecProject with DocParentProject { akkaModulesParent =>
 
   // -------------------------------------------------------------------------------------------------------------------
   // Compile settings
@@ -196,6 +196,9 @@ class AkkaModulesParentProject(info: ProjectInfo) extends ParentProject(info) wi
   // -------------------------------------------------------------------------------------------------------------------
 
   override def disableCrossPaths = true
+
+  // add the sh action since it doesn't exist in ParentProject
+  lazy val sh = task { args =>  execOut { Process("sh" :: "-c" :: args.mkString(" ") :: Nil) } }
 
   // -------------------------------------------------------------------------------------------------------------------
   // Scaladocs
