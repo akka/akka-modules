@@ -7,7 +7,7 @@ import akka.camel.Message
 /**
  * @author Martin Krasser
  */
-object ClientApplication extends Application {
+object ClientApplication extends App {
 
   val actor1 = remote.actorOf[RemoteActor1]("localhost", 7777).start
   val actor2 = remote.actorFor("remote2", "localhost", 7777)

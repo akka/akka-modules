@@ -11,7 +11,7 @@ import akka.camel._
 /**
  * @author Martin Krasser
  */
-object StandaloneApplication extends Application {
+object StandaloneApplication extends App {
   import CamelContextManager._
   import CamelServiceManager._
 
@@ -49,7 +49,7 @@ class StandaloneApplicationRoute extends RouteBuilder {
   }
 }
 
-object StandaloneSpringApplication extends Application {
+object StandaloneSpringApplication extends App {
   import CamelContextManager._
 
   // load Spring application context
@@ -79,7 +79,7 @@ class StandaloneSpringApplicationRoute extends RouteBuilder {
   }
 }
 
-object StandaloneJmsApplication extends Application {
+object StandaloneJmsApplication extends App {
   import CamelServiceManager._
 
   val context = new ClassPathXmlApplicationContext("/context-jms.xml")

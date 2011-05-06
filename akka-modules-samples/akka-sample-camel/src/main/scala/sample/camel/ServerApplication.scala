@@ -7,7 +7,7 @@ import akka.actor.{TypedActor}
 /**
  * @author Martin Krasser
  */
-object ServerApplication extends Application {
+object ServerApplication extends App {
   import CamelServiceManager._
 
   startCamelService
