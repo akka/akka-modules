@@ -11,13 +11,14 @@ For an introduction to akka-camel, see also the `Appendix E - Akka and Camel`_
 .. _Appendix E - Akka and Camel: http://www.manning.com/ibsen/appEsample.pdf
 .. _Camel in Action: http://www.manning.com/ibsen/
 
+Contents:
+
+.. contents:: :local:
+
 Other, more advanced external articles are:
 
 * `Akka Consumer Actors: New Features and Best Practices <http://krasserm.blogspot.com/2011/02/akka-consumer-actors-new-features-and.html>`_
 * `Akka Producer Actors: New Features and Best Practices <http://krasserm.blogspot.com/2011/02/akka-producer-actor-new-features-and.html>`_
-
-
-.. contents:: :local:
 
 
 Introduction
@@ -2029,6 +2030,8 @@ typed-actor component.
 .. _bean: http://camel.apache.org/bean.html
 .. _Camel registry: http://camel.apache.org/registry.html
 
+
+.. _camel-typed-actors-using-spring:
 
 Using Spring
 ^^^^^^^^^^^^

@@ -7,9 +7,13 @@
 
 Module stability: **STABLE**
 
-Akkas integration with the `Spring Framework <http://www.springsource.org>`_ supplies the Spring way of using the Typed Actor Java API and for `configuring <Camel#spring-applications>`_ CamelService instances. It uses Spring's custom namespaces to create Typed Actors, supervisor hierarchies and a CamelService in a Spring environment.
+Akkas integration with the `Spring Framework <http://www.springsource.org>`_ supplies the Spring way of using the Typed Actor Java API and for CamelService configuration for :ref:`camel-spring-applications`. It uses Spring's custom namespaces to create Typed Actors, supervisor hierarchies and a CamelService in a Spring environment.
 
-To use the custom name space tags for Akka you have to add the XML schema definition to your spring configuration. It is available at `http://akka.io/akka-1.0.xsd <http://akka.io/akka.xsd>`_ (previous was `http://akka.io/akka-0.10.xsd <http://akka.io/akka.xsd>`_ ). The namespace for Akka is:
+Contents:
+
+.. contents:: :local:
+
+To use the custom name space tags for Akka you have to add the XML schema definition to your spring configuration. It is available at `http://akka.io/akka-1.0.xsd <http://akka.io/akka.xsd>`_. The namespace for Akka is:
 
 .. code-block:: xml
 
@@ -49,7 +53,8 @@ Example how to create Actors with the Spring framework:
           <property name="aDependency" ref="someBeanOrActorDependency"/>
   </akka:untyped-actor>
 
-Supported scopes are singleton and prototype. Dependencies and properties are set with Springs <property/> element. A dependency can be either a <akka:untyped-actor/> or a regular <bean/>.
+Supported scopes are singleton and prototype. Dependencies and properties are set with Springs ``<property/>`` element.
+A dependency can be either a ``<akka:untyped-actor/>`` or a regular ``<bean/>``.
 
 Get the Actor from the Spring context:
 
@@ -81,7 +86,8 @@ Creating a Typed Actor:
     </akka:typed-actor>
   </beans>
 
-Supported scopes are singleton and prototype. Dependencies and properties are set with Springs <property/> element. A dependency can be either a <akka:typed-actor/> or a regular <bean/>.
+Supported scopes are singleton and prototype. Dependencies and properties are set with Springs ``<property/>`` element.
+A dependency can be either a ``<akka:typed-actor/>`` or a regular ``<bean/>``.
 
 Get the Typed Actor from the Spring context:
 
@@ -137,9 +143,6 @@ Client side
   <!-- service-name could be custom name or class name -->
   <akka:actor-for id="client-1" host="localhost" port="9990" service-name="my-service"/>
 
-^
-
-^
 
 Configuration for a client managed remote Typed Actor
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -152,8 +155,6 @@ Configuration for a client managed remote Typed Actor
                     timeout="2000">
       <akka:remote host="localhost" port="9999" />
   </akka:typed-actor>
-
-^
 
 Configuration for a server managed remote Typed Actor
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -230,11 +231,13 @@ If you want to or have to share the dispatcher between Actors you can define a d
   </akka:typed-actor>
 
 The following dispatcher types are available in spring configuration:
+
 * executor-based-event-driven
 * executor-based-event-driven-work-stealing
 * thread-based
 
 The following queue types are configurable for dispatchers using thread pools:
+
 * bounded-linked-blocking-queue
 * unbounded-linked-blocking-queue
 * synchronous-queue
@@ -326,7 +329,7 @@ The Akka configuration can be made available as property placeholders by using a
 Camel configuration
 -------------------
 
-For details refer to the `akka-camel <camel>`_ documentation:
+For details refer to the :ref:`camel-module` documentation:
 
-* `CamelService <Camel#spring-applications>`_` configuration <Camel#spring-applications>`_
-* `Access to Typed Actors <Camel#using-spring>`_
+* CamelService configuration for :ref:`camel-spring-applications`
+* Access to Typed Actors :ref:`camel-typed-actors-using-spring`
