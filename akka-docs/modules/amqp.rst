@@ -7,9 +7,13 @@ Akka has an AMQP module which abstracts AMQP Connection, Producer and Consumer a
 It is currently based on the RabbitMQ Java client
 
 Documentation is best described in code, so therefore you can find most of the usage described here:
-|| **Scala:** || `ExampleSession.scala <@https://github.com/jboner/akka-modules/blob/master/akka-amqp/src/main/scala/akka/amqp/ExampleSession.scala>`_ ||
-|| **Java:** || `ExampleSessionJava.java <@https://github.com/jboner/akka-modules/blob/master/akka-amqp/src/main/java/akka/amqp/ExampleSessionJava.java>`_ ||
-Be sure to check it out since it also contains examples for doing simple RPC with Strings or ProtoBuf messages.
+
+* **Scala:** `ExampleSession.scala <@https://github.com/jboner/akka-modules/blob/master/akka-amqp/src/main/scala/akka/amqp/ExampleSession.scala>`_
+* **Java:** `ExampleSessionJava.java <@https://github.com/jboner/akka-modules/blob/master/akka-amqp/src/main/java/akka/amqp/ExampleSessionJava.java>`_. Be sure to check it out since it also contains examples for doing simple RPC with Strings or ProtoBuf messages.
+
+Contents:
+
+.. contents:: :local:
 
 Connection
 ^^^^^^^^^^

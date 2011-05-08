@@ -4,10 +4,16 @@ Contents
 .. toctree::
    :maxdepth: 2
 
-   intro/index
    modules/index
+   dev/index
 
 Links
 =====
 
-* `Support <http://scalablesolutions.se>`_
+* `Scaladoc API <http://akka.io/api/akka-modules/snapshot>`_
+
+* `Downloads <http://akka.io/downloads/>`_
+
+* `Source Code <http://github.com/jboner/akka>`_
+
+* `Issue Tracking <https://www.assembla.com/spaces/akka-modules/tickets>`_

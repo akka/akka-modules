@@ -11,4 +11,6 @@ Third, the *akka-osgi-assembly* module which also is a subproject of the *akka-o
 
 Last but not least, there is a simple OSGi example for Akka Core in the *akka-sample-osgi* module which itself is a subproject of the *akka-samples* module. It will start an *EchoActor* and send a message to it on bundle activation and shut it down on bundle deactivation. In order to run this example all you have to run an OSGi container like Eclipse Equinox or Apache Felix and install all the above mentioned bundles as well as this example bundle. An easy way to achieve this is using `Pax Runner <@http://paxrunner.ops4j.org/space/Pax+Runner>`_, step into the *target/<scala-version>/bundles* directory of the *akka-osgi-assembly* module and enter the following on the console:
 
-*pax-run.sh --p=equinox --profiles=log scan-dir:.@update file:../../../../../akka-samples/akka-sample-osgi/target/scala_2.8.0/akka-sample-osgi_2.8.0-0.10.jar*
+::
+
+  pax-run.sh --p=equinox --profiles=log scan-dir:.@update file:../../../../../akka-samples/akka-sample-osgi/target/scala_2.8.0/akka-sample-osgi_2.8.0-0.10.jar
