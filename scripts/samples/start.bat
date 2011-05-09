@@ -1,7 +1,7 @@
 set SAMPLE=%~dp0..
-set AKKA_HOME=%SAMPLE%\\..\\..
+set AKKA_HOME=%SAMPLE%\\..\\..\\..\\..
 set JAVA_OPTS="-Xmx512M"
-set AKKA_CLASSPATH="%AKKA_HOME%\\lib\\*"
+set AKKA_CLASSPATH="%AKKA_HOME%\\lib\\scala-library.jar;%AKKA_HOME%\\lib\\akka\\*"
 set SAMPLE_CLASSPATH="%AKKA_CLASSPATH%;%SAMPLE%\\lib\\*;%SAMPLE%\\config"
 
 java %JAVA_OPTS% -cp "%SAMPLE_CLASSPATH%" -Dakka.home=%SAMPLE% akka.kernel.Main
