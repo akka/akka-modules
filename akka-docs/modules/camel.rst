@@ -2466,7 +2466,7 @@ main method) that can be started from `sbt`_.
 .. code-block:: none
 
    $ sbt
-   [info] Building project akka-modules 1.1-SNAPSHOT against Scala 2.9.0.RC1
+   [info] Building project akka-modules 1.1-SNAPSHOT against Scala 2.9.0
    [info]    using AkkaModulesParentProject with sbt 0.7.6.RC0 and Scala 2.7.7
    > project akka-sample-camel
    Set current project to akka-sample-camel 1.1-SNAPSHOT
