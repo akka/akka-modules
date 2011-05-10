@@ -204,7 +204,7 @@ class AkkaModulesParentProject(info: ProjectInfo) extends ParentProject(info) wi
   // Scaladocs
   // -------------------------------------------------------------------------------------------------------------------
 
-  override def docProjectDependencies = dependencies.toList - akka_samples - akka_sbt_plugin
+  override def apiProjectDependencies = dependencies.toList - akka_samples - akka_sbt_plugin
 
   // -------------------------------------------------------------------------------------------------------------------
   // Publishing
@@ -250,7 +250,6 @@ class AkkaModulesParentProject(info: ProjectInfo) extends ParentProject(info) wi
 
   val localReleasePath = outputPath / "release" / version.toString
   val localReleaseRepository = Resolver.file("Local Release", localReleasePath / "repository" asFile)
-  val localReleaseDownloads = localReleasePath / "downloads"
 
   override def otherRepositories = super.otherRepositories ++ Seq(localReleaseRepository)
 
@@ -260,11 +259,38 @@ class AkkaModulesParentProject(info: ProjectInfo) extends ParentProject(info) wi
   }
 
   lazy val buildRelease = task {
-    FileUtilities.copy(Seq(distArchive), localReleaseDownloads, log).left.toOption
-  } dependsOn (publishRelease, dist)
+    log.info("Built release.")
+    None
+  } dependsOn (publishRelease, releaseApi, releaseDocs, releaseDownloads, releaseDist)
 
-  lazy val dist = task { None }
-  lazy val distArchive = akkaDist.akkaMicrokernelDist.distArchive
+  lazy val releaseApi = task {
+    val apiSources = ((apiOutputPath ##) ***)
+    val apiPath = localReleasePath / "api" / "akka-modules" / version.toString
+    FileUtilities.copy(apiSources.get, apiPath, log).left.toOption
+  } dependsOn (api)
+
+  lazy val releaseDocs = task {
+    val docsBuildPath = docsPath / "_build"
+    val docsHtmlSources = ((docsBuildPath / "html" ##) ***)
+    val docsPdfSources = (docsBuildPath / "latex" ##) ** "*.pdf"
+    val docsOutputPath = localReleasePath / "docs" / "akka-modules" / version.toString
+    FileUtilities.copy(docsHtmlSources.get, docsOutputPath, log).left.toOption orElse
+    FileUtilities.copy(docsPdfSources.get, docsOutputPath, log).left.toOption
+  } dependsOn (docs)
+
+  lazy val releaseDownloads = task {
+    val distArchive = akkaDist.akkaMicrokernelDist.distArchive
+    val downloadsPath = localReleasePath / "downloads"
+    FileUtilities.copy(distArchive.get, downloadsPath, log).left.toOption
+  } dependsOn (dist)
+
+  lazy val releaseDist = task {
+    val distArchive = akkaDist.akkaMicrokernelDist.distExclusiveArchive
+    val distPath = localReleasePath / "dist"
+    FileUtilities.copy(distArchive.get, distPath, log).left.toOption
+  } dependsOn (dist)
+
+  lazy val dist = task { None } // dummy task
 
   // -------------------------------------------------------------------------------------------------------------------
   // akka-amqp subproject
@@ -617,17 +643,15 @@ class AkkaModulesParentProject(info: ProjectInfo) extends ParentProject(info) wi
   // Distribution
   // -------------------------------------------------------------------------------------------------------------------
 
-  lazy val distExclusive = systemOptional[Boolean]("dist.exclusive", false)
-
   lazy val akkaDist = project("dist", "akka-dist", new AkkaDistParentProject(_))
 
   class AkkaDistParentProject(info: ProjectInfo) extends ParentProject(info) {
     lazy val akkaActorsDist = project("actors", "akka-dist-actors", new AkkaActorsDistProject(_))
 
-    lazy val akkaCoreDist = project("core", "akka-dist-core", new AkkaCoreDistProject(_))
+    lazy val akkaCoreDist = project("core", "akka-dist-core", new AkkaCoreDistProject(_), akkaActorsDist)
 
     lazy val akkaMicrokernelDist = project("microkernel", "akka-dist-microkernel", new AkkaMicrokernelDistProject(_),
-                                           akka_kernel, akka_samples)
+                                           akkaCoreDist, akka_kernel, akka_samples)
 
     def doNothing = task { None }
     override def publishLocalAction = doNothing
@@ -635,42 +659,39 @@ class AkkaModulesParentProject(info: ProjectInfo) extends ParentProject(info) wi
     override def publishAction = doNothing
     override def deliverAction = doNothing
 
-    class AkkaActorsDistProject(info: ProjectInfo) extends AkkaDistProject("akka-actors", info) {
-      val akkaActor = Dependencies.akka_actor
+    // shared from akka project
+    class AkkaActorsDistProject(info: ProjectInfo) extends DefaultProject(info) with DistSharedProject {
+      def distName = "akka-actors"
     }
 
-    class AkkaCoreDistProject(info: ProjectInfo) extends AkkaDistProject("akka-core", info) {
-      val akkaRemote = Dependencies.akka_remote
-      val akkaSlf4j = Dependencies.akka_slf4j
-      val akkaTestkit = Dependencies.akka_testkit
-      val akkaActorTests = Dependencies.akka_actor_tests
-
-      override def dependencyClasspath =
-        if (distExclusive.value) runClasspath.filter(p => !akkaActorsDist.runClasspath.get.exists(_.name == p.name))
-        else runClasspath
+    // shared from akka project
+    class AkkaCoreDistProject(info: ProjectInfo) extends DefaultProject(info) with DistSharedProject {
+      def distName = "akka-core"
     }
 
-    class AkkaMicrokernelDistProject(info: ProjectInfo) extends AkkaDistProject("akka-microkernel", info) {
-      override def distConfigSources = (akkaModulesParent.info.projectPath / "config").descendentsExcept("*.*", "*-test.*")
+    class AkkaMicrokernelDistProject(info: ProjectInfo) extends DefaultProject(info) with DistDocProject {
+      def distName = "akka-microkernel"
+      override def distDocName = "akka-modules"
+
+      override def distConfigSources = (akkaModulesParent.info.projectPath / "config" ##).descendentsExcept("*.*", "*-test.*")
+
       override def distScriptSources = akkaModulesParent.info.projectPath / "scripts" / "microkernel" * "*"
 
-      override def dependencyClasspath =
-        if (distExclusive.value) akka_kernel.runClasspath.filter(p => !akkaCoreDist.runClasspath.get.exists(_.name == p.name))
-        else akka_kernel.runClasspath
+      override def distClasspath = akka_kernel.runClasspath
 
       override def projectDependencies = akka_kernel.topologicalSort
 
       override def distAction = super.distAction dependsOn (distSamples)
 
-      lazy val distSamples = distSamplesAction dependsOn (distClean)
+      val distSamplesPath = distDocPath / "samples"
 
-      def distSamplesAction = task {
+      lazy val distSamples = task {
         val demo = akka_samples.akka_sample_hello.jarPath
         val samples = Set(akka_samples.akka_sample_camel,
                           akka_samples.akka_sample_hello,
                           akka_samples.akka_sample_security)
 
-        def distCopySamples[P <: DefaultProject](samples: Set[P]) = {
+        def copySamples[P <: DefaultProject](samples: Set[P]) = {
           samples.map { sample =>
             val sampleOutputPath = distSamplesPath / sample.name
             val binPath = sampleOutputPath / "bin"
@@ -692,95 +713,8 @@ class AkkaModulesParentProject(info: ProjectInfo) extends ParentProject(info) wi
         }
 
         copyFiles(demo, distDeployPath) orElse
-        distCopySamples(samples)
-      }
-    }
-
-    class AkkaDistProject(distName: String, info: ProjectInfo) extends DefaultProject(info) {
-      val distFullName = distName + "-" + version
-      val distOutputBasePath = outputPath / "dist"
-      val distOutputPath = (distOutputBasePath ##) / distFullName
-      val distScalaLibPath = distOutputPath / "lib"
-      val distAkkaPath = distOutputPath
-      val distBinPath = distAkkaPath / "bin"
-      val distConfigPath = distAkkaPath / "config"
-      val distDeployPath = distAkkaPath / "deploy"
-      val distLibPath = distAkkaPath / "lib"
-      val distSamplesPath = distAkkaPath / "samples"
-      val distArchiveName = distFullName + ".zip"
-      val distArchive = (distOutputBasePath ##) / distArchiveName
-
-      def distConfigSources = info.projectPath / "config" * "*"
-      def distScriptSources = info.projectPath / "scripts" * "*"
-
-      def scalaDependency = if (distExclusive.value) Path.emptyPathFinder else buildLibraryJar
-
-      def dependencyClasspath = runClasspath
-
-      def runtimeJars = (dependencyClasspath
-                         .filter(ClasspathUtilities.isArchive)
-                         .filter(jar => !jar.name.contains("-sources"))
-                         .filter(jar => !jar.name.contains("-docs")))
-
-      def projectDependencies = topologicalSort.dropRight(1)
-
-      def dependencyJars = Path.lazyPathFinder {
-        projectDependencies.flatMap( p => p match {
-          case pp: PackagePaths => Some(pp.jarPath)
-          case _ => None
-        })
-      }
-
-      def distLibs = runtimeJars +++ dependencyJars
-
-      lazy val dist = distAction dependsOn (`package`, distClean) describedAs("Create a distribution.")
-
-      def distAction = task {
-        copyFiles(scalaDependency, distScalaLibPath) orElse
-        copyFiles(distLibs, distLibPath) orElse
-        copyFiles(distConfigSources, distConfigPath) orElse
-        copyScripts(distScriptSources, distBinPath) orElse
-        FileUtilities.zip(List(distOutputPath), distArchive, true, log)
-      }
-
-      lazy val distClean = distCleanAction describedAs "Clean the dist target dir."
-
-      def distCleanAction = task { FileUtilities.clean(distOutputPath, log) }
-
-      def copyFiles(from: PathFinder, to: Path): Option[String] = {
-        if (from.get.isEmpty) None
-        else FileUtilities.copyFlat(from.get, to, log).left.toOption
-      }
-
-      def copyPaths(from: PathFinder, to: Path): Option[String] = {
-        if (from.get.isEmpty) None
-        else FileUtilities.copy(from.get, to, log).left.toOption
-      }
-
-      def copyScripts(from: PathFinder, to: Path): Option[String] = {
-        from.get.map { script =>
-          val target = to / script.name
-          FileUtilities.copyFile(script, target, log) orElse
-          setExecutable(target, script.asFile.canExecute)
-        }.foldLeft(None: Option[String])(_ orElse _)
-      }
-
-      def setExecutable(target: Path, executable: Boolean): Option[String] = {
-        val success = target.asFile.setExecutable(executable, false)
-        if (success) None else Some("Couldn't set permissions of " + target)
-      }
-
-      override def disableCrossPaths = true
-
-      def doNothing = task { None }
-      override def compileAction = doNothing
-      override def testCompileAction = doNothing
-      override def testAction = doNothing
-      override def packageAction = doNothing
-      override def publishLocalAction = doNothing
-      override def deliverLocalAction = doNothing
-      override def publishAction = doNothing
-      override def deliverAction = doNothing
+        copySamples(samples)
+      } dependsOn (distBase)
     }
   }
 }

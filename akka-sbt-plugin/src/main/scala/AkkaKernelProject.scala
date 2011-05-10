@@ -22,7 +22,7 @@ trait AkkaMicrokernelProject extends AkkaConfigProject {
   def distDeployPath = distOutputPath / distDeployName
   def distLibPath = distOutputPath / distLibName
 
-  def distJvmOptions = "-Xmx512M"
+  def distJvmOptions = "-Xms1536M -Xmx1536M -Xss1M -XX:MaxPermSize=256M -XX:+UseParallelGC"
   def distMainClass = "akka.kernel.Main"
 
   def distProjectDependencies = topologicalSort.dropRight(1)
