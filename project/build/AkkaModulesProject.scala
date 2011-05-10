@@ -261,7 +261,7 @@ class AkkaModulesParentProject(info: ProjectInfo) extends ParentProject(info) wi
   lazy val buildRelease = task {
     log.info("Built release.")
     None
-  } dependsOn (publishRelease, releaseApi, releaseDocs, releaseDownloads)
+  } dependsOn (publishRelease, releaseApi, releaseDocs, releaseDownloads, releaseDist)
 
   lazy val releaseApi = task {
     val apiSources = ((apiOutputPath ##) ***)
@@ -282,6 +282,12 @@ class AkkaModulesParentProject(info: ProjectInfo) extends ParentProject(info) wi
     val distArchive = akkaDist.akkaMicrokernelDist.distArchive
     val downloadsPath = localReleasePath / "downloads"
     FileUtilities.copy(distArchive.get, downloadsPath, log).left.toOption
+  } dependsOn (dist)
+
+  lazy val releaseDist = task {
+    val distArchive = akkaDist.akkaMicrokernelDist.distExclusiveArchive
+    val distPath = localReleasePath / "dist"
+    FileUtilities.copy(distArchive.get, distPath, log).left.toOption
   } dependsOn (dist)
 
   lazy val dist = task { None } // dummy task
@@ -667,7 +673,7 @@ class AkkaModulesParentProject(info: ProjectInfo) extends ParentProject(info) wi
       def distName = "akka-microkernel"
       override def distDocName = "akka-modules"
 
-      override def distConfigSources = (akkaModulesParent.info.projectPath / "config").descendentsExcept("*.*", "*-test.*")
+      override def distConfigSources = (akkaModulesParent.info.projectPath / "config" ##).descendentsExcept("*.*", "*-test.*")
 
       override def distScriptSources = akkaModulesParent.info.projectPath / "scripts" / "microkernel" * "*"
 
