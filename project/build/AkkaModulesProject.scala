@@ -115,7 +115,7 @@ class AkkaModulesParentProject(info: ProjectInfo) extends ParentProject(info) wi
 
     lazy val commons_codec = "commons-codec" % "commons-codec" % CODEC_VERSION % "compile" //ApacheV2
 
-    lazy val commons_io = "commons-io" % "commons-io" % "1.4" % "compile" //ApacheV2
+    lazy val commons_io = "commons-io" % "commons-io" % "2.0.1" % "compile" //ApacheV2
 
     lazy val commons_pool = "commons-pool" % "commons-pool" % "1.5.4" % "compile" //ApacheV2
 
