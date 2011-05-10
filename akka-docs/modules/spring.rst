@@ -38,7 +38,7 @@ Example header for Akka Spring configuration:
 Actors
 ------
 
-Actors in Java are created by extending the 'UntypedActor' class and implementing the 'onReceive' method (see `Actors <untyped-actors-java>`_).
+Actors in Java are created by extending the 'UntypedActor' class and implementing the 'onReceive' method.
 
 Example how to create Actors with the Spring framework:
 
@@ -99,7 +99,7 @@ Get the Typed Actor from the Spring context:
 Remote Actors
 -------------
 
-For details on server managed and client managed remote actors see `Remote Actor <remote-actors-java>`_.
+For details on server managed and client managed remote actors see Remote Actor documentation.
 
 Configuration for a client managed remote Actor
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -189,7 +189,7 @@ Dispatchers
 Configuration for a Typed Actor or Untyped Actor with a custom dispatcher
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-If you don't want to use the default dispatcher you can define your own dispatcher in the spring configuration. For more information on dispatchers have a look at `<dispatchers>`_.
+If you don't want to use the default dispatcher you can define your own dispatcher in the spring configuration. For more information on dispatchers have a look at Dispatchers documentation.
 
 .. code-block:: xml
 
@@ -248,12 +248,12 @@ If you have set up your IDE to be XSD-aware you can easily write your configurat
 Stopping Typed Actors and Untyped Actors
 ----------------------------------------
 
-Actors with scope singleton are stopped when the application context is closed. Actors with scope prototype must be `stopped <typed-actors#stop>`_ by the application.
+Actors with scope singleton are stopped when the application context is closed. Actors with scope prototype must be stopped by the application.
 
 Supervisor Hierarchies
 ----------------------
 
-The supervisor configuration in Spring follows the declarative configuration for the Java API. Have a look at Akka's approach to `fault tolerance <fault-tolerance>`_.
+The supervisor configuration in Spring follows the declarative configuration for the Java API. Have a look at Akka's approach to fault tolerance.
 
 Example spring supervisor configuration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
