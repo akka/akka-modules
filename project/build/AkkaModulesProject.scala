@@ -46,7 +46,7 @@ class AkkaModulesParentProject(info: ProjectInfo) extends ParentProject(info) wi
   lazy val AKKA_VERSION          = version.toString // matching versions
   lazy val HAWT_DISPATCH_VERSION = "1.1"
   lazy val CAMEL_VERSION         = "2.7.0"
-  lazy val JACKSON_VERSION       = "1.7.1"
+  lazy val JACKSON_VERSION       = "1.8.0"
   lazy val JERSEY_VERSION        = "1.3"
   lazy val MULTIVERSE_VERSION    = "0.6.2"
   lazy val SCALATEST_VERSION     = "1.4.RC3"
@@ -145,7 +145,7 @@ class AkkaModulesParentProject(info: ProjectInfo) extends ParentProject(info) wi
 
     lazy val multiverse_test = "org.multiverse" % "multiverse-alpha" % MULTIVERSE_VERSION % "test" //ApacheV2
 
-    lazy val netty = "org.jboss.netty" % "netty" % "3.2.3.Final" % "compile" //ApacheV2
+    lazy val netty = "org.jboss.netty" % "netty" % "3.2.4.Final" % "compile" //ApacheV2
 
     lazy val protobuf = "com.google.protobuf" % "protobuf-java" % "2.3.0" % "compile" //New BSD
 
