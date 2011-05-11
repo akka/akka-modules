@@ -74,7 +74,7 @@ trait AkkaMicrokernelProject extends AkkaConfigProject {
   case class DistScript(name: String, contents: String, executable: Boolean)
 
   def distScripts = Set(DistScript("start", distShScript, true),
-                        DistScript("start.cmd", distCmdScript, true))
+                        DistScript("start.bat", distCmdScript, true))
 
   def distShScript = """|#!/bin/sh
                         |
@@ -85,11 +85,12 @@ trait AkkaMicrokernelProject extends AkkaConfigProject {
                         |java $JAVA_OPTS -cp "$AKKA_CLASSPATH" -Dakka.home="$AKKA_HOME" %s
                         |""".stripMargin.format(distJvmOptions, distMainClass)
 
-  def distCmdScript = """|set AKKA_HOME=%%~dp0..
-                         |set AKKA_CLASSPATH="%%AKKA_HOME%%\\lib\\*;%%AKKA_HOME%%\\config"
-                         |set JAVA_OPTS="%s"
+  def distCmdScript = """|@echo off
+                         |set AKKA_HOME=%%~dp0..
+                         |set AKKA_CLASSPATH=%%AKKA_HOME%%\lib\*;%%AKKA_HOME%%\config
+                         |set JAVA_OPTS=%s
                          |
-                         |java %%JAVA_OPTS%% -cp "%%AKKA_CLASSPATH%%" -Dakka.home=%%AKKA_HOME%% %s
+                         |java %%JAVA_OPTS%% -cp "%%AKKA_CLASSPATH%%" -Dakka.home="%%AKKA_HOME%%" %s
                          |""".stripMargin.format(distJvmOptions, distMainClass)
 
   def writeScripts(scripts: Set[DistScript], to: Path) = {
