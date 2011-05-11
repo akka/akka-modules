@@ -14,8 +14,8 @@ Links
 
 * `Source Code <http://github.com/jboner/akka-modules>`_
 
-* `Scaladoc API <http://akka.io/api/akka-modules/1.1>`_
+* `Scaladoc API <http://akka.io/api/akka-modules/snapshot/>`_
 
-* `Akka Core Documentation <http://akka.io/docs/akka/1.1/>`_.
+* `Akka Core Documentation <http://akka.io/docs/akka/snapshot/>`_.
 
 * `Issue Tracking <https://www.assembla.com/spaces/akka-modules/tickets>`_
