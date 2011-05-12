@@ -22,7 +22,7 @@ trait AkkaMicrokernelProject extends AkkaConfigProject {
   def distDeployPath = distOutputPath / distDeployName
   def distLibPath = distOutputPath / distLibName
 
-  def distJvmOptions = "-Xms1536M -Xmx1536M -Xss1M -XX:MaxPermSize=256M -XX:+UseParallelGC"
+  def distJvmOptions = "-Xms1024M -Xmx1024M -Xss1M -XX:MaxPermSize=256M -XX:+UseParallelGC"
   def distMainClass = "akka.kernel.Main"
 
   def distProjectDependencies = topologicalSort.dropRight(1)
@@ -74,7 +74,7 @@ trait AkkaMicrokernelProject extends AkkaConfigProject {
   case class DistScript(name: String, contents: String, executable: Boolean)
 
   def distScripts = Set(DistScript("start", distShScript, true),
-                        DistScript("start.bat", distCmdScript, true))
+                        DistScript("start.bat", distBatScript, true))
 
   def distShScript = """|#!/bin/sh
                         |
@@ -85,7 +85,7 @@ trait AkkaMicrokernelProject extends AkkaConfigProject {
                         |java $JAVA_OPTS -cp "$AKKA_CLASSPATH" -Dakka.home="$AKKA_HOME" %s
                         |""".stripMargin.format(distJvmOptions, distMainClass)
 
-  def distCmdScript = """|@echo off
+  def distBatScript = """|@echo off
                          |set AKKA_HOME=%%~dp0..
                          |set AKKA_CLASSPATH=%%AKKA_HOME%%\lib\*;%%AKKA_HOME%%\config
                          |set JAVA_OPTS=%s
