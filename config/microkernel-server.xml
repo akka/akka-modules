@@ -11,7 +11,7 @@
 <!-- and can be mixed in.  For example:                              -->
 <!--   java -jar start.jar etc/jetty.xml etc/jetty-ssl.xml           -->
 <!--                                                                 -->
-<!-- See start.ini file for the default configuraton files           -->
+<!-- See start.ini file for the default configuration files           -->
 <!-- =============================================================== -->
 
 
