@@ -49,7 +49,7 @@ class AkkaModulesParentProject(info: ProjectInfo) extends ParentProject(info) wi
   lazy val JACKSON_VERSION       = "1.8.0"
   lazy val JERSEY_VERSION        = "1.3"
   lazy val MULTIVERSE_VERSION    = "0.6.2"
-  lazy val SCALATEST_VERSION     = "1.4.RC3"
+  lazy val SCALATEST_VERSION     = "1.4.1"
   lazy val SPRING_VERSION        = "3.0.5.RELEASE"
   lazy val JETTY_VERSION         = "7.4.0.v20110414"
   lazy val CODEC_VERSION         = "1.4"
@@ -81,8 +81,8 @@ class AkkaModulesParentProject(info: ProjectInfo) extends ParentProject(info) wi
   lazy val timeModuleConfig        = ModuleConfiguration("org.scala-tools", "time", ScalaToolsRepo)
   lazy val args4jModuleConfig      = ModuleConfiguration("args4j", JBossRepo)
   lazy val scannotationModuleConfig= ModuleConfiguration("org.scannotation", JBossRepo)
-  lazy val scalazModuleConfig      = ModuleConfiguration("org.scalaz", ScalaToolsSnapshots)
-  lazy val scalacheckModuleConfig  = ModuleConfiguration("org.scala-tools.testing", "scalacheck_"+buildScalaVersion, "1.9-SNAPSHOT", ScalaToolsSnapshots)
+  lazy val scalazModuleConfig      = ModuleConfiguration("org.scalaz", ScalaToolsRepo)
+  lazy val scalacheckModuleConfig  = ModuleConfiguration("org.scala-tools.testing", "scalacheck_"+buildScalaVersion, "1.9", ScalaToolsRepo)
   lazy val aspectWerkzModuleConfig = ModuleConfiguration("org.codehaus.aspectwerkz", "aspectwerkz", "2.2.3", AkkaRepo)
   lazy val lzfModuleConfig         = ModuleConfiguration("voldemort.store.compress", "h2-lzf", AkkaRepo)
   lazy val rabbitModuleConfig      = ModuleConfiguration("com.rabbitmq","rabbitmq-client", "0.9.1", AkkaRepo)
@@ -153,7 +153,7 @@ class AkkaModulesParentProject(info: ProjectInfo) extends ParentProject(info) wi
 
     lazy val rabbit = "com.rabbitmq" % "amqp-client" % "2.3.1" % "compile" //Mozilla public license
 
-    lazy val scalaz = "org.scalaz" %% "scalaz-core" % "6.0-SNAPSHOT" % "compile" //New BSD
+    lazy val scalaz = "org.scalaz" %% "scalaz-core" % "6.0.RC2" % "compile" //New BSD
 
     lazy val spring_beans   = "org.springframework" % "spring-beans"   % SPRING_VERSION % "compile" //ApacheV2
     lazy val spring_context = "org.springframework" % "spring-context" % SPRING_VERSION % "compile" //ApacheV2
@@ -173,8 +173,8 @@ class AkkaModulesParentProject(info: ProjectInfo) extends ParentProject(info) wi
     lazy val mockito        = "org.mockito"            % "mockito-all"         % "1.8.1"           % "test" //MIT
     lazy val scalatest      = "org.scalatest"          %% "scalatest"          % SCALATEST_VERSION % "test" //ApacheV2
 
-    lazy val scalaz_scalacheck = "org.scalaz" %% "scalaz-scalacheck-binding" % "6.0-SNAPSHOT" % "test" //New BSD
-    lazy val scalacheck = "org.scala-tools.testing" %% "scalacheck" % "1.9-SNAPSHOT" % "test" // New BSD
+    lazy val scalaz_scalacheck = "org.scalaz" %% "scalaz-scalacheck-binding" % "6.0.RC2" % "test" //New BSD
+    lazy val scalacheck = "org.scala-tools.testing" %% "scalacheck" % "1.9" % "test" // New BSD
   }
 
   // -------------------------------------------------------------------------------------------------------------------
