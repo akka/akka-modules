@@ -16,7 +16,7 @@ master_doc = 'index'
 exclude_patterns = ['_build']
 
 project = u'Akka Modules'
-copyright = u'2009-2011, Scalable Solutions AB'
+copyright = u'2011, Typesafe Inc'
 version = '1.2-SNAPSHOT'
 release = '1.2-SNAPSHOT'
 
