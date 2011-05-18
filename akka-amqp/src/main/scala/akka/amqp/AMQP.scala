@@ -119,29 +119,24 @@ object AMQP {
    */
   case class ProducerParameters(
           exchangeParameters: Option[ExchangeParameters] = None,
-          producerId: Option[String] = None,
           returnListener: Option[ReturnListener] = None,
           channelParameters: Option[ChannelParameters] = None) {
-    def this() = this (None, None, None, None)
+    def this() = this (None, None, None)
 
     // Needed for Java API usage
-    def this(exchangeParameters: ExchangeParameters) = this (Some(exchangeParameters), None, None, None)
-
-    // Needed for Java API usage
-    def this(exchangeParameters: ExchangeParameters, producerId: String) =
-      this (Some(exchangeParameters), Some(producerId), None, None)
+    def this(exchangeParameters: ExchangeParameters) = this (Some(exchangeParameters), None, None)
 
     // Needed for Java API usage
     def this(exchangeParameters: ExchangeParameters, returnListener: ReturnListener) =
-      this (Some(exchangeParameters), None, Some(returnListener), None)
+      this (Some(exchangeParameters), Some(returnListener), None)
 
     // Needed for Java API usage
     def this(exchangeParameters: ExchangeParameters, channelParameters: ChannelParameters) =
-      this (Some(exchangeParameters), None, None, Some(channelParameters))
+      this (Some(exchangeParameters), None, Some(channelParameters))
 
     // Needed for Java API usage
-    def this(exchangeParameters: ExchangeParameters, producerId: String, returnListener: ReturnListener, channelParameters: ChannelParameters) =
-      this (Some(exchangeParameters), Some(producerId), Some(returnListener), Some(channelParameters))
+    def this(exchangeParameters: ExchangeParameters, returnListener: ReturnListener, channelParameters: ChannelParameters) =
+      this (Some(exchangeParameters), Some(returnListener), Some(channelParameters))
   }
 
   /**
@@ -286,18 +281,9 @@ object AMQP {
     newStringProducer(connection, Some(exchangeName), Some(routingKey))
   }
 
-  // Needed for Java API usage
-  def newStringProducer(connection: ActorRef,
-                        exchangeName: String,
-                        routingKey: String,
-                        producerId: String): ProducerClient[String] = {
-    newStringProducer(connection, Some(exchangeName), Some(routingKey), Some(producerId))
-  }
-
   def newStringProducer(connection: ActorRef,
                         exchangeName: Option[String],
-                        routingKey: Option[String] = None,
-                        producerId: Option[String] = None): ProducerClient[String] = {
+                        routingKey: Option[String] = None): ProducerClient[String] = {
 
     if (exchangeName.isEmpty && routingKey.isEmpty) {
       throw new IllegalArgumentException("Either exchange name or routing key is mandatory")
@@ -305,7 +291,7 @@ object AMQP {
     val exchangeParameters = exchangeName.flatMap(name => Some(ExchangeParameters(name)))
     val rKey = routingKey.getOrElse("%s.request".format(exchangeName.get))
 
-    val producerRef = newProducer(connection, ProducerParameters(exchangeParameters, producerId))
+    val producerRef = newProducer(connection, ProducerParameters(exchangeParameters))
     val toBinary = new ToBinary[String] {
       def toBinary(t: String) = t.getBytes
     }
@@ -371,18 +357,9 @@ object AMQP {
     newProtobufProducer(connection, Some(exchangeName), Some(routingKey))
   }
 
-  // Needed for Java API usage
-  def newProtobufProducer[O <: com.google.protobuf.Message](connection: ActorRef,
-                                                            exchangeName: String,
-                                                            routingKey: String,
-                                                            producerId: String): ProducerClient[O] = {
-    newProtobufProducer(connection, Some(exchangeName), Some(routingKey), Some(producerId))
-  }
-
   def newProtobufProducer[O <: com.google.protobuf.Message](connection: ActorRef,
                                                             exchangeName: Option[String],
-                                                            routingKey: Option[String] = None,
-                                                            producerId: Option[String] = None): ProducerClient[O] = {
+                                                            routingKey: Option[String] = None): ProducerClient[O] = {
 
     if (exchangeName.isEmpty && routingKey.isEmpty) {
       throw new IllegalArgumentException("Either exchange name or routing key is mandatory")
@@ -390,7 +367,7 @@ object AMQP {
     val exchangeParameters = exchangeName.flatMap(name => Some(ExchangeParameters(name)))
     val rKey = routingKey.getOrElse("%s.request".format(exchangeName.get))
 
-    val producerRef = newProducer(connection, ProducerParameters(exchangeParameters, producerId))
+    val producerRef = newProducer(connection, ProducerParameters(exchangeParameters))
     new ProducerClient(producerRef, rKey, new ToBinary[O] {
       def toBinary(t: O) = t.toByteArray
     })

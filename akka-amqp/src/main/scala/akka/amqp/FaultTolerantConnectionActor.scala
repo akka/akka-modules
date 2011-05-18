@@ -16,7 +16,6 @@ import java.util.concurrent.{ScheduledFuture, TimeUnit}
 private[amqp] class FaultTolerantConnectionActor(connectionParameters: ConnectionParameters) extends Actor {
   import connectionParameters._
 
-  self.id = "amqp-connection"
   self.lifeCycle = Permanent
   self.faultHandler = OneForOneStrategy(List(classOf[Throwable]))
 
@@ -46,7 +45,7 @@ private[amqp] class FaultTolerantConnectionActor(connectionParameters: Connectio
       if (cause.isHardError) {
         // connection error
         if (cause.isInitiatedByApplication) {
-          EventHandler notifyListeners EventHandler.Info(this, "ConnectionShutdown by application [%s]" format self.id)
+          EventHandler notifyListeners EventHandler.Info(this, "ConnectionShutdown by application [%s]" format self.address)
         } else {
           EventHandler notifyListeners EventHandler.Error(cause, this, "ConnectionShutdown is hard error - self terminating")
           self ! new Exit(self, cause)

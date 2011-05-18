@@ -39,7 +39,7 @@ class AMQPConsumerManualAcknowledgeTestIntegration extends JUnitSuite with MustM
           case Delivery(payload, _, deliveryTag, _, _, sender) => {
             if (!failLatch.isOpen) {
               failLatch.open
-              error("Make it fail!")
+              sys.error("Make it fail!")
             } else {
               deliveryTagCheck = deliveryTag
               sender.foreach(_ ! Acknowledge(deliveryTag))

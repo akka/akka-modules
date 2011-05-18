@@ -81,7 +81,7 @@ private[amqp] class ConsumerActor(consumerParameters: ConsumerParameters)
           case Some(params) => params.configurationArguments
           case _ => Map.empty
         }
-        ch.queueDeclare(queueName, durable, exclusive, autoDelete, JavaConversions.asJavaMap(configurationArguments.toMap))
+        ch.queueDeclare(queueName, durable, exclusive, autoDelete, JavaConversions.mapAsJavaMap(configurationArguments.toMap))
       case NoActionDeclaration => new com.rabbitmq.client.impl.AMQImpl.Queue.DeclareOk(queueName, 0, 0) // do nothing here
     }
   }
@@ -132,7 +132,7 @@ private[amqp] class ConsumerActor(consumerParameters: ConsumerParameters)
   }
 
   override def toString =
-    "AMQP.Consumer[id= " + self.id +
+    "AMQP.Consumer[address= " + self.address +
             ", exchangeParameters=" + exchangeParameters +
             ", queueDeclaration=" + queueDeclaration + "]"
 }

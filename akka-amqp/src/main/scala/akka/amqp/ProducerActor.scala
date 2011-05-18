@@ -17,8 +17,6 @@ private[amqp] class ProducerActor(producerParameters: ProducerParameters)
 
   val exchangeName = exchangeParameters.flatMap(params => Some(params.exchangeName))
 
-  producerId.foreach(id => self.id = id)
-
   def specificMessageHandler = {
 
     case message@Message(payload, routingKey, mandatory, immediate, properties) if channel.isDefined => {
@@ -54,7 +52,7 @@ private[amqp] class ProducerActor(producerParameters: ProducerParameters)
   }
 
   override def toString =
-    "AMQP.Poducer[id= "+ self.id +
+    "AMQP.Poducer[address= "+ self.address +
     ", exchangeParameters=" + exchangeParameters + "]"
 }
 

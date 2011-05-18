@@ -50,7 +50,7 @@ object ExampleSession {
     // all connections/consumers/producers will be stopped
     AMQP.shutdownAll
 
-    Actor.registry.shutdownAll
+    Actor.registry.local.shutdownAll
     System.exit(0)
   }
 

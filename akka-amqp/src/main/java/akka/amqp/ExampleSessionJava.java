@@ -44,7 +44,7 @@ public class ExampleSessionJava {
         // all connections/consumers/producers will be stopped
         AMQP.shutdownAll();
 
-        Actors.registry().shutdownAll();
+        Actors.registry().local().shutdownAll();
 
         printTopic("Happy hAkking :-)");
 
