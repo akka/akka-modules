@@ -20,8 +20,8 @@ import akka.event.EventHandler
  */
 private[camel] class ConsumerPublishRequestor extends PublishRequestor {
   def receiveActorRegistryEvent = {
-    case ActorRegistered(actor)   => for (event <- ConsumerActorRegistered.eventFor(actor)) deliverCurrentEvent(event)
-    case ActorUnregistered(actor) => for (event <- ConsumerActorUnregistered.eventFor(actor)) deliverCurrentEvent(event)
+    case ActorRegistered(_, actor)   => for (event <- ConsumerActorRegistered.eventFor(actor)) deliverCurrentEvent(event)
+    case ActorUnregistered(_, actor) => for (event <- ConsumerActorUnregistered.eventFor(actor)) deliverCurrentEvent(event)
   }
 }
 

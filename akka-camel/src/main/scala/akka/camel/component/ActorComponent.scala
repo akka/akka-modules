@@ -206,12 +206,8 @@ class ActorProducer(val ep: ActorEndpoint) extends DefaultProducer(ep) with Asyn
     case null         => uuid
   }
 
-  private def targetById(id: String) = Actor.registry.actorsFor(id) match {
-    case actors if actors.length == 0 => None
-    case actors                       => Some(actors(0))
-  }
-
-  private def targetByUuid(uuid: Uuid) = Actor.registry.actorFor(uuid)
+  private def targetById(id: String) = Actor.registry.local.actorFor(id)
+  private def targetByUuid(uuid: Uuid) = Actor.registry.local.actorFor(uuid)
 }
 
 /**
@@ -268,6 +264,8 @@ private[akka] object AsyncCallbackAdapter {
 private[akka] class AsyncCallbackAdapter(exchange: Exchange, callback: AsyncCallback) extends ActorRef with ScalaActorRef {
   import akka.camel.Consumer._
 
+  val address = exchange.getExchangeId
+
   def start = {
     _status = ActorRefInternals.RUNNING
     this
@@ -304,7 +302,7 @@ private[akka] class AsyncCallbackAdapter(exchange: Exchange, callback: AsyncCall
   def remoteAddress: Option[InetSocketAddress] = unsupported
   def link(actorRef: ActorRef): Unit = unsupported
   def unlink(actorRef: ActorRef): Unit = unsupported
-  def startLink(actorRef: ActorRef): Unit = unsupported
+  def startLink(actorRef: ActorRef): ActorRef = unsupported
   def startLinkRemote(actorRef: ActorRef, hostname: String, port: Int): Unit = unsupported
   def spawn(clazz: Class[_ <: Actor]): ActorRef = unsupported
   def spawnRemote(clazz: Class[_ <: Actor], hostname: String, port: Int, timeout: Long): ActorRef = unsupported

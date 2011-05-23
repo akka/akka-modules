@@ -12,7 +12,7 @@ class CamelServiceManagerTest extends WordSpec with BeforeAndAfterAll with MustM
 
   override def afterAll = {
     CamelServiceManager.stopCamelService
-    Actor.registry.shutdownAll
+    Actor.registry.local.shutdownAll
   }
 
   "A CamelServiceManager" when {

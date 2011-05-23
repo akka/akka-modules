@@ -11,7 +11,7 @@ class UntypedProducerFeatureTest extends FeatureSpec with BeforeAndAfterAll with
   import UntypedProducerFeatureTest._
 
   override protected def beforeAll = {
-    registry.shutdownAll
+    registry.local.shutdownAll
     CamelContextManager.init
     CamelContextManager.mandatoryContext.addRoutes(new TestRoute)
     CamelContextManager.start
@@ -19,7 +19,7 @@ class UntypedProducerFeatureTest extends FeatureSpec with BeforeAndAfterAll with
 
   override protected def afterAll = {
     CamelContextManager.stop
-    registry.shutdownAll
+    registry.local.shutdownAll
   }
 
   override protected def afterEach = {

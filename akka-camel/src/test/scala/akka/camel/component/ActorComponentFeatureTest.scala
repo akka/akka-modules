@@ -16,7 +16,7 @@ class ActorComponentFeatureTest extends FeatureSpec with BeforeAndAfterAll with 
   import ActorComponentFeatureTest._
 
   override protected def beforeAll = {
-    Actor.registry.shutdownAll
+    Actor.registry.local.shutdownAll
     CamelContextManager.init
     CamelContextManager.mandatoryContext.addRoutes(new TestRoute)
     CamelContextManager.start
@@ -25,7 +25,7 @@ class ActorComponentFeatureTest extends FeatureSpec with BeforeAndAfterAll with 
   override protected def afterAll = CamelContextManager.stop
 
   override protected def afterEach = {
-    Actor.registry.shutdownAll
+    Actor.registry.local.shutdownAll
     mockEndpoint.reset
   }
 
@@ -72,7 +72,7 @@ class ActorComponentFeatureTest extends FeatureSpec with BeforeAndAfterAll with 
     scenario("one-way communication") {
       val actor = actorOf[Tester1].start
       val latch = (actor !! SetExpectedMessageCount(1)).as[CountDownLatch].get
-      mandatoryTemplate.sendBody("actor:%s" format actor.id, "Martin")
+      mandatoryTemplate.sendBody("actor:%s" format actor.address, "Martin")
       assert(latch.await(5000, TimeUnit.MILLISECONDS))
       val reply = (actor !! GetRetainedMessage).get.asInstanceOf[Message]
       assert(reply.body === "Martin")
@@ -80,11 +80,11 @@ class ActorComponentFeatureTest extends FeatureSpec with BeforeAndAfterAll with 
 
     scenario("two-way communication") {
       val actor = actorOf[Tester2].start
-      assert(mandatoryTemplate.requestBody("actor:%s" format actor.id, "Martin") === "Hello Martin")
+      assert(mandatoryTemplate.requestBody("actor:%s" format actor.address, "Martin") === "Hello Martin")
     }
 
     scenario("two-way communication via a custom route") {
-      val actor = actorOf[CustomIdActor].start
+      val actor = actorOf[CustomIdActor]("custom-id").start
       assert(mandatoryTemplate.requestBody("direct:custom-id-test-1", "Martin") === "Received Martin")
       assert(mandatoryTemplate.requestBody("direct:custom-id-test-2", "Martin") === "Received Martin")
     }
@@ -95,7 +95,6 @@ class ActorComponentFeatureTest extends FeatureSpec with BeforeAndAfterAll with 
 
 object ActorComponentFeatureTest {
   class CustomIdActor extends Actor {
-    self.id = "custom-id"
     protected def receive = {
       case msg: Message => self.reply("Received %s" format msg.body)
     }

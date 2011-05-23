@@ -141,7 +141,10 @@ private[camel] object Consumer {
    */
   def withConsumer[T](actorRef: ActorRef)(f: Consumer => T): Option[T] = {
     if (!actorRef.actor.isInstanceOf[Consumer]) None
-    else if (actorRef.homeAddress.isDefined) None
+
+    // TODO: check if this is needed at all
+    //else if (actorRef.homeAddress.isDefined) None
+
     else Some(f(actorRef.actor.asInstanceOf[Consumer]))
   }
 }

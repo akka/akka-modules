@@ -17,7 +17,7 @@ import akka.camel.CamelTestSupport._
 class ActorProducerTest extends JUnitSuite with BeforeAndAfterAll {
   import ActorProducerTest._
 
-  @After def tearDown = registry.shutdownAll
+  @After def tearDown = registry.local.shutdownAll
 
   @Test def shouldSendMessageToActorWithSyncProcessor = {
     val actor = actorOf[Tester1].start
@@ -106,20 +106,18 @@ class ActorProducerTest extends JUnitSuite with BeforeAndAfterAll {
   }
 
   @Test def shouldDynamicallyRouteMessageToActorWithDefaultId = {
-    val actor1 = actorOf[Tester1]
-    val actor2 = actorOf[Tester1]
-    actor1.id = "x"
-    actor2.id = "y"
+    val actor1 = actorOf[Tester1]("x")
+    val actor2 = actorOf[Tester1]("y")
     actor1.start
     actor2.start
     val latch1 = (actor1 !! SetExpectedMessageCount(1)).as[CountDownLatch].get
     val latch2 = (actor2 !! SetExpectedMessageCount(1)).as[CountDownLatch].get
-    val endpoint = actorEndpoint("actor:id:%s" format actor1.id)
+    val endpoint = actorEndpoint("actor:id:%s" format actor1.address)
     val exchange1 = endpoint.createExchange(ExchangePattern.InOnly)
     val exchange2 = endpoint.createExchange(ExchangePattern.InOnly)
     exchange1.getIn.setBody("Test1")
     exchange2.getIn.setBody("Test2")
-    exchange2.getIn.setHeader(ActorComponent.ActorIdentifier, actor2.id)
+    exchange2.getIn.setHeader(ActorComponent.ActorIdentifier, actor2.address)
     actorProducer(endpoint).process(exchange1)
     actorProducer(endpoint).process(exchange2)
     assert(latch1.await(5, TimeUnit.SECONDS))
@@ -131,10 +129,8 @@ class ActorProducerTest extends JUnitSuite with BeforeAndAfterAll {
   }
 
   @Test def shouldDynamicallyRouteMessageToActorWithoutDefaultId = {
-    val actor1 = actorOf[Tester1]
-    val actor2 = actorOf[Tester1]
-    actor1.id = "x"
-    actor2.id = "y"
+    val actor1 = actorOf[Tester1]("x")
+    val actor2 = actorOf[Tester1]("y")
     actor1.start
     actor2.start
     val latch1 = (actor1 !! SetExpectedMessageCount(1)).as[CountDownLatch].get
@@ -144,8 +140,8 @@ class ActorProducerTest extends JUnitSuite with BeforeAndAfterAll {
     val exchange2 = endpoint.createExchange(ExchangePattern.InOnly)
     exchange1.getIn.setBody("Test1")
     exchange2.getIn.setBody("Test2")
-    exchange1.getIn.setHeader(ActorComponent.ActorIdentifier, actor1.id)
-    exchange2.getIn.setHeader(ActorComponent.ActorIdentifier, actor2.id)
+    exchange1.getIn.setHeader(ActorComponent.ActorIdentifier, actor1.address)
+    exchange2.getIn.setHeader(ActorComponent.ActorIdentifier, actor2.address)
     actorProducer(endpoint).process(exchange1)
     actorProducer(endpoint).process(exchange2)
     assert(latch1.await(5, TimeUnit.SECONDS))

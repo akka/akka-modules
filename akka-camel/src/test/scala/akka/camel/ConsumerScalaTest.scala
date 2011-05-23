@@ -24,7 +24,7 @@ class ConsumerScalaTest extends WordSpec with BeforeAndAfterAll with MustMatcher
   var service: CamelService = _
 
   override protected def beforeAll = {
-    registry.shutdownAll
+    registry.local.shutdownAll
     service = CamelServiceFactory.createCamelService
     // register test consumer before registering the publish requestor
     // and before starting the CamelService (registry is scanned for consumers)
@@ -39,7 +39,7 @@ class ConsumerScalaTest extends WordSpec with BeforeAndAfterAll with MustMatcher
 
   override protected def afterAll = {
     service.stop
-    registry.shutdownAll
+    registry.local.shutdownAll
   }
 
   "A responding consumer" when {

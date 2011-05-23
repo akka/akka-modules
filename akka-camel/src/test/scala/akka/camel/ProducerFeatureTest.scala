@@ -6,13 +6,13 @@ import org.apache.camel.component.mock.MockEndpoint
 import org.scalatest.{GivenWhenThen, BeforeAndAfterEach, BeforeAndAfterAll, FeatureSpec}
 
 import akka.actor.Actor._
-import akka.actor.{ActorRef, Actor, ActorRegistry}
+import akka.actor.{ActorRef, Actor}
 
 class ProducerFeatureTest extends FeatureSpec with BeforeAndAfterAll with BeforeAndAfterEach with GivenWhenThen {
   import ProducerFeatureTest._
 
   override protected def beforeAll = {
-    Actor.registry.shutdownAll
+    Actor.registry.local.shutdownAll
     CamelContextManager.init
     CamelContextManager.mandatoryContext.addRoutes(new TestRoute)
     CamelContextManager.start
@@ -20,7 +20,7 @@ class ProducerFeatureTest extends FeatureSpec with BeforeAndAfterAll with Before
 
   override protected def afterAll = {
     CamelContextManager.stop
-    Actor.registry.shutdownAll
+    Actor.registry.local.shutdownAll
   }
 
   override protected def afterEach = {

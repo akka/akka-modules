@@ -25,7 +25,7 @@ public class ConsumerJavaTestBase {
     @AfterClass
     public static void tearDownAfterClass() {
         stopCamelService();
-        registry().shutdownAll();
+        registry().local().shutdownAll();
     }
 
     @Test
