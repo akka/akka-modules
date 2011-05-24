@@ -86,6 +86,8 @@ class AkkaModulesParentProject(info: ProjectInfo) extends ParentProject(info) wi
   lazy val aspectWerkzModuleConfig = ModuleConfiguration("org.codehaus.aspectwerkz", "aspectwerkz", "2.2.3", AkkaRepo)
   lazy val lzfModuleConfig         = ModuleConfiguration("voldemort.store.compress", "h2-lzf", AkkaRepo)
   lazy val rabbitModuleConfig      = ModuleConfiguration("com.rabbitmq","rabbitmq-client", "0.9.1", AkkaRepo)
+  lazy val springModuleConfig      = ModuleConfiguration("org.springframework", sbt.DefaultMavenRepository)
+  lazy val jsr311ModuleConfig      = ModuleConfiguration("javax.ws.rs", JavaNetRepo)
   val localMavenRepo               = LocalMavenRepo // Second exception, also fast! ;-)
 
   // -------------------------------------------------------------------------------------------------------------------
@@ -153,7 +155,7 @@ class AkkaModulesParentProject(info: ProjectInfo) extends ParentProject(info) wi
 
     lazy val rabbit = "com.rabbitmq" % "amqp-client" % "2.3.1" % "compile" //Mozilla public license
 
-    lazy val scalaz = "org.scalaz" %% "scalaz-core" % "6.0.RC2" % "compile" //New BSD
+    lazy val scalaz = "org.scalaz" % "scalaz-core_2.9.0" % "6.0.RC2" % "compile" //New BSD
 
     lazy val spring_beans   = "org.springframework" % "spring-beans"   % SPRING_VERSION % "compile" //ApacheV2
     lazy val spring_context = "org.springframework" % "spring-context" % SPRING_VERSION % "compile" //ApacheV2
@@ -171,10 +173,10 @@ class AkkaModulesParentProject(info: ProjectInfo) extends ParentProject(info) wi
 
     lazy val junit          = "junit"                  % "junit"               % "4.5"             % "test" //Common Public License 1.0
     lazy val mockito        = "org.mockito"            % "mockito-all"         % "1.8.1"           % "test" //MIT
-    lazy val scalatest      = "org.scalatest"          %% "scalatest"          % SCALATEST_VERSION % "test" //ApacheV2
+    lazy val scalatest      = "org.scalatest"          % "scalatest_2.9.0"          % SCALATEST_VERSION % "test" //ApacheV2
 
-    lazy val scalaz_scalacheck = "org.scalaz" %% "scalaz-scalacheck-binding" % "6.0.RC2" % "test" //New BSD
-    lazy val scalacheck = "org.scala-tools.testing" %% "scalacheck" % "1.9" % "test" // New BSD
+    lazy val scalaz_scalacheck = "org.scalaz" % "scalaz-scalacheck-binding_2.9.0" % "6.0.RC2" % "test" //New BSD
+    lazy val scalacheck = "org.scala-tools.testing" % "scalacheck_2.9.0" % "1.9" % "test" // New BSD
   }
 
   // -------------------------------------------------------------------------------------------------------------------
