@@ -54,6 +54,7 @@ class AkkaModulesParentProject(info: ProjectInfo) extends ParentProject(info) wi
   lazy val JETTY_VERSION         = "7.4.0.v20110414"
   lazy val CODEC_VERSION         = "1.4"
   lazy val LOGBACK_VERSION       = "0.9.28"
+  lazy val SLF4J_VERSION         = "1.6.0"
 
   // -------------------------------------------------------------------------------------------------------------------
   // ModuleConfigurations
@@ -174,6 +175,7 @@ class AkkaModulesParentProject(info: ProjectInfo) extends ParentProject(info) wi
     lazy val junit          = "junit"                  % "junit"               % "4.5"             % "test" //Common Public License 1.0
     lazy val mockito        = "org.mockito"            % "mockito-all"         % "1.8.1"           % "test" //MIT
     lazy val scalatest      = "org.scalatest"          % "scalatest_2.9.0"          % SCALATEST_VERSION % "test" //ApacheV2
+    lazy val slf4j_test     = "org.slf4j"              % "slf4j-api"       % SLF4J_VERSION % "test"
 
     lazy val scalaz_scalacheck = "org.scalaz" % "scalaz-scalacheck-binding_2.9.0" % "6.0.RC2" % "test" //New BSD
     lazy val scalacheck = "org.scala-tools.testing" % "scalacheck_2.9.0" % "1.9" % "test" // New BSD
@@ -382,6 +384,7 @@ class AkkaModulesParentProject(info: ProjectInfo) extends ParentProject(info) wi
     val camel_spring = Dependencies.camel_spring
     val junit        = Dependencies.junit
     val scalatest    = Dependencies.scalatest
+    val slf4j_test   = Dependencies.slf4j_test
   }
 
   // -------------------------------------------------------------------------------------------------------------------
