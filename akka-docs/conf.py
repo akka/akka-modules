@@ -16,9 +16,9 @@ master_doc = 'index'
 exclude_patterns = ['_build']
 
 project = u'Akka Modules'
-copyright = u'2009-2011, Scalable Solutions AB'
-version = '1.1'
-release = '1.1'
+copyright = u'2011, Typesafe Inc'
+version = '1.1.1'
+release = '1.1.1'
 
 pygments_style = 'simple'
 highlight_language = 'scala'
