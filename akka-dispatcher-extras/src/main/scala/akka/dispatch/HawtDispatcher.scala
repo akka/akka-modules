@@ -160,6 +160,9 @@ class HawtDispatcher(val aggregate: Boolean = true, val parent: DispatchQueue = 
   // TODO: figure out if this can be optional in akka
   override def mailboxSize(actorRef: ActorRef) = 0
 
+  // TODO: this is wrong?!?
+  def mailboxIsEmpty(actorRef: ActorRef) = true
+
   def createMailbox(actorRef: ActorRef): AnyRef = {
     val queue = parent.createQueue(actorRef.toString)
     if (aggregate) new AggregatingHawtDispatcherMailbox(queue)
