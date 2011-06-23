@@ -61,13 +61,14 @@ abstract private[amqp] class FaultTolerantChannelActor(
 
   private def setupChannelInternal(ch: Channel) = if (channel.isEmpty) {
 
+    EventHandler notifyListeners EventHandler.Info(this, "%s setting up channel" format toString)
     exchangeParameters.foreach {
       params =>
         import params._
         exchangeDeclaration match {
           case PassiveDeclaration => ch.exchangeDeclarePassive(exchangeName)
           case ActiveDeclaration(durable, autoDelete, _) =>
-            ch.exchangeDeclare(exchangeName, exchangeType.toString, durable, autoDelete, JavaConversions.asJavaMap(configurationArguments))
+            ch.exchangeDeclare(exchangeName, exchangeType.toString, durable, autoDelete, JavaConversions.mapAsJavaMap(configurationArguments))
           case NoActionDeclaration => // ignore
         }
     }
@@ -81,6 +82,9 @@ abstract private[amqp] class FaultTolerantChannelActor(
     setupChannel(ch)
     channel = Some(ch)
     notifyCallback(Started)
+  } else {
+    // close not needed channel
+    if (ch.isOpen) ch.close()
   }
 
   private def closeChannel = {
@@ -95,6 +99,11 @@ abstract private[amqp] class FaultTolerantChannelActor(
 
   private def notifyCallback(message: AMQPMessage) = {
     channelParameters.foreach(_.channelCallback.foreach(cb => if (cb.isRunning) cb ! message))
+  }
+
+
+  override def postRestart(reason: Throwable) {
+    self ! Start
   }
 
   override def preRestart(reason: Throwable) = {

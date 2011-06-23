@@ -48,6 +48,7 @@ class AMQPProducerChannelRecoveryTestIntegration extends JUnitSuite with MustMat
       startedLatch.tryAwait(2, TimeUnit.SECONDS) must be (true)
 
       producer ! new ChannelShutdown(new ShutdownSignalException(false, false, "TestException", "TestRef"))
+
       restartingLatch.tryAwait(2, TimeUnit.SECONDS) must be (true)
       restartedLatch.tryAwait(2, TimeUnit.SECONDS) must be (true)
     } finally {

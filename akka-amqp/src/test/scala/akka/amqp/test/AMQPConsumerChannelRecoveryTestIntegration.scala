@@ -36,7 +36,7 @@ class AMQPConsumerChannelRecoveryTestIntegration extends JUnitSuite with MustMat
               consumerRestartedLatch.open
             }
           }
-          case Restarting => ()
+          case Restarting => println("*** restarting")
           case Stopped => ()
         }
       }).start
@@ -50,9 +50,7 @@ class AMQPConsumerChannelRecoveryTestIntegration extends JUnitSuite with MustMat
         exchangeParameters = Some(consumerExchangeParameters), channelParameters = Some(consumerChannelParameters)))
       consumerStartedLatch.tryAwait(2, TimeUnit.SECONDS) must be (true)
 
-      val listenerLatch = new StandardLatch
-
-      consumer ! new ChannelShutdown(new ShutdownSignalException(false, false, "TestException", "TestRef"))
+      connection ! new ConnectionShutdown(new ShutdownSignalException(true, false, "TestException", "TestRef"))
 
       consumerRestartedLatch.tryAwait(4, TimeUnit.SECONDS) must be (true)
 

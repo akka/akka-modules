@@ -57,11 +57,11 @@ private[amqp] class FaultTolerantConnectionActor(connectionParameters: Connectio
 
   private def connect = if (connection.isEmpty || !connection.get.isOpen) {
     try {
-      EventHandler notifyListeners EventHandler.Info(this, "Connecting to one of [%s]" format addresses)
+      EventHandler notifyListeners EventHandler.Info(this, "Connecting to one of [%s]" format addresses.toList)
       connection = Some(connectionFactory.newConnection(addresses))
       connection.foreach {
         conn =>
-          EventHandler notifyListeners EventHandler.Info(this, "Connected to [%s:%s]" format (conn.getHost, conn.getPort))
+          EventHandler notifyListeners EventHandler.Info(this, "Connected to [%s]" format (conn.getAddress))
           conn.addShutdownListener(new ShutdownListener {
             def shutdownCompleted(cause: ShutdownSignalException) = {
               self ! ConnectionShutdown(cause)
