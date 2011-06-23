@@ -154,7 +154,7 @@ class AkkaModulesParentProject(info: ProjectInfo) extends ParentProject(info) wi
 
     lazy val osgi_core = "org.osgi" % "org.osgi.core" % "4.2.0" //ApacheV2
 
-    lazy val rabbit = "com.rabbitmq" % "amqp-client" % "2.3.1" % "compile" //Mozilla public license
+    lazy val rabbit = "com.rabbitmq" % "amqp-client" % "2.5.0" % "compile" //Mozilla public license
 
     lazy val scalaz = "org.scalaz" % "scalaz-core_2.9.0" % "6.0.RC2" % "compile" //New BSD
 

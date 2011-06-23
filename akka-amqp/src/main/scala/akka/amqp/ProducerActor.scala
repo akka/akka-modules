@@ -8,6 +8,7 @@ import com.rabbitmq.client._
 
 import akka.event.EventHandler
 import akka.amqp.AMQP.ProducerParameters
+import com.rabbitmq.client.AMQP.BasicProperties
 
 private[amqp] class ProducerActor(producerParameters: ProducerParameters)
     extends FaultTolerantChannelActor(
@@ -34,13 +35,13 @@ private[amqp] class ProducerActor(producerParameters: ProducerParameters)
     returnListener match {
       case Some(listener) => ch.setReturnListener(listener)
       case None => ch.setReturnListener(new ReturnListener() {
-        def handleBasicReturn(
+        def handleReturn(
             replyCode: Int,
             replyText: String,
             exchange: String,
             routingKey: String,
-            properties: com.rabbitmq.client.AMQP.BasicProperties,
-            body: Array[Byte]) = {
+            properties: BasicProperties,
+            body: Array[Byte]) {
           throw new MessageNotDeliveredException(
             "Could not deliver message [" + body +
             "] with reply code [" + replyCode +
@@ -49,6 +50,7 @@ private[amqp] class ProducerActor(producerParameters: ProducerParameters)
             "] to exchange [" + exchange + "]",
             replyCode, replyText, exchange, routingKey, properties, body)
         }
+
       })
     }
   }

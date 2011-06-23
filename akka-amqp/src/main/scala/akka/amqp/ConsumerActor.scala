@@ -21,7 +21,7 @@ private[amqp] class ConsumerActor(consumerParameters: ConsumerParameters)
 
   def specificMessageHandler = {
     case Acknowledge(deliveryTag) => acknowledgeDeliveryTag(deliveryTag, true)
-    case Reject(deliveryTag) => rejectDeliveryTag(deliveryTag, true)
+    case Reject(deliveryTag, requeue) => rejectDeliveryTag(deliveryTag, requeue, true)
     case message: Message =>
       handleIllegalMessage("%s can't be used to send messages, ignoring message [%s]".format(this, message))
     case unknown =>
@@ -81,7 +81,7 @@ private[amqp] class ConsumerActor(consumerParameters: ConsumerParameters)
           case Some(params) => params.configurationArguments
           case _ => Map.empty
         }
-        ch.queueDeclare(queueName, durable, exclusive, autoDelete, JavaConversions.asJavaMap(configurationArguments.toMap))
+        ch.queueDeclare(queueName, durable, exclusive, autoDelete, JavaConversions.mapAsJavaMap(configurationArguments.toMap))
       case NoActionDeclaration => new com.rabbitmq.client.impl.AMQImpl.Queue.DeclareOk(queueName, 0, 0) // do nothing here
     }
   }
@@ -96,18 +96,16 @@ private[amqp] class ConsumerActor(consumerParameters: ConsumerParameters)
     }
   }
 
-  private def rejectDeliveryTag(deliveryTag: Long, remoteAcknowledgement: Boolean) = {
-    // FIXME: when rabbitmq 1.9 arrives, basicReject should be available on the API and implemented instead of this
-    val message = ("Consumer is rejecting delivery with tag [%s] -" +
-                   "for now this means we have to self terminate and kill the channel - see you in a second." format deliveryTag)
+  private def rejectDeliveryTag(deliveryTag: Long, requeue: Boolean, remoteAcknowledgement: Boolean) = {
+    val message = ("Consumer is rejecting delivery with tag [%s] - requeue [%s]" format (deliveryTag, requeue))
     EventHandler notifyListeners EventHandler.Warning(this, message)
     channel.foreach {
       ch =>
+        ch.basicReject(deliveryTag, requeue)
         if (remoteAcknowledgement) {
           deliveryHandler ! Rejected(deliveryTag)
         }
     }
-    throw new RejectionException(deliveryTag)
   }
 
   private def handleIllegalMessage(errorMessage: String) = {
@@ -121,7 +119,7 @@ private[amqp] class ConsumerActor(consumerParameters: ConsumerParameters)
   }
 
   override def postStop = {
-    listenerTag.foreach(tag => channel.foreach(_.basicCancel(tag)))
+    listenerTag.foreach(tag => channel.foreach(ch => if(ch.isOpen) ch.basicCancel(tag)))
     val i = self.linkedActors.values.iterator
     while(i.hasNext) {
       val ref = i.next

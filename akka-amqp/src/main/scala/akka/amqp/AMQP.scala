@@ -14,6 +14,7 @@ import akka.japi.Procedure
 import akka.dispatch.Dispatchers
 import com.rabbitmq.client._
 import ConnectionFactory._
+import com.rabbitmq.client.AMQP.BasicProperties.Builder
 
 /**
  * AMQP Actor API. Implements Connection, Producer and Consumer materialized as Actors.
@@ -265,8 +266,8 @@ object AMQP {
     }
 
     def send(request: O, replyTo: Option[String] = None) = {
-      val basicProperties = new BasicProperties
-      basicProperties.setReplyTo(replyTo.getOrElse(null))
+
+      val basicProperties = new BasicProperties.Builder().replyTo(replyTo.getOrElse(null)).build()
       client ! Message(toBinary.toBinary(request), routingKey, false, false, Some(basicProperties))
     }
 

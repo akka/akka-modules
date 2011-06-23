@@ -21,11 +21,10 @@ class AMQPConsumerManualRejectTestIntegration extends JUnitSuite with MustMatche
     val connection = AMQP.newConnection()
     try {
       val countDown = new CountDownLatch(2)
-      val restartingLatch = new StandardLatch
       val channelCallback = actorOf(new Actor {
         def receive = {
           case Started => countDown.countDown
-          case Restarting => restartingLatch.open
+          case Restarting => ()
           case Stopped => ()
         }
       }).start
@@ -48,7 +47,6 @@ class AMQPConsumerManualRejectTestIntegration extends JUnitSuite with MustMatche
       producer ! Message("some_payload".getBytes, "manual.reject.this")
 
       rejectedLatch.tryAwait(2, TimeUnit.SECONDS) must be (true)
-      restartingLatch.tryAwait(2, TimeUnit.SECONDS) must be (true)
     } finally {
       connection.stop
     }

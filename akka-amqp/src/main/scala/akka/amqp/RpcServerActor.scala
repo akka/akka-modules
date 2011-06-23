@@ -21,8 +21,9 @@ class RpcServerActor[I,O](
       val request = serializer.fromBinary.fromBinary(payload)
       val response: Array[Byte] =  serializer.toBinary.toBinary(requestHandler(request))
 
-      val replyProps = new BasicProperties
-      replyProps.setCorrelationId(props.getCorrelationId)
+
+
+      val replyProps = new BasicProperties.Builder().correlationId(props.getCorrelationId).build()
       producer ! new Message(response, props.getReplyTo, properties = Some(replyProps))
 
       sender.foreach(_ ! Acknowledge(tag))

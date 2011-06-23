@@ -25,7 +25,7 @@ class AMQPProducerMessageTestIntegration extends JUnitSuite with MustMatchers {
     try {
       val returnLatch = new StandardLatch
       val returnListener = new ReturnListener {
-        def handleBasicReturn(replyCode: Int, replyText: String, exchange: String, routingKey: String, properties: BasicProperties, body: Array[Byte]) = {
+        def handleReturn(replyCode: Int, replyText: String, exchange: String, routingKey: String, properties: BasicProperties, body: Array[Byte]) = {
           returnLatch.open
         }
       }
