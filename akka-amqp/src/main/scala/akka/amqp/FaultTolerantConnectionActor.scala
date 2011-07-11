@@ -9,7 +9,7 @@ import java.io.IOException
 import com.rabbitmq.client._
 import akka.amqp.AMQP.ConnectionParameters
 import akka.config.Supervision.{ Permanent, OneForOneStrategy }
-import akka.actor.{Scheduler, Exit, Actor}
+import akka.actor.{Scheduler, Death, Actor}
 import akka.event.EventHandler
 import java.util.concurrent.{ScheduledFuture, TimeUnit}
 
@@ -49,7 +49,7 @@ private[amqp] class FaultTolerantConnectionActor(connectionParameters: Connectio
           EventHandler notifyListeners EventHandler.Info(this, "ConnectionShutdown by application [%s]" format self.id)
         } else {
           EventHandler notifyListeners EventHandler.Error(cause, this, "ConnectionShutdown is hard error - self terminating")
-          self ! new Exit(self, cause)
+          self ! new Death(self, cause)
         }
       }
     }
