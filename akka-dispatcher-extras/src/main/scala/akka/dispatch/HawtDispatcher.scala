@@ -138,7 +138,7 @@ object HawtDispatcher {
  *
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
  */
-class HawtDispatcher(val aggregate: Boolean = true, val parent: DispatchQueue = globalQueue) extends MessageDispatcher  {
+class HawtDispatcher(val name: String = "hawt", val aggregate: Boolean = true, val parent: DispatchQueue = globalQueue) extends MessageDispatcher  {
   import HawtDispatcher._
 
   private[akka] def start { retainNonDaemon }
@@ -216,5 +216,5 @@ class AggregatingHawtDispatcherMailbox(queue:DispatchQueue) extends HawtDispatch
  */
 class HawtDispatcherConfigurator extends MessageDispatcherConfigurator {
   def configure(config: Configuration): MessageDispatcher =
-    new HawtDispatcher(config.getBool("aggregate",true))
+    new HawtDispatcher(aggregate = config.getBool("aggregate", true))
 }
