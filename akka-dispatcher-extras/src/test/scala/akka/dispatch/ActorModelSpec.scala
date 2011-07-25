@@ -304,7 +304,7 @@ class ExecutorBasedEventDrivenDispatcherModelTest extends ActorModelSpec {
 }
 
 class HawtDispatcherModelTest extends ActorModelSpec {
-  def newInterceptedDispatcher = new HawtDispatcher(false) with MessageDispatcherInterceptor
+  def newInterceptedDispatcher = new HawtDispatcher(aggregate = false) with MessageDispatcherInterceptor
 }
 
 class ExecutorBasedEventDrivenWorkStealingDispatcherModelTest extends ActorModelSpec {
