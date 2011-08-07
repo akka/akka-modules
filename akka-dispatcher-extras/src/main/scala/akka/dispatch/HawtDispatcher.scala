@@ -149,7 +149,7 @@ class HawtDispatcher(val name: String = "hawt", val aggregate: Boolean = true, v
     mailbox(invocation.receiver).dispatch(invocation)
   }
 
-  private[akka] def executeFuture(invocation: FutureInvocation[_]){
+  private[akka] def executeTask(invocation: TaskInvocation){
     parent {
       invocation.run
     }
