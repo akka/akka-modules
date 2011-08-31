@@ -141,15 +141,15 @@ object HawtDispatcher {
 class HawtDispatcher(val name: String = "hawt", val aggregate: Boolean = true, val parent: DispatchQueue = globalQueue) extends MessageDispatcher  {
   import HawtDispatcher._
 
-  private[akka] def start { retainNonDaemon }
+  protected[akka] def start { retainNonDaemon }
 
-  private[akka] def shutdown { releaseNonDaemon }
+  protected[akka] def shutdown { releaseNonDaemon }
 
-  private[akka] def dispatch(invocation: MessageInvocation){
+  protected[akka] def dispatch(invocation: MessageInvocation){
     mailbox(invocation.receiver).dispatch(invocation)
   }
 
-  private[akka] def executeTask(invocation: TaskInvocation){
+  protected[akka] def executeTask(invocation: TaskInvocation){
     parent {
       invocation.run
     }

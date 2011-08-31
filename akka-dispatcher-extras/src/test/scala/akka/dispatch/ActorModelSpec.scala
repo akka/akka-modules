@@ -82,27 +82,27 @@ object ActorModelSpec {
       getStats(actorRef).resumes.incrementAndGet()
     }
 
-    private[akka] abstract override def register(actorRef: ActorRef) {
+    protected[akka] abstract override def register(actorRef: ActorRef) {
       super.register(actorRef)
       getStats(actorRef).registers.incrementAndGet()
     }
 
-    private[akka] abstract override def unregister(actorRef: ActorRef) {
+    protected[akka] abstract override def unregister(actorRef: ActorRef) {
       super.unregister(actorRef)
       getStats(actorRef).unregisters.incrementAndGet()
     }
 
-    private[akka] abstract override def dispatch(invocation: MessageInvocation) {
+    protected[akka] abstract override def dispatch(invocation: MessageInvocation) {
       super.dispatch(invocation)
       getStats(invocation.receiver).msgsReceived.incrementAndGet()
     }
 
-    private[akka] abstract override def start {
+    protected[akka] abstract override def start {
       super.start
       starts.incrementAndGet()
     }
 
-    private[akka] abstract override def shutdown {
+    protected[akka] abstract override def shutdown {
       super.shutdown
       stops.incrementAndGet()
     }
