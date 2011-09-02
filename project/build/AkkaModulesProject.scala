@@ -13,7 +13,9 @@ import sbt.CompileOrder._
 // -------------------------------------------------------------------------------------------------------------------
 
 object Repositories {
+  lazy val TypesafeRepo = MavenRepository("Typesafe Repo", "http://repo.typesafe.com/typesafe/releases/")
   lazy val AkkaRepo               = MavenRepository("Akka Repository", "http://akka.io/repository")
+  /*
   lazy val ScalaToolsRepo         = MavenRepository("Scala-Tools Repo", "http://scala-tools.org/repo-releases")
   lazy val CodehausRepo           = MavenRepository("Codehaus Repo", "http://repository.codehaus.org")
   lazy val LocalMavenRepo         = MavenRepository("Local Maven Repo", (Path.userHome / ".m2" / "repository").asURL.toString)
@@ -23,6 +25,7 @@ object Repositories {
   lazy val SonatypeSnapshotRepo   = MavenRepository("Sonatype OSS Repo", "http://oss.sonatype.org/content/repositories/releases")
   lazy val SunJDMKRepo            = MavenRepository("Sun JDMK Repo", "http://wp5.e-taxonomy.eu/cdmlib/mavenrepo")
   lazy val ClojarsRepo            = MavenRepository("Clojars Repo", "http://clojars.org/repo")
+  */
 }
 
 class AkkaModulesParentProject(info: ProjectInfo) extends ParentProject(info) with ExecProject with DocParentProject { akkaModulesParent =>
@@ -64,6 +67,8 @@ class AkkaModulesParentProject(info: ProjectInfo) extends ParentProject(info) wi
 
   import Repositories._
 
+  lazy val typesafeRepo = TypesafeRepo
+  /*
   lazy val jettyModuleConfig       = ModuleConfiguration("org.eclipse.jetty", sbt.DefaultMavenRepository)
   lazy val guiceyFruitModuleConfig = ModuleConfiguration("org.guiceyfruit", GuiceyFruitRepo)
   lazy val jbossModuleConfig       = ModuleConfiguration("org.jboss", JBossRepo)
@@ -87,6 +92,7 @@ class AkkaModulesParentProject(info: ProjectInfo) extends ParentProject(info) wi
   lazy val lzfModuleConfig         = ModuleConfiguration("voldemort.store.compress", "h2-lzf", AkkaRepo)
   lazy val rabbitModuleConfig      = ModuleConfiguration("com.rabbitmq","rabbitmq-client", "0.9.1", AkkaRepo)
   val localMavenRepo               = LocalMavenRepo // Second exception, also fast! ;-)
+  */
 
   // -------------------------------------------------------------------------------------------------------------------
   // Dependencies
