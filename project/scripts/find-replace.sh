@@ -3,7 +3,7 @@
 # Find and replace across all source files.
 #
 # Example usage:
-# 
+#
 # sh project/scripts/find-replace.sh 1.1-SNAPSHOT 1.1-RC1
 #
 # This script will be called as part of the sbt release script.
@@ -22,7 +22,7 @@ echo "Find and replace: $FIND --> $REPLACE"
 
 # Exclude directories from search
 
-excludedirs=".git dist deploy embedded-repo lib_managed project/boot project/scripts src_managed target akka-docs"
+excludedirs=".git dist deploy embedded-repo lib_managed project/boot project/scripts src_managed target"
 
 echo "Excluding directories: $excludedirs"
 
