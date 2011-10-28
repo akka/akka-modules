@@ -122,27 +122,36 @@ object AMQP {
           exchangeParameters: Option[ExchangeParameters] = None,
           producerId: Option[String] = None,
           returnListener: Option[ReturnListener] = None,
-          channelParameters: Option[ChannelParameters] = None) {
-    def this() = this (None, None, None, None)
+          channelParameters: Option[ChannelParameters] = None, 
+          errorCallbackActor: Option[ActorRef] = None) {
+    def this() = this (None, None, None, None, None)
 
     // Needed for Java API usage
-    def this(exchangeParameters: ExchangeParameters) = this (Some(exchangeParameters), None, None, None)
+    def this(exchangeParameters: ExchangeParameters) = this (Some(exchangeParameters), None, None, None, None)
 
     // Needed for Java API usage
     def this(exchangeParameters: ExchangeParameters, producerId: String) =
-      this (Some(exchangeParameters), Some(producerId), None, None)
+      this (Some(exchangeParameters), Some(producerId), None, None, None)
 
     // Needed for Java API usage
     def this(exchangeParameters: ExchangeParameters, returnListener: ReturnListener) =
-      this (Some(exchangeParameters), None, Some(returnListener), None)
+      this (Some(exchangeParameters), None, Some(returnListener), None, None)
 
     // Needed for Java API usage
     def this(exchangeParameters: ExchangeParameters, channelParameters: ChannelParameters) =
-      this (Some(exchangeParameters), None, None, Some(channelParameters))
+      this (Some(exchangeParameters), None, None, Some(channelParameters), None)
 
     // Needed for Java API usage
     def this(exchangeParameters: ExchangeParameters, producerId: String, returnListener: ReturnListener, channelParameters: ChannelParameters) =
-      this (Some(exchangeParameters), Some(producerId), Some(returnListener), Some(channelParameters))
+      this (Some(exchangeParameters), Some(producerId), Some(returnListener), Some(channelParameters), None)
+    
+    // Needed for Java API usage
+    def this(exchangeParameters: ExchangeParameters, producerId: String, returnListener: ReturnListener, channelParameters: ChannelParameters, errorCallbackActor: ActorRef) =
+      this (Some(exchangeParameters), Some(producerId), Some(returnListener), Some(channelParameters), Some(errorCallbackActor))
+    
+    // Needed for Java API usage
+    def this(exchangeParameters: ExchangeParameters, producerId: String, channelParameters: ChannelParameters, errorCallbackActor: ActorRef) =
+      this (Some(exchangeParameters), Some(producerId), None, Some(channelParameters), Some(errorCallbackActor))
   }
 
   /**
