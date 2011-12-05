@@ -52,7 +52,7 @@ private[amqp] class ProducerActor(producerParameters: ProducerParameters)
   }
 
   override def toString =
-    "AMQP.Poducer[address= "+ self.address +
+    "AMQP.Producer[address= "+ self.address +
     ", exchangeParameters=" + exchangeParameters + "]"
 }
 
