@@ -21,3 +21,7 @@ case object Match extends ExchangeType {
   def getInstance() = this // Needed for Java API usage
   override def toString = "match"
 }
+
+case class CustomExchange(exchangeType: String) extends ExchangeType {
+  override def toString = exchangeType
+}

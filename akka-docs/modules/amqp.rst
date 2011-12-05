@@ -76,6 +76,8 @@ As most of the messaging is done over exchanges, when creating producers or cons
 
   val activeDurableFanout = ExchangeParameters("fanout_exchange", Fanout, ActiveDeclaration(true, false)
 
+Aside from using the predefined ExchangeTypes (``Direct``, ``Fanout``, ``Topic``, ``Match``) also use ``CustomExchange(...)``.
+
 Producer
 ^^^^^^^^
 
