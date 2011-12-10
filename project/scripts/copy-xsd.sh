@@ -3,7 +3,7 @@
 # Copy the akka-version.xsd file to akka.io, renaming it for a release.
 #
 # Example usage:
-# 
+#
 # sh project/scripts/copy-xsd.sh 1.1-RC1
 
 RELEASE=$1
@@ -32,9 +32,4 @@ if [ -z "$AKKA_RELEASE_PATH" ]; then
     exit 1
 fi
 
-echo "Verify sudo on $AKKA_RELEASE_SERVER"
-ssh -t ${AKKA_RELEASE_SERVER} sudo -v
-
-scp akka-spring/src/main/resources/akka/spring/akka-${version}.xsd ${AKKA_RELEASE_SERVER}:/tmp/akka-${RELEASE}.xsd
-ssh -t ${AKKA_RELEASE_SERVER} sudo cp /tmp/akka-${RELEASE}.xsd ${AKKA_RELEASE_PATH}/akka-${RELEASE}.xsd
-ssh -t ${AKKA_RELEASE_SERVER} rm -f /tmp/akka-${RELEASE}.xsd
+rsync -rlpvz --chmod=Dg+ws,Fg+w akka-spring/src/main/resources/akka/spring/akka-${version}.xsd ${AKKA_RELEASE_SERVER}:${AKKA_RELEASE_PATH}/akka-${RELEASE}.xsd
