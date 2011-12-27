@@ -22,6 +22,7 @@ object Repositories {
   lazy val JavaNetRepo            = MavenRepository("java.net Repo", "http://download.java.net/maven/2")
   lazy val SonatypeSnapshotRepo   = MavenRepository("Sonatype OSS Repo", "http://oss.sonatype.org/content/repositories/releases")
   lazy val SunJDMKRepo            = MavenRepository("Sun JDMK Repo", "http://wp5.e-taxonomy.eu/cdmlib/mavenrepo")
+  lazy val TypesafeRepo           = MavenRepository("Typesafe Repo", "http://repo.typesafe.com/typesafe/releases/")
   lazy val ClojarsRepo            = MavenRepository("Clojars Repo", "http://clojars.org/repo")
 }
 
@@ -83,9 +84,9 @@ class AkkaModulesParentProject(info: ProjectInfo) extends ParentProject(info) wi
   lazy val scannotationModuleConfig= ModuleConfiguration("org.scannotation", JBossRepo)
   lazy val scalazModuleConfig      = ModuleConfiguration("org.scalaz", ScalaToolsRepo)
   lazy val scalacheckModuleConfig  = ModuleConfiguration("org.scala-tools.testing", "scalacheck_"+buildScalaVersion, "1.9", ScalaToolsRepo)
-  lazy val aspectWerkzModuleConfig = ModuleConfiguration("org.codehaus.aspectwerkz", "aspectwerkz", "2.2.3", AkkaRepo)
-  lazy val lzfModuleConfig         = ModuleConfiguration("voldemort.store.compress", "h2-lzf", AkkaRepo)
-  lazy val rabbitModuleConfig      = ModuleConfiguration("com.rabbitmq","rabbitmq-client", "0.9.1", AkkaRepo)
+  lazy val aspectWerkzModuleConfig = ModuleConfiguration("org.codehaus.aspectwerkz", "aspectwerkz", "2.2.3", TypesafeRepo)
+  lazy val lzfModuleConfig         = ModuleConfiguration("voldemort.store.compress", "h2-lzf", TypesafeRepo)
+  lazy val rabbitModuleConfig      = ModuleConfiguration("com.rabbitmq","rabbitmq-client", "0.9.1", TypesafeRepo)
   val localMavenRepo               = LocalMavenRepo // Second exception, also fast! ;-)
 
   // -------------------------------------------------------------------------------------------------------------------
