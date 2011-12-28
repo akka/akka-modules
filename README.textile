@@ -1,5 +1,8 @@
 h1. Akka Modules
 
+NOTE: This project has been dicontinued for Akka 2.x and forward,
+and exists only as an archive for the pre 2.x series of Akka.
+
 Repository for add-on modules to the Akka Project.
 
 Learn more at "http://akka.io":http://akka.io.
