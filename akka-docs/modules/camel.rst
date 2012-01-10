@@ -2466,10 +2466,10 @@ main method) that can be started from `sbt`_.
 .. code-block:: none
 
    $ sbt
-   [info] Building project akka-modules 1.3-SNAPSHOT against Scala 2.9.0
+   [info] Building project akka-modules 1.3-RC6 against Scala 2.9.0
    [info]    using AkkaModulesParentProject with sbt 0.7.6 and Scala 2.7.7
    > project akka-sample-camel
-   Set current project to akka-sample-camel 1.3-SNAPSHOT
+   Set current project to akka-sample-camel 1.3-RC6
    > run
    ...
    Multiple main classes detected, select one to run:
