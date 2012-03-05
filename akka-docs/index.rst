@@ -12,7 +12,7 @@ Links
 
 * `Downloads <http://akka.io/downloads/>`_
 
-* `Source Code <http://github.com/jboner/akka-modules>`_
+* `Source Code <http://github.com/akka/akka-modules>`_
 
 * `Scaladoc API <http://akka.io/api/akka-modules/snapshot/>`_
 

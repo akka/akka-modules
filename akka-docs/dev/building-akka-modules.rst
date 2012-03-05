@@ -7,9 +7,8 @@
  Building Akka Modules
 #######################
 
-This section describes how to build and run Akka Modules from the latest source code.
-
-.. contents:: :local:
+This section describes how to build and run Akka Modules from the latest source
+code.
 
 
 Get the source code
@@ -21,13 +20,13 @@ Akka uses `Git <http://git-scm.com>`_ and is hosted at `Github
 You first need Git installed on your machine. You can then clone the source
 repositories:
 
-- Akka repository from `<http://github.com/jboner/akka>`_
-- Akka Modules repository from `<http://github.com/jboner/akka-modules>`_
+- Akka repository from `<http://github.com/akka/akka>`_
+- Akka Modules repository from `<http://github.com/akka/akka-modules>`_
 
 For example::
 
-   git clone git://github.com/jboner/akka.git
-   git clone git://github.com/jboner/akka-modules.git
+   git clone git://github.com/akka/akka.git
+   git clone git://github.com/akka/akka-modules.git
 
 If you have already cloned the repositories previously then you can update the
 code with ``git pull``::
@@ -191,7 +190,7 @@ Linux/Unix init script
 
 Here is a Linux/Unix init script that can be very useful:
 
-http://github.com/jboner/akka/blob/master/scripts/akka-init-script.sh
+http://github.com/akka/akka/blob/master/scripts/akka-init-script.sh
 
 Copy and modify as needed.
 
@@ -201,7 +200,7 @@ Simple startup shell script
 
 This little script might help a bit:
 
-http://github.com/jboner/akka/blob/master/scripts/run_akka.sh
+http://github.com/akka/akka/blob/master/scripts/run_akka.sh
 
 Copy and modify as needed.
 

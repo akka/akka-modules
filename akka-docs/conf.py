@@ -27,8 +27,9 @@ show_authors = True
 
 # -- Options for HTML output ---------------------------------------------------
 
-html_theme = 'akka'
+html_theme = 'akka-2.0'
 html_theme_path = ['_sphinx/themes']
+html_favicon = '_sphinx/static/favicon.ico'
 
 html_title = 'Akka Modules Documentation'
 html_logo = '_sphinx/static/logo.png'
@@ -45,21 +46,29 @@ html_show_sourcelink = False
 html_show_sphinx = False
 html_show_copyright = True
 htmlhelp_basename = 'Akkadoc'
+html_add_permalinks = ''
 
 # -- Options for LaTeX output --------------------------------------------------
+
+def setup(app):
+  from sphinx.util.texescape import tex_replacements
+  tex_replacements.append((u'⇒', ur'\(\Rightarrow\)'))
 
 latex_paper_size = 'a4'
 latex_font_size = '10pt'
 
 latex_documents = [
   ('index', 'AkkaModules.tex', u' Akka Modules Documentation',
-   u'Scalable Solutions AB', 'manual'),
+   u'Typesafe Inc', 'manual'),
 ]
 
 latex_elements = {
     'classoptions': ',oneside,openany',
     'babel': '\\usepackage[english]{babel}',
+    'fontpkg': '\\PassOptionsToPackage{warn}{textcomp} \\usepackage{times}',
     'preamble': '\\definecolor{VerbatimColor}{rgb}{0.935,0.935,0.935}'
     }
+
+
 
 # latex_logo = '_sphinx/static/akka.png'
