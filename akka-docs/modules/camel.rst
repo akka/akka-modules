@@ -1688,13 +1688,13 @@ CamelContext can be defined for <camel-service> as well. Here's an example.
 
    <beans xmlns="http://www.springframework.org/schema/beans"
           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-          xmlns:akka="http://www.akka.io/schema/akka"
+          xmlns:akka="http://repo.akka.io/schema/akka"
           xmlns:camel="http://camel.apache.org/schema/spring"
           xsi:schemaLocation="
    http://www.springframework.org/schema/beans
    http://www.springframework.org/schema/beans/spring-beans-2.5.xsd
-   http://www.akka.io/schema/akka
-   http://akka.io/akka-0.10.xsd
+   http://repo.akka.io/schema/akka
+   http://repo.akka.io/akka-1.3.1.xsd
    http://camel.apache.org/schema/spring
    http://camel.apache.org/schema/spring/camel-spring.xsd">
 
@@ -1749,12 +1749,12 @@ DefaultCamelContext is created (and accessible via the CamelContextManager).
 
    <beans xmlns="http://www.springframework.org/schema/beans"
           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-          xmlns:akka="http://www.akka.io/schema/akka"
+          xmlns:akka="http://repo.akka.io/schema/akka"
           xsi:schemaLocation="
    http://www.springframework.org/schema/beans
    http://www.springframework.org/schema/beans/spring-beans-2.5.xsd
-   http://www.akka.io/schema/akka
-   http://akka.io/akka-0.10.xsd">
+   http://repo.akka.io/schema/akka
+   http://repo.akka.io/akka-1.3.1.xsd">
 
      <!-- Create a CamelService using DefaultCamelContext -->
      <akka:camel-service />
@@ -2046,13 +2046,13 @@ CamelService.
    -->
    <beans xmlns="http://www.springframework.org/schema/beans"
           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-          xmlns:akka="http://www.akka.io/schema/akka"
+          xmlns:akka="http://repo.akka.io/schema/akka"
           xmlns:camel="http://camel.apache.org/schema/spring"
           xsi:schemaLocation="
    http://www.springframework.org/schema/beans
    http://www.springframework.org/schema/beans/spring-beans-2.5.xsd
-   http://www.akka.io/schema/akka
-   http://akka.io/akka-0.10.xsd
+   http://repo.akka.io/schema/akka
+   http://repo.akka.io/akka-1.3.1.xsd
    http://camel.apache.org/schema/spring
    http://camel.apache.org/schema/spring/camel-spring.xsd">
 
